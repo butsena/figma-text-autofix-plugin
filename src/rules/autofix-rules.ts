@@ -2,6 +2,7 @@ import type { AutofixRule } from "../core/autofix-engine";
 import { getSheetReplacementRules } from "../sheet/replacement-rules-store";
 import { buildCianBrandRules } from "./cian/brand-rules";
 import { buildFormalPronounRules } from "./cian/formal-pronoun-rules";
+import { buildSmsRules } from "./cian/sms-rules";
 import {
   buildCianNounOrNetDeclensionRule,
   buildCianPrepositionDeclensionRules,
@@ -19,6 +20,7 @@ function composeAutofixRules(): AutofixRule[] {
   return [
     ...buildCianBrandRules(),
     ...buildFormalPronounRules(),
+    ...buildSmsRules(),
     ...buildCianPrepositionDeclensionRules(),
     buildCianNounOrNetDeclensionRule(),
     ...buildEmailRules(),

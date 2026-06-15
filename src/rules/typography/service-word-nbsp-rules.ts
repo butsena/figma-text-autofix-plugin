@@ -6,14 +6,6 @@ import { serviceWordPattern } from "./ru-service-words";
 export function buildServiceWordNbspRules(): AutofixRule[] {
   return rules([
     rule({
-      id: "cian-094-nbsp-after-service-words-base",
-      category: "typography",
-      pattern: serviceWordPattern(" +(?! )"),
-      replacement: (_match, prefix, word) => `${prefix}${word}${NBSP}`,
-      message: "Типографика: базовый неразрывный пробел после служебных слов.",
-      priority: 51,
-    }),
-    rule({
       id: "cian-095-nbsp-after-short-words-strict",
       category: "typography",
       pattern: serviceWordPattern(`(?:${HORIZONTAL_SPACE}+)(?=\\S)`),
