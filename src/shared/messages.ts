@@ -35,6 +35,10 @@ export type AutoApplyFixLineDto = {
   message: string;
   before: string;
   after: string;
+  from: number;
+  to: number;
+  /** Текст слоя на момент обнаружения правки (для контекста в UI). */
+  sourceText: string;
 };
 
 export type AutoApplyLayerReportDto = {

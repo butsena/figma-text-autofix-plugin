@@ -198,6 +198,14 @@
         font-size: 11px;
         line-height: 1.5;
       }
+      .reportCtxWord {
+        font-family: var(--figma-font, Inter, -apple-system, BlinkMacSystemFont, sans-serif);
+        font-weight: 600;
+        color: #1f1f1f;
+        background: #eef3fc;
+        padding: 0 4px;
+        border-radius: 4px;
+      }
       .ws-mark {
         font-weight: 600;
       }
@@ -384,6 +392,93 @@
         );
       }
 
+      var SERVICE_WORD_NBSP_RULE_IDS = {
+        "cian-095-nbsp-after-short-words-strict": true,
+        "cian-097-nbsp-after-service-words-before-line-end": true,
+        "cian-098-nbsp-after-service-words-newlines-before-text": true,
+        "cian-099-nbsp-after-service-words-trailing-newlines-at-eof": true,
+        "cian-101-nbsp-after-service-words-mixed-ws-before-text": true,
+      };
+
+      var WORD_CHAR_RE = /[0-9A-Za-z\u0400-\u04FF\u0451\u0401]/;
+
+      function isWhitespaceOnlyFragment(text) {
+        if (text == null || text === "") return true;
+        var s = String(text);
+        for (var i = 0; i < s.length; i++) {
+          var code = s.charCodeAt(i);
+          var ch = s.charAt(i);
+          if (
+            ch !== " " &&
+            ch !== "\t" &&
+            ch !== "\n" &&
+            ch !== "\r" &&
+            code !== 0x00a0 &&
+            code !== 0x202f
+          ) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function extractContextWordBefore(text, index) {
+        var i = index - 1;
+        while (i >= 0 && WORD_CHAR_RE.test(text.charAt(i))) i--;
+        return text.slice(i + 1, index);
+      }
+
+      function extractContextWordAfter(text, index) {
+        var i = index;
+        while (i < text.length && WORD_CHAR_RE.test(text.charAt(i))) i++;
+        return text.slice(index, i);
+      }
+
+      function formatContextSide(leftWord, fragment, rightWord, bold) {
+        var parts = [];
+        if (leftWord) {
+          parts.push('<span class="reportCtxWord">' + escapeHtml(leftWord) + "</span>");
+        }
+        parts.push(
+          bold ? "<b>" + visualizeDiffFragment(fragment) + "</b>" : visualizeDiffFragment(fragment),
+        );
+        if (rightWord) {
+          parts.push('<span class="reportCtxWord">' + escapeHtml(rightWord) + "</span>");
+        }
+        return parts.join(" ");
+      }
+
+      function formatContextualWhitespaceDiff(sourceText, from, to, before, after) {
+        if (!sourceText || from == null || to == null) return null;
+        var leftWord = extractContextWordBefore(sourceText, from);
+        var rightWord = extractContextWordAfter(sourceText, to);
+        if (!leftWord && !rightWord) return null;
+        return (
+          formatContextSide(leftWord, before, rightWord, false) +
+          ' <span style="color:#888;font-weight:400">→</span> ' +
+          formatContextSide(leftWord, after, rightWord, true)
+        );
+      }
+
+      function formatFixDiffHtml(fix) {
+        if (
+          SERVICE_WORD_NBSP_RULE_IDS[fix.ruleId] &&
+          isWhitespaceOnlyFragment(fix.before) &&
+          isWhitespaceOnlyFragment(fix.after) &&
+          fix.sourceText
+        ) {
+          var contextual = formatContextualWhitespaceDiff(
+            fix.sourceText,
+            fix.from,
+            fix.to,
+            fix.before,
+            fix.after,
+          );
+          if (contextual) return contextual;
+        }
+        return formatDiffHtml(fix.before, fix.after);
+      }
+
       function displayText(value) {
         if (value == null) return "";
         if (typeof value === "string") return value;
@@ -557,7 +652,7 @@
                     <div class="reportMeta">Правило: <code>${escapeHtml(f.ruleId)}</code> · ${escapeHtml(
                   f.category
                 )}</div>
-                    <div class="reportDiff">${formatDiffHtml(f.before, f.after)}</div>
+                    <div class="reportDiff">${formatFixDiffHtml(f)}</div>
                   </div>
                 `;
               })

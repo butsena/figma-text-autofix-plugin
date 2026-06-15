@@ -1,5 +1,5 @@
 import type { AutofixRule } from "../../core/autofix-engine";
-import { escapeRegex } from "../regex";
+import { CYRILLIC_LETTERS, escapeRegex } from "../regex";
 
 type CianPrepReclinationRow = {
   id: string;
@@ -89,18 +89,24 @@ const CIAN_PREP_RECTION_TABLE: readonly CianPrepReclinationRow[] = [
 
 const CIAN_TAIL = String.raw`([«"]?)Циан(?![аеуомАЕУОМ])([»"]?)(?=[\s\.,:;!?)]|$)`;
 
+/** Предлог — отдельное слово (иначе «о» срабатывает внутри «про»). */
+const PREP_WORD_LOOKBEHIND = String.raw`(?<=^|[^${CYRILLIC_LETTERS}])`;
+
 const ALL_CIAN_PREPS_ALTERNATION = buildPrepAlternation(
   CIAN_PREP_RECTION_TABLE.flatMap((row) => row.preps),
 );
 
-const GENITIVE_GAP = String.raw`((?:(?!\b(?:${ALL_CIAN_PREPS_ALTERNATION})\s)\S+\s+)*?)`;
+const GENITIVE_GAP = String.raw`((?:(?!${PREP_WORD_LOOKBEHIND}(?:${ALL_CIAN_PREPS_ALTERNATION})\\s)\\S+\\s+)*?)`;
 
 export function buildCianPrepositionDeclensionRules(): AutofixRule[] {
   return CIAN_PREP_RECTION_TABLE.map((row) => {
     const inner = buildPrepAlternation(row.preps);
     const allowWordsBetweenPrepAndCian = row.id === "gen";
     const gap = allowWordsBetweenPrepAndCian ? GENITIVE_GAP : "";
-    const pattern = new RegExp(`((?:${inner})\\s+)${gap}${CIAN_TAIL}`, "g");
+    const pattern = new RegExp(
+      `((?:${PREP_WORD_LOOKBEHIND}(?:${inner}))\\s+)${gap}${CIAN_TAIL}`,
+      "g",
+    );
     return {
       id: `cian-003-prep-${row.id}`,
       category: "cian_declension_context",

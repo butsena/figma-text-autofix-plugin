@@ -10,8 +10,7 @@ export function buildServiceWordNbspRules(): AutofixRule[] {
       category: "typography",
       pattern: serviceWordPattern(`(?:${HORIZONTAL_SPACE}+)(?=\\S)`),
       replacement: (_match, prefix, word) => `${prefix}${word}${NBSP}`,
-      message:
-        "Типографика: неразрывный пробел после служебных слов (нормализация горизонтальных пробелов; переносы строк обрабатываются отдельно).",
+      message: "Типографика: неразрывный пробел после служебных слов.",
       priority: 52,
     }),
     rule({

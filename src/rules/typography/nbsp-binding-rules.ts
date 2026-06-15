@@ -49,7 +49,7 @@ export function buildNbspBindingRules(): AutofixRule[] {
     rule({
       id: "cian-126-nbsp-td-te",
       category: "typography",
-      pattern: /\bт\.[ \t\u00A0\u202F]*([де])\./gi,
+      pattern: /(?<![\p{L}\d])т\.[ \t\u00A0\u202F]*([де])\./giu,
       replacement: (_m, letter) => `т.${NBSP}${letter}.`,
       message: "Типографика: неразрывный пробел в сокращениях «т. д.» / «т. е.».",
       priority: 53,
@@ -57,7 +57,7 @@ export function buildNbspBindingRules(): AutofixRule[] {
     rule({
       id: "cian-127-nbsp-itc",
       category: "typography",
-      pattern: /\bи[ \t\u00A0\u202F]+т\.[ \t\u00A0\u202F]*п\./gi,
+      pattern: /(?<![\p{L}\d])и[ \t\u00A0\u202F]+т\.[ \t\u00A0\u202F]*п\./giu,
       replacement: `и${NBSP}т.${NBSP}п.`,
       message: "Типографика: неразрывные пробелы в «и т. п.».",
       priority: 53,
@@ -65,7 +65,7 @@ export function buildNbspBindingRules(): AutofixRule[] {
     rule({
       id: "cian-128-nbsp-tk-tch",
       category: "typography",
-      pattern: /\bт\.[ \t\u00A0\u202F]*([кч])\./gi,
+      pattern: /(?<![\p{L}\d])т\.[ \t\u00A0\u202F]*([кч])\./giu,
       replacement: (_m, letter) => `т.${NBSP}${letter}.`,
       message: "Типографика: неразрывный пробел в сокращениях «т. к.» / «т. ч.».",
       priority: 53,

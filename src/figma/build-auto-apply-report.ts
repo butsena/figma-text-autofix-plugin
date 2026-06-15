@@ -53,6 +53,9 @@ export function buildAutoApplyReport(scan: CheckResultDto): AutoApplyReportDto {
         message: f.rule.message,
         before: f.before,
         after: f.after,
+        from: f.from,
+        to: f.to,
+        sourceText: c.originalText,
       })),
     })),
   };
