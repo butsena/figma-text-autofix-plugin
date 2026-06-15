@@ -1,0 +1,14 @@
+{
+  "name": "Text Autofix (Cian rules)",
+  "api": "1.0.0",
+  "id": "1637103330071275318",
+  "documentAccess": "dynamic-page",
+  "editorType": ["figma"],
+  "main": "dist/main.js",
+  "ui": "dist/src/ui/ui.html",
+  "permissions": [],
+  "networkAccess": {
+    "allowedDomains": ["https://docs.google.com", "https://script.google.com"],
+    "reasoning": "Google Таблица: загрузка правил (JSONP в UI). Опционально — URL Apps Script."
+  }
+}
