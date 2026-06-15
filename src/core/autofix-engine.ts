@@ -36,6 +36,82 @@ function expandReplacementTemplate(template: string, match: RegExpExecArray): st
   });
 }
 
+const UNCHANGED_EDGE_CHAR = /[0-9A-Za-zА-Яа-яЁё]/;
+
+function tailsAreSeparatorsOnly(before: string, after: string): boolean {
+  if (before.length === 0 && after.length === 0) return true;
+  return (
+    [...before].every((ch) => !UNCHANGED_EDGE_CHAR.test(ch)) &&
+    [...after].every((ch) => !UNCHANGED_EDGE_CHAR.test(ch))
+  );
+}
+
+/**
+ * Сужает диапазон замены до реально меняющейся части.
+ * С краёв снимаются совпадающие разделители; неизменное слово в середине тоже
+ * выносится из диапазона, если меняются только пробелы/знаки рядом с ним.
+ */
+export function narrowReplacementRange(
+  from: number,
+  before: string,
+  after: string,
+): { from: number; to: number; before: string; after: string } {
+  if (before === after) {
+    return { from, to: from + before.length, before, after };
+  }
+
+  let prefixLen = 0;
+  while (
+    prefixLen < before.length &&
+    prefixLen < after.length &&
+    before[prefixLen] === after[prefixLen] &&
+    !UNCHANGED_EDGE_CHAR.test(before[prefixLen])
+  ) {
+    prefixLen++;
+  }
+
+  let tailBefore = before.slice(prefixLen);
+  let tailAfter = after.slice(prefixLen);
+
+  let sharedWordPrefix = 0;
+  while (
+    sharedWordPrefix < tailBefore.length &&
+    sharedWordPrefix < tailAfter.length &&
+    tailBefore[sharedWordPrefix] === tailAfter[sharedWordPrefix]
+  ) {
+    sharedWordPrefix++;
+  }
+
+  if (
+    sharedWordPrefix > 0 &&
+    tailsAreSeparatorsOnly(
+      tailBefore.slice(sharedWordPrefix),
+      tailAfter.slice(sharedWordPrefix),
+    )
+  ) {
+    prefixLen += sharedWordPrefix;
+    tailBefore = tailBefore.slice(sharedWordPrefix);
+    tailAfter = tailAfter.slice(sharedWordPrefix);
+  }
+
+  let suffixLen = 0;
+  while (
+    suffixLen < tailBefore.length &&
+    suffixLen < tailAfter.length &&
+    tailBefore[tailBefore.length - 1 - suffixLen] === tailAfter[tailAfter.length - 1 - suffixLen] &&
+    !UNCHANGED_EDGE_CHAR.test(tailBefore[tailBefore.length - 1 - suffixLen])
+  ) {
+    suffixLen++;
+  }
+
+  return {
+    from: from + prefixLen,
+    to: from + before.length - suffixLen,
+    before: tailBefore.slice(0, tailBefore.length - suffixLen),
+    after: tailAfter.slice(0, tailAfter.length - suffixLen),
+  };
+}
+
 function computeAfter(_fullText: string, match: RegExpExecArray, rule: AutofixRule): string {
   const matched = match[0] ?? "";
 
@@ -75,11 +151,14 @@ export function checkTextForAutofixes(text: string, rules: AutofixRule[]): TextC
       const after = computeAfter(text, match, rule);
       if (after === matched) continue;
 
+      const narrowed = narrowReplacementRange(from, matched, after);
+      if (narrowed.before === narrowed.after) continue;
+
       fixes.push({
-        from,
-        to,
-        before: matched,
-        after,
+        from: narrowed.from,
+        to: narrowed.to,
+        before: narrowed.before,
+        after: narrowed.after,
 
         ruleId: rule.id,
         category: rule.category,

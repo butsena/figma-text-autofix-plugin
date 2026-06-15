@@ -1,31 +1,38 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
-import { CYRILLIC_WORD_EDGE, CYRILLIC_WORD_EDGE_END } from "../regex";
+import {
+  LATIN_CYRILLIC_WORD_EDGE_END,
+  LATIN_CYRILLIC_WORD_LOOKBEHIND,
+} from "../regex";
 import { HORIZONTAL_SPACE } from "../typography/constants";
 
-const SMS_WORD = "СМС";
+/** Кириллица «СМС» и латиница «SMS»; регистр — через флаг i. */
+const SMS_FORMS = String.raw`(?:СМС|SMS)`;
 const NOT_SENTENCE_START = String.raw`(?<!^)(?<![.!?…]${HORIZONTAL_SPACE}*)`;
-const SENTENCE_START = String.raw`(?:^|[.!?…]${HORIZONTAL_SPACE}*|[\r\n]${HORIZONTAL_SPACE}*)`;
+const AT_SENTENCE_START = String.raw`(?<=^|[.!?…]${HORIZONTAL_SPACE}*|[\r\n]${HORIZONTAL_SPACE}*)`;
 
 export function buildSmsRules(): AutofixRule[] {
   return rules([
     rule({
       id: "cian-sms-sentence-start",
       category: "cian_editorial",
-      pattern: new RegExp(`(${SENTENCE_START})(${SMS_WORD})${CYRILLIC_WORD_EDGE_END}`, "gu"),
-      replacement: (_match, prefix) => `${prefix}Смс`,
-      message: "Редполитика: «СМС» в начале предложения → «Смс».",
+      pattern: new RegExp(
+        `${AT_SENTENCE_START}(${SMS_FORMS})${LATIN_CYRILLIC_WORD_EDGE_END}`,
+        "iu",
+      ),
+      replacement: (_match, _word) => "Смс",
+      message: "Редполитика: «СМС» / «SMS» в начале предложения → «Смс».",
       priority: 72,
     }),
     rule({
       id: "cian-sms-mid-sentence",
       category: "cian_editorial",
       pattern: new RegExp(
-        `${NOT_SENTENCE_START}${CYRILLIC_WORD_EDGE}(${SMS_WORD})${CYRILLIC_WORD_EDGE_END}`,
-        "gu",
+        `${NOT_SENTENCE_START}${LATIN_CYRILLIC_WORD_LOOKBEHIND}(${SMS_FORMS})${LATIN_CYRILLIC_WORD_EDGE_END}`,
+        "iu",
       ),
-      replacement: (_match, prefix) => `${prefix}смс`,
-      message: "Редполитика: «СМС» в середине предложения → «смс».",
+      replacement: (_match, _word) => "смс",
+      message: "Редполитика: «СМС» / «SMS» в середине предложения → «смс».",
       priority: 71,
     }),
   ]);

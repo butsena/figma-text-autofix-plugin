@@ -8,6 +8,10 @@ export const CYRILLIC_WORD_EDGE = String.raw`(^|[^${CYRILLIC_LETTERS}])`;
 export const CYRILLIC_WORD_EDGE_END = String.raw`(?=[^${CYRILLIC_LETTERS}]|$)`;
 
 export const LATIN_CYRILLIC_WORD_EDGE = String.raw`(^|[^${LATIN_CYRILLIC_LETTERS}])`;
+export const LATIN_CYRILLIC_WORD_EDGE_END = String.raw`(?=[^${LATIN_CYRILLIC_LETTERS}]|$)`;
+
+/** Граница слова без захвата префикса — чтобы не сбрасывать стиль пробела при замене. */
+export const LATIN_CYRILLIC_WORD_LOOKBEHIND = String.raw`(?<=^|[^${LATIN_CYRILLIC_LETTERS}])`;
 
 export function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

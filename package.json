@@ -5,12 +5,15 @@
   "scripts": {
     "dev": "vite",
     "build:yo-curated": "node scripts/build-yo-curated.mjs",
-    "build": "npm run build:yo-curated && vite build"
+    "build": "npm run build:yo-curated && vite build",
+    "test": "npm run build:yo-curated && vitest run",
+    "test:watch": "npm run build:yo-curated && vitest"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.125.0",
     "esbuild": "^0.24.2",
     "typescript": "^5.6.3",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vitest": "^3.2.4"
   }
 }
