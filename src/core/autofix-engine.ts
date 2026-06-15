@@ -29,27 +29,22 @@ function ensureGlobalRegex(pattern: RegExp): RegExp {
   return new RegExp(pattern.source, flags);
 }
 
-function regexWithoutGlobal(pattern: RegExp): RegExp {
-  const flags = pattern.flags.replace(/g/g, "");
-  return new RegExp(pattern.source, flags);
+function expandReplacementTemplate(template: string, match: RegExpExecArray): string {
+  return template.replace(/\$(\d+)|\$\$/g, (whole, n) => {
+    if (whole === "$$") return "$";
+    return match[Number(n)] ?? "";
+  });
 }
 
-function computeAfter(fullText: string, match: RegExpExecArray, rule: AutofixRule): string {
+function computeAfter(_fullText: string, match: RegExpExecArray, rule: AutofixRule): string {
   const matched = match[0] ?? "";
-  const from = match.index;
 
-  // Повторный прогон по подстроке ломает lookbehind вроде (?<!^) — нужна позиция в полном тексте.
-  const rx = regexWithoutGlobal(rule.pattern);
-  rx.lastIndex = from;
-  const rematch = rx.exec(fullText);
-  if (!rematch || rematch.index !== from || rematch[0] !== matched) {
-    return matched;
-  }
-
+  // Группы уже сняты глобальным exec в нужной позиции; повторный exec без /g
+  // снова ищет с начала строки и ломает фразы вроде «не подтвержден».
   if (typeof rule.replacement === "function") {
-    return rule.replacement(rematch[0], ...rematch.slice(1));
+    return rule.replacement(matched, ...match.slice(1));
   }
-  return rematch[0].replace(rx, rule.replacement);
+  return expandReplacementTemplate(rule.replacement, match);
 }
 
 /**

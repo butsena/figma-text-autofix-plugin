@@ -2,4 +2,5 @@ dist/
 node_modules/
 .DS_Store
 data/yo-map.json
+src/rules/yo-curated.generated.ts
 

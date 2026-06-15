@@ -1,9 +1,4 @@
-import yoMap from "../../data/yo-map.json";
-
-/** «е/Е»-форма → каноничная форма с «ё/Ё» (yobase yo_sure, без yo_unsure). */
-const YO_CORRECTIONS: ReadonlyMap<string, string> = new Map(
-  Object.entries(yoMap as Record<string, string>),
-);
+import { YO_CORRECTIONS } from "./yo-curated.generated";
 
 function capitalizeLike(source: string, target: string): string {
   if (!source) return target;
@@ -16,12 +11,11 @@ function capitalizeLike(source: string, target: string): string {
   return target;
 }
 
+/** Замена «е» на «ё» по курируемому списку (IT / недвижимость). */
 export function getYoCorrection(word: string): string | null {
-  const direct = YO_CORRECTIONS.get(word);
-  if (direct) return direct;
-
-  const fromLower = YO_CORRECTIONS.get(word.toLowerCase());
+  const fromLower = YO_CORRECTIONS[word.toLowerCase()];
   if (!fromLower) return null;
-
-  return capitalizeLike(word, fromLower);
+  const right = capitalizeLike(word, fromLower);
+  if (right === word) return null;
+  return right;
 }

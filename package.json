@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:yo-map": "node scripts/build-yo-map.mjs",
-    "build": "npm run build:yo-map && vite build"
+    "build:yo-curated": "node scripts/build-yo-curated.mjs",
+    "build": "npm run build:yo-curated && vite build"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.125.0",
