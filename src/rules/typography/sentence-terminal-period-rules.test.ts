@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyAllRules, fixByRuleId } from "../../test/helpers";
+import { applyAllRules, fixesFor } from "../../test/helpers";
 import { getAutofixRules } from "../autofix-rules";
 import {
   ensureSentenceTerminalPeriods,
@@ -31,13 +31,6 @@ describe("normalizeSpaceAfterSentenceEnd", () => {
 describe("splitIntoSentenceFragments", () => {
   it("делит по . ! ? …", () => {
     expect(splitIntoSentenceFragments("А. Б! В? Г… Д")).toEqual(["А.", " Б!", " В?", " Г…", " Д"]);
-  });
-
-  it("делит по неявной границе: строчная + пробел + заглавная", () => {
-    expect(splitIntoSentenceFragments("по запросу Главное — текст")).toEqual([
-      "по запросу",
-      " Главное — текст",
-    ]);
   });
 });
 
@@ -85,18 +78,6 @@ describe("ensureSentenceTerminalPeriods", () => {
     );
     expect(ensureSentenceTerminalPeriods("см. 1. пункт ниже")).toBe("см. 1. пункт ниже");
   });
-
-  it("ставит точку между предложениями без явной границы", () => {
-    const input =
-      "Любого слона можно купить онлайн — цену скину вам в смс по запросу Главное — сохраните ваш профиль.";
-    expect(ensureSentenceTerminalPeriods(input)).toBe(
-      "Любого слона можно купить онлайн — цену скину вам в смс по запросу. Главное — сохраните ваш профиль.",
-    );
-  });
-
-  it("не путает короткий предлог и заглавное имя", () => {
-    expect(ensureSentenceTerminalPeriods("квартира в Москве")).toBe("квартира в Москве");
-  });
 });
 
 describe("buildSentenceTerminalPeriodRules", () => {
@@ -106,23 +87,5 @@ describe("buildSentenceTerminalPeriodRules", () => {
 
   it("в полном пайплайне после капитализации", () => {
     expect(applyAllRules("первое. второе", allRules)).toBe("Первое. Второе.");
-  });
-
-  it("в полном пайплайне: слон и профиль", () => {
-    const input =
-      "Любого слона можно купить онлайн — цену скину вам в смс по запросу Главное — сохраните ваш профиль.";
-    const out = applyAllRules(input, allRules);
-    expect(out).toMatch(/запросу\.\s+Главное/);
-    expect(out).toMatch(/профиль\.?$/);
-  });
-
-  it("fix сужается до вставки точки", () => {
-    const input =
-      "Любого слона можно купить онлайн — цену скину вам в смс по запросу Главное — сохраните ваш профиль.";
-    const fix = fixByRuleId(input, allRules, "cian-139-sentence-terminal-period");
-    expect(fix).toBeDefined();
-    expect(fix!.before).toBe("");
-    expect(fix!.after).toBe(".");
-    expect(input.slice(0, fix!.from)).toMatch(/запросу$/);
   });
 });

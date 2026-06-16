@@ -9,6 +9,7 @@ import {
   buildCianPrepositionDeclensionRules,
 } from "./cian/prep-declension-table";
 import { buildEYoRules } from "./e-yo-rules";
+import { buildYoHomographRules } from "./yo-homograph-rules";
 import { buildEmailRules } from "./formatting/email-rules";
 import { buildGeneralTypographyRules } from "./typography/general-typography-rules";
 import { buildHyphenCompoundRules } from "./typography/hyphen-compound-rules";
@@ -16,6 +17,7 @@ import { buildNumberGroupingRules } from "./typography/number-grouping";
 import { buildNbspBindingRules } from "./typography/nbsp-binding-rules";
 import { buildPunctuationSpacingRules } from "./typography/punctuation-spacing-rules";
 import { buildSentenceCapitalizationRules } from "./typography/sentence-capitalization-rules";
+import { buildImplicitSentencePeriodRules } from "./typography/implicit-sentence-period-rules";
 import { buildSentenceTerminalPeriodRules } from "./typography/sentence-terminal-period-rules";
 import { buildServiceWordNbspRules } from "./typography/service-word-nbsp-rules";
 
@@ -29,6 +31,7 @@ function composeAutofixRules(): AutofixRule[] {
     buildCianNounOrNetDeclensionRule(),
     ...buildEmailRules(),
     ...buildEYoRules(),
+    ...buildYoHomographRules(),
     ...getSheetReplacementRules(),
     ...buildServiceWordNbspRules(),
     ...buildNbspBindingRules(),
@@ -38,6 +41,7 @@ function composeAutofixRules(): AutofixRule[] {
     ...buildPunctuationSpacingRules(),
     ...buildSentenceCapitalizationRules(),
     ...buildSentenceTerminalPeriodRules(),
+    ...buildImplicitSentencePeriodRules(),
   ];
 }
 

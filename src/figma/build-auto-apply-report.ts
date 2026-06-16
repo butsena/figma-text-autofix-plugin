@@ -1,5 +1,5 @@
 import type { TextFix } from "../core/autofix-engine";
-import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
+import type { AutoApplyReportDto, CheckResultDto, TextFixDto } from "../shared/messages";
 
 /** Склеить отчёты нескольких проходов автоисправления (по слоям и списку замен). */
 export function mergeAutoApplyReports(
@@ -73,6 +73,40 @@ export function buildAutoApplyReportFromApplied(
       changedLayerCount: layers.length,
     },
     layers,
+  };
+}
+
+export function buildAutoApplyReportFromConfirmFix(
+  nodeId: string,
+  nodeName: string,
+  fix: TextFixDto,
+  sourceText: string,
+): AutoApplyReportDto {
+  return {
+    summary: {
+      checkedLayers: 1,
+      appliedFixCount: 1,
+      changedLayerCount: 1,
+    },
+    layers: [
+      {
+        nodeId,
+        nodeName,
+        fixes: [
+          {
+            fixId: fix.fixId,
+            ruleId: fix.rule.id,
+            category: fix.rule.category,
+            message: fix.rule.message,
+            before: fix.before,
+            after: fix.after,
+            from: fix.from,
+            to: fix.to,
+            sourceText,
+          },
+        ],
+      },
+    ],
   };
 }
 

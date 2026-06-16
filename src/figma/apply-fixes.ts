@@ -12,6 +12,7 @@ function toEngineTextFix(f: TextFixDto): TextFix {
     category: f.rule.category,
     message: f.rule.message,
     priority: f.rule.priority,
+    applyPolicy: f.rule.applyPolicy,
   };
 }
 
@@ -151,6 +152,7 @@ export async function applyFixesFromScan(
 
   for (const card of result.cards) {
     for (const fix of card.fixes) {
+      if (fix.rule.applyPolicy === "confirm") continue;
       const list = fixByNodeId.get(card.nodeId) ?? [];
       list.push(toEngineTextFix(fix));
       fixByNodeId.set(card.nodeId, list);

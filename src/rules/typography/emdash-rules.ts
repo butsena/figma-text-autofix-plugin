@@ -1,6 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
-import { MSG_TYPO_EMDASH, MSG_TYPO_EMDASH_SPACING } from "../rule-messages";
+import { MSG_TYPO_EMDASH, MSG_TYPO_EMDASH_NBSP_BEFORE, MSG_TYPO_EMDASH_SPACING } from "../rule-messages";
 import { LATIN_CYRILLIC_LETTERS } from "../regex";
 import { HORIZONTAL_SPACE, NBSP } from "./constants";
 
@@ -22,7 +22,7 @@ export function buildEmdashRules(): AutofixRule[] {
       category: "punctuation_typography",
       pattern: new RegExp(`([${LATIN_CYRILLIC_LETTERS}0-9])${HORIZONTAL_SPACE}+—`, "g"),
       replacement: (_match, left) => `${left}${NBSP}—`,
-      message: MSG_TYPO_EMDASH_SPACING,
+      message: MSG_TYPO_EMDASH_NBSP_BEFORE,
       priority: 54,
     }),
     rule({

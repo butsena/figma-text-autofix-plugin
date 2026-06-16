@@ -18,6 +18,13 @@ export const MSG_RED_POLICY_SENTENCE_CAP =
 export const MSG_RED_POLICY_SENTENCE_PERIOD =
   "Редполитика: точка в конце предложения.";
 
+export const MSG_CONFIRM_IMPLICIT_SENTENCE_PERIOD =
+  "Похоже, между словами пропущена точка.";
+
+export function msgConfirmYoHomograph(eForm: string, yoForm: string): string {
+  return `Проверьте: «${eForm}» или «${yoForm}»?`;
+}
+
 // —— Редполитика (лексикон) ——
 
 export function msgLexiconReplace(variants: string[], replace: string): string {
@@ -62,6 +69,8 @@ export const MSG_TYPO_QUOTES = "Типографика: кавычки-«ёло�
 export const MSG_TYPO_EMDASH = "Типографика: длинное тире вместо дефиса с пробелами.";
 
 export const MSG_TYPO_EMDASH_SPACING = "Типографика: пробелы вокруг длинного тире.";
+
+export const MSG_TYPO_EMDASH_NBSP_BEFORE = "Типографика: неразрывный пробел перед длинным тире.";
 
 export const MSG_TYPO_HYPHEN_COMPOUND = "Типографика: дефис в слитном написании.";
 

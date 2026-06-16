@@ -12,7 +12,7 @@ const HORIZONTAL_WS = String.raw`[ \t\u00A0\u202F]`;
  * Неявная граница: слово из 4+ букв + пробел + новое предложение с заглавной.
  * Не после двоеточия (1: Главное). Не для коротких предлогов (в Москве).
  */
-const IMPLICIT_SENTENCE_BOUNDARY = new RegExp(
+export const IMPLICIT_SENTENCE_BOUNDARY = new RegExp(
   String.raw`(?<!:)${String.raw`(?<=[а-яёa-z]{4,}|[A-Za-z]{4,})`}${HORIZONTAL_WS}+(?=[А-ЯЁA-Z][а-яёa-zА-Яа-яЁёA-Za-z])`,
   "gu",
 );
@@ -34,7 +34,7 @@ export function isListOnlyLayer(text: string): boolean {
   return lines.every((line) => isListItemLine(line));
 }
 
-function collectFragmentStarts(text: string): number[] {
+function collectFragmentStarts(text: string, includeImplicit: boolean): number[] {
   const starts = new Set<number>([0]);
 
   SENTENCE_TERMINATOR.lastIndex = 0;
@@ -46,17 +46,18 @@ function collectFragmentStarts(text: string): number[] {
     }
   }
 
-  IMPLICIT_SENTENCE_BOUNDARY.lastIndex = 0;
-  while ((match = IMPLICIT_SENTENCE_BOUNDARY.exec(text)) !== null) {
-    starts.add(match.index);
+  if (includeImplicit) {
+    IMPLICIT_SENTENCE_BOUNDARY.lastIndex = 0;
+    while ((match = IMPLICIT_SENTENCE_BOUNDARY.exec(text)) !== null) {
+      starts.add(match.index);
+    }
   }
 
   return [...starts].sort((a, b) => a - b);
 }
 
-/** Разбивает текст на фрагменты-предложения (явные и неявные границы). */
-export function splitIntoSentenceFragments(text: string): string[] {
-  const starts = collectFragmentStarts(text);
+function splitIntoSentenceFragmentsInternal(text: string, includeImplicit: boolean): string[] {
+  const starts = collectFragmentStarts(text, includeImplicit);
   const fragments: string[] = [];
 
   for (let i = 0; i < starts.length; i++) {
@@ -68,6 +69,22 @@ export function splitIntoSentenceFragments(text: string): string[] {
   }
 
   return fragments.filter((part) => part.length > 0);
+}
+
+/** Разбивает текст с учётом неявных границ (для тестов и confirm-логики). */
+export function splitIntoSentenceFragmentsWithImplicit(text: string): string[] {
+  return splitIntoSentenceFragmentsInternal(text, true);
+}
+
+/** Разбивает текст на фрагменты-предложения (только явные границы . ! ? …). */
+export function splitIntoSentenceFragments(text: string): string[] {
+  return splitIntoSentenceFragmentsInternal(text, false);
+}
+
+export function insertImplicitSentencePeriods(text: string): string {
+  if (!LETTER.test(text)) return text;
+  if (isListOnlyLayer(text)) return text;
+  return text.replace(IMPLICIT_SENTENCE_BOUNDARY, ". ");
 }
 
 function hasLetter(text: string): boolean {

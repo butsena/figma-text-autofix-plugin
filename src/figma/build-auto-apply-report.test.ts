@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { buildAutoApplyReport, buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport } from "./build-auto-apply-report";
+import {
+  buildAutoApplyReport,
+  buildAutoApplyReportFromApplied,
+  buildAutoApplyReportFromConfirmFix,
+  buildEmptyAutoApplyReport,
+  mergeAutoApplyReports,
+} from "./build-auto-apply-report";
 import type { CheckResultDto } from "../shared/messages";
 import type { TextFix } from "../core/autofix-engine";
 
 describe("buildAutoApplyReport", () => {
   it("передаёт позицию и исходный текст для контекста в UI", () => {
     const scan: CheckResultDto = {
-      summary: { checkedLayers: 1, foundFixes: 1 },
+      summary: { checkedLayers: 1, foundFixes: 1, confirmFixes: 0 },
       cards: [
         {
           nodeId: "1:1",
@@ -25,6 +31,7 @@ describe("buildAutoApplyReport", () => {
                 category: "typography",
                 message: "NBSP после служебных слов",
                 priority: 52,
+                applyPolicy: "auto",
               },
             },
           ],
@@ -43,7 +50,7 @@ describe("buildAutoApplyReport", () => {
 
   it("отчёт только по реально применённым правкам", () => {
     const scan: CheckResultDto = {
-      summary: { checkedLayers: 1, foundFixes: 2 },
+      summary: { checkedLayers: 1, foundFixes: 2, confirmFixes: 0 },
       cards: [
         {
           nodeId: "1:1",
@@ -62,6 +69,7 @@ describe("buildAutoApplyReport", () => {
                 category: "typography",
                 message: "Капитализация",
                 priority: 90,
+                applyPolicy: "auto",
               },
             },
             {
@@ -75,6 +83,7 @@ describe("buildAutoApplyReport", () => {
                 category: "cian_editorial",
                 message: "Ты→вы",
                 priority: 59,
+                applyPolicy: "auto",
               },
             },
           ],
@@ -95,6 +104,7 @@ describe("buildAutoApplyReport", () => {
             category: "typography",
             message: "Капитализация",
             priority: 90,
+            applyPolicy: "auto",
           },
         ],
       ],
@@ -114,5 +124,64 @@ describe("buildAutoApplyReport", () => {
       changedLayerCount: 0,
     });
     expect(report.layers).toEqual([]);
+  });
+
+  it("учитывает принятую confirm-правку в счётчике и отчёте", () => {
+    const confirmReport = buildAutoApplyReportFromConfirmFix(
+      "1:1",
+      "Текст",
+      {
+        fixId: "1:1:cian-139a:66:66",
+        from: 66,
+        to: 66,
+        before: "",
+        after: ".",
+        rule: {
+          id: "cian-139a-implicit-sentence-period",
+          category: "cian_editorial",
+          message: "Похоже, между словами пропущена точка.",
+          priority: 87,
+          applyPolicy: "confirm",
+        },
+      },
+      "по запросу Главное",
+    );
+    const autoReport = buildEmptyAutoApplyReport(1);
+    autoReport.summary.appliedFixCount = 2;
+    autoReport.layers = [
+      {
+        nodeId: "1:1",
+        nodeName: "Текст",
+        fixes: [
+          {
+            fixId: "a",
+            ruleId: "cian-139-sentence-terminal-period",
+            category: "cian_editorial",
+            message: "Редполитика: точка в конце предложения.",
+            before: "",
+            after: ".",
+            from: 100,
+            to: 100,
+            sourceText: "текст",
+          },
+          {
+            fixId: "b",
+            ruleId: "cian-139-sentence-terminal-period",
+            category: "cian_editorial",
+            message: "Редполитика: точка в конце предложения.",
+            before: "",
+            after: ".",
+            from: 50,
+            to: 50,
+            sourceText: "текст",
+          },
+        ],
+      },
+    ];
+
+    const merged = mergeAutoApplyReports(confirmReport, autoReport);
+    expect(merged.summary.appliedFixCount).toBe(3);
+    expect(merged.layers[0].fixes).toHaveLength(3);
+    expect(merged.layers[0].fixes[0].ruleId).toBe("cian-139a-implicit-sentence-period");
   });
 });

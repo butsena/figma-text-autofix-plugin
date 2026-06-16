@@ -1,3 +1,9 @@
+import { resolveApplyPolicy, type ApplyPolicy } from "./apply-policy";
+
+const UNCHANGED_EDGE_CHAR = /[0-9A-Za-zА-Яа-яЁё]/;
+
+export type { ApplyPolicy };
+
 export type AutofixRule = {
   id: string;
   category: string;
@@ -5,6 +11,8 @@ export type AutofixRule = {
   replacement: string | ((match: string, ...groups: string[]) => string);
   message: string;
   priority: number;
+  /** auto — применять сразу; confirm — только после подтверждения в UI. */
+  applyPolicy?: ApplyPolicy;
 };
 
 export type TextFix = {
@@ -18,6 +26,7 @@ export type TextFix = {
   category: string;
   message: string;
   priority: number;
+  applyPolicy: ApplyPolicy;
 };
 
 export type TextCheckResult = {
@@ -36,7 +45,6 @@ function expandReplacementTemplate(template: string, match: RegExpExecArray): st
   });
 }
 
-const UNCHANGED_EDGE_CHAR = /[0-9A-Za-zА-Яа-яЁё]/;
 
 function tailsAreSeparatorsOnly(before: string, after: string): boolean {
   if (before.length === 0 && after.length === 0) return true;
@@ -256,6 +264,7 @@ export function checkTextForAutofixes(text: string, rules: AutofixRule[]): TextC
         category: rule.category,
         message: rule.message,
         priority: rule.priority,
+        applyPolicy: resolveApplyPolicy(rule.applyPolicy),
       });
     }
   }

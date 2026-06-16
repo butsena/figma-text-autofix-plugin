@@ -26,6 +26,7 @@ function toEForm(word) {
 const stems = readLines(path.join(dataDir, "yo-curated-stems.txt"));
 const sure = readLines(path.join(dataDir, "yo-sure.txt"));
 const unsure = new Set(readLines(path.join(dataDir, "yo-unsure.txt")));
+const forceYo = readLines(path.join(dataDir, "yo-force-yo.txt"));
 
 /** Редкие краткие прилагательные и омонимичные / шумные формы. */
 const exclude =
@@ -40,6 +41,11 @@ for (const word of sure) {
   if (exclude.test(lower)) continue;
   if (!stems.some((stem) => lower.startsWith(stem.toLowerCase()))) continue;
   yoForms.add(lower);
+}
+
+for (const word of forceYo) {
+  if (!/ё|Ё/.test(word)) continue;
+  yoForms.add(word.toLowerCase());
 }
 
 const sorted = [...yoForms].sort((a, b) => a.localeCompare(b, "ru"));

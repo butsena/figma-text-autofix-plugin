@@ -113,15 +113,15 @@ describe("narrowReplacementRange", () => {
 describe("applyTextFixes", () => {
   it("применяет правки с конца, чтобы индексы не съезжали", () => {
     const fixes = [
-      { from: 0, to: 3, before: "foo", after: "FOO", ruleId: "", category: "", message: "", priority: 0 },
-      { from: 4, to: 7, before: "bar", after: "BAR", ruleId: "", category: "", message: "", priority: 0 },
+      { from: 0, to: 3, before: "foo", after: "FOO", ruleId: "", category: "", message: "", priority: 0, applyPolicy: "auto" },
+      { from: 4, to: 7, before: "bar", after: "BAR", ruleId: "", category: "", message: "", priority: 0, applyPolicy: "auto" },
     ];
     expect(applyTextFixes("foo bar", fixes)).toBe("FOO BAR");
   });
 
   it("пропускает устаревшую правку, если before уже не совпадает", () => {
     const fixes = [
-      { from: 0, to: 3, before: "foo", after: "baz", ruleId: "", category: "", message: "", priority: 0 },
+      { from: 0, to: 3, before: "foo", after: "baz", ruleId: "", category: "", message: "", priority: 0, applyPolicy: "auto" },
     ];
     expect(applyTextFixes("bar", fixes)).toBe("bar");
   });

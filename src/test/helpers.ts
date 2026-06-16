@@ -9,8 +9,12 @@ export function fixesFor(text: string, rules: AutofixRule[]): TextFix[] {
   return checkTextForAutofixes(text, rules).fixes;
 }
 
+export function autoFixesFor(text: string, rules: AutofixRule[]): TextFix[] {
+  return fixesFor(text, rules).filter((f) => f.applyPolicy !== "confirm");
+}
+
 export function applyAllRules(text: string, rules: AutofixRule[]): string {
-  return applyTextFixes(text, fixesFor(text, rules));
+  return applyTextFixes(text, autoFixesFor(text, rules));
 }
 
 export function fixByRuleId(

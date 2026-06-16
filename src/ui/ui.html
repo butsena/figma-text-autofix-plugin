@@ -12,7 +12,7 @@
       }
       html,
       body {
-        height: 100%;
+        min-height: 100%;
       }
       body {
         margin: 0;
@@ -23,19 +23,16 @@
       }
       #app {
         display: flex;
-        flex: 1;
+        flex: 1 1 auto;
         flex-direction: column;
-        min-height: 0;
       }
       .appShell {
         display: flex;
-        flex: 1;
+        flex: 1 1 auto;
         flex-direction: column;
-        min-height: 0;
       }
       .appMain {
-        flex: 1 1 auto;
-        min-height: 0;
+        flex: 0 0 auto;
       }
       .resultWaiting {
         color: #666;
@@ -152,8 +149,6 @@
         margin-top: 8px;
         padding-top: 8px;
         border-top: 1px solid #d8e4f8;
-        max-height: calc((100vh - 180px) * 2 / 3);
-        overflow-y: auto;
       }
       .reportSummary {
         color: #333;
@@ -180,6 +175,87 @@
         margin-bottom: 6px;
         background: #fff;
         border-radius: 0 6px 6px 0;
+      }
+      .confirmBlock {
+        border: 1px solid #f0d48a;
+        background: #fff8e6;
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin-bottom: 14px;
+        box-sizing: border-box;
+      }
+      .confirmDetails > summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        padding: 2px 0;
+        user-select: none;
+      }
+      .confirmDetails > summary::-webkit-details-marker {
+        display: none;
+      }
+      .confirmDetails > summary::before {
+        content: "▸";
+        color: #8a6200;
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        margin-right: 4px;
+        border-radius: 6px;
+        background: #ffe8a3;
+        border: 1px solid #e6c25a;
+        box-sizing: border-box;
+      }
+      .confirmDetails > summary:hover::before {
+        background: #ffdf85;
+        border-color: #d4ad3f;
+      }
+      .confirmDetails[open] > summary::before {
+        content: "▾";
+        background: #ffd96b;
+      }
+      .confirmDetailsTitle {
+        font-weight: 700;
+        font-size: 13px;
+        color: #6b4f00;
+      }
+      .confirmDetailsBody {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #f0d48a;
+      }
+      .confirmFix {
+        padding: 6px 0 6px 8px;
+        border-left: 3px solid #e6a700;
+        margin-bottom: 8px;
+        background: #fff;
+        border-radius: 0 6px 6px 0;
+      }
+      .confirmActions {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .confirmApplyBtn {
+        background: #1a73e8;
+        color: #fff;
+        border-color: #1a73e8;
+      }
+      .confirmApplyBtn:hover {
+        background: #1558b0;
+      }
+      .confirmSkipBtn {
+        background: #f6f6f6;
+        color: #1f1f1f;
       }
       .reportWhy {
         font-weight: 700;
@@ -333,12 +409,92 @@
       const state = {
         summary: null,
         cards: [],
+        confirmCards: [],
         lastReport: null,
         sheetLoad: null,
+        ui: {
+          confirmDetailsOpen: false,
+          reportDetailsOpen: false,
+          techDetailsOpen: false,
+        },
       };
 
       function sendToPlugin(message) {
         parent.postMessage({ pluginMessage: message }, "*");
+      }
+
+      var PLUGIN_UI_WIDTH = 390;
+      var PLUGIN_UI_MIN_HEIGHT = 220;
+      var PLUGIN_UI_MAX_HEIGHT = Math.min(
+        window.screen && window.screen.availHeight ? window.screen.availHeight - 64 : 750,
+        750,
+      );
+
+      function computePluginContentHeight() {
+        return Math.max(
+          document.documentElement.scrollHeight,
+          document.body ? document.body.scrollHeight : 0,
+        );
+      }
+
+      function applyPluginScrollMode(contentHeight) {
+        var capped = contentHeight > PLUGIN_UI_MAX_HEIGHT;
+        var overflow = capped ? "auto" : "";
+        document.documentElement.style.overflowY = overflow;
+        document.body.style.overflowY = overflow;
+      }
+
+      var pluginResizeFrame = 0;
+      function schedulePluginResize() {
+        if (pluginResizeFrame) {
+          cancelAnimationFrame(pluginResizeFrame);
+        }
+        pluginResizeFrame = requestAnimationFrame(function () {
+          pluginResizeFrame = requestAnimationFrame(function () {
+            pluginResizeFrame = 0;
+            var contentHeight = computePluginContentHeight();
+            var targetHeight = Math.max(
+              PLUGIN_UI_MIN_HEIGHT,
+              Math.min(PLUGIN_UI_MAX_HEIGHT, contentHeight),
+            );
+            applyPluginScrollMode(contentHeight);
+            sendToPlugin({
+              type: "ui:resize",
+              width: PLUGIN_UI_WIDTH,
+              height: targetHeight,
+            });
+          });
+        });
+      }
+
+      function detailsOpenAttr(isOpen) {
+        return isOpen ? " open" : "";
+      }
+
+      function captureUiAccordionState() {
+        var confirmEl = document.querySelector("details.confirmDetails");
+        if (confirmEl) state.ui.confirmDetailsOpen = confirmEl.open;
+        var reportEl = document.querySelector("details.reportDetails");
+        if (reportEl) state.ui.reportDetailsOpen = reportEl.open;
+        var techEl = document.querySelector("details.techDetails");
+        if (techEl) state.ui.techDetailsOpen = techEl.open;
+      }
+
+      function wireAccordionResize() {
+        document
+          .querySelectorAll("details.reportDetails, details.confirmDetails, details.techDetails")
+          .forEach(function (el) {
+            el.addEventListener("toggle", function () {
+              if (el.classList.contains("confirmDetails")) {
+                state.ui.confirmDetailsOpen = el.open;
+              } else if (el.classList.contains("reportDetails")) {
+                state.ui.reportDetailsOpen = el.open;
+              } else if (el.classList.contains("techDetails")) {
+                state.ui.techDetailsOpen = el.open;
+              }
+              schedulePluginResize();
+            });
+          });
       }
 
       function escapeHtml(str) {
@@ -400,7 +556,10 @@
         "cian-101-nbsp-after-service-words-mixed-ws-before-text": true,
       };
 
-      var SENTENCE_PERIOD_RULE_ID = "cian-139-sentence-terminal-period";
+      var SENTENCE_PERIOD_RULE_IDS = {
+        "cian-139-sentence-terminal-period": true,
+        "cian-139a-implicit-sentence-period": true,
+      };
 
       var WORD_CHAR_RE = /[0-9A-Za-z\u0400-\u04FF\u0451\u0401]/;
 
@@ -426,7 +585,8 @@
 
       function isSentenceTerminalPunctuationFragment(text) {
         if (text == null || text === "") return false;
-        var s = String(text);
+        var s = String(text).trim();
+        if (s.length === 0) return false;
         for (var i = 0; i < s.length; i++) {
           var ch = s.charAt(i);
           if (ch !== "." && ch !== "!" && ch !== "?" && ch !== "…") {
@@ -491,35 +651,38 @@
         );
       }
 
-      function formatFixDiffHtml(fix) {
+      function formatFixDiffHtml(fix, sourceText) {
+        var enriched = Object.assign({}, fix, {
+          sourceText: sourceText != null ? sourceText : fix.sourceText,
+        });
         if (
-          fix.ruleId === SENTENCE_PERIOD_RULE_ID &&
-          fix.sourceText
+          SENTENCE_PERIOD_RULE_IDS[enriched.ruleId] &&
+          enriched.sourceText
         ) {
           var periodDiff = formatSentencePeriodDiff(
-            fix.sourceText,
-            fix.from,
-            fix.before,
-            fix.after,
+            enriched.sourceText,
+            enriched.from,
+            enriched.before,
+            enriched.after,
           );
           if (periodDiff) return periodDiff;
         }
         if (
-          SERVICE_WORD_NBSP_RULE_IDS[fix.ruleId] &&
-          isWhitespaceOnlyFragment(fix.before) &&
-          isWhitespaceOnlyFragment(fix.after) &&
-          fix.sourceText
+          SERVICE_WORD_NBSP_RULE_IDS[enriched.ruleId] &&
+          isWhitespaceOnlyFragment(enriched.before) &&
+          isWhitespaceOnlyFragment(enriched.after) &&
+          enriched.sourceText
         ) {
           var contextual = formatContextualWhitespaceDiff(
-            fix.sourceText,
-            fix.from,
-            fix.to,
-            fix.before,
-            fix.after,
+            enriched.sourceText,
+            enriched.from,
+            enriched.to,
+            enriched.before,
+            enriched.after,
           );
           if (contextual) return contextual;
         }
-        return formatDiffHtml(fix.before, fix.after);
+        return formatDiffHtml(enriched.before, enriched.after);
       }
 
       function displayText(value) {
@@ -609,7 +772,7 @@
       function wrapReportInDetails(bodyHtml) {
         return `
           <div class="reportBlock">
-            <details class="reportDetails">
+            <details class="reportDetails"${detailsOpenAttr(state.ui.reportDetailsOpen)}>
               <summary class="reportDetailsSummary">
                 <span class="reportDetailsTitle">Что исправлено</span>
               </summary>
@@ -624,6 +787,9 @@
           return '<div class="resultWaiting">Шуршу по макету…</div>';
         }
         const applied = state.lastReport ? state.lastReport.summary.appliedFixCount : 0;
+        const confirmCount = state.confirmCards.reduce(function (n, c) {
+          return n + (c.fixes ? c.fixes.length : 0);
+        }, 0);
         return `
           <div class="resultHeader">
             <h1 class="resultTitle">Проверка окончена</h1>
@@ -637,8 +803,8 @@
                 <div class="resultStatValue">${applied}</div>
               </div>
               <div class="resultStat">
-                <div class="resultStatLabel">Осталось правок</div>
-                <div class="resultStatValue">${state.summary.foundFixes}</div>
+                <div class="resultStatLabel">На подтверждение</div>
+                <div class="resultStatValue">${confirmCount}</div>
               </div>
             </div>
           </div>
@@ -667,7 +833,7 @@
 
         return `
           <div class="techBlock">
-            <details class="techDetails">
+            <details class="techDetails"${detailsOpenAttr(state.ui.techDetailsOpen)}>
               <summary>
                 <span class="techDetailsTitle">Техническая хрень</span>
               </summary>
@@ -698,7 +864,7 @@
                     <div class="reportMeta">Правило: <code>${escapeHtml(f.ruleId)}</code> · ${escapeHtml(
                   f.category
                 )}</div>
-                    <div class="reportDiff">${formatFixDiffHtml(f)}</div>
+                    <div class="reportDiff">${formatFixDiffHtml(f, f.sourceText)}</div>
                   </div>
                 `;
               })
@@ -717,11 +883,121 @@
         return wrapReportInDetails(layerBlocks);
       }
 
+      function renderConfirmHtml() {
+        if (!state.confirmCards.length) return "";
+        const layerBlocks = state.confirmCards
+          .map((layer, cardIdx) => {
+            const fixesHtml = layer.fixes
+              .map((f, fixIdx) => {
+                const ruleId = f.rule && f.rule.id ? f.rule.id : "";
+                const category = f.rule && f.rule.category ? f.rule.category : "";
+                const message = f.rule && f.rule.message ? f.rule.message : "";
+                return `
+                  <div class="confirmFix" data-confirm-card="${cardIdx}" data-confirm-fix="${fixIdx}">
+                    <div class="reportWhy">${escapeHtml(message)}</div>
+                    <div class="reportMeta">Правило: <code>${escapeHtml(ruleId)}</code> · ${escapeHtml(
+                  category
+                )}</div>
+                    <div class="reportDiff">${formatFixDiffHtml(
+                      {
+                        ruleId: ruleId,
+                        from: f.from,
+                        to: f.to,
+                        before: f.before,
+                        after: f.after,
+                      },
+                      layer.originalText,
+                    )}</div>
+                    <div class="confirmActions">
+                      <button type="button" class="confirmApplyBtn" data-confirm-apply="${cardIdx}:${fixIdx}">
+                        Принять
+                      </button>
+                      <button type="button" class="confirmSkipBtn" data-confirm-skip="${cardIdx}:${fixIdx}">
+                        Пропустить
+                      </button>
+                    </div>
+                  </div>
+                `;
+              })
+              .join("");
+            return `
+              <div class="reportLayer">
+                <div class="reportLayerTitle" data-node-id="${escapeHtml(layer.nodeId)}">${escapeHtml(
+                  layer.nodeName || "Без имени"
+                )}</div>
+                ${fixesHtml}
+              </div>
+            `;
+          })
+          .join("");
+
+        return `
+          <div class="confirmBlock">
+            <details class="confirmDetails"${detailsOpenAttr(state.ui.confirmDetailsOpen)}>
+              <summary class="confirmDetailsSummary">
+                <span class="confirmDetailsTitle">Требуют подтверждения</span>
+              </summary>
+              <div class="confirmDetailsBody">${layerBlocks}</div>
+            </details>
+          </div>
+        `;
+      }
+
+      function skipConfirmFix(cardIdx, fixIdx) {
+        const card = state.confirmCards[cardIdx];
+        if (!card || !card.fixes[fixIdx]) return;
+        card.fixes.splice(fixIdx, 1);
+        if (card.fixes.length === 0) {
+          state.confirmCards.splice(cardIdx, 1);
+        }
+        if (state.summary) {
+          state.summary.confirmFixes = state.confirmCards.reduce(function (n, c) {
+            return n + c.fixes.length;
+          }, 0);
+        }
+        render();
+      }
+
+      function wireConfirmButtons() {
+        document.querySelectorAll("[data-confirm-apply]").forEach((el) => {
+          el.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const key = el.getAttribute("data-confirm-apply");
+            if (!key) return;
+            const parts = key.split(":");
+            const cardIdx = Number(parts[0]);
+            const fixIdx = Number(parts[1]);
+            const card = state.confirmCards[cardIdx];
+            if (!card) return;
+            const fix = card.fixes[fixIdx];
+            if (!fix) return;
+            state.ui.confirmDetailsOpen = true;
+            sendToPlugin({
+              type: "ui:applyConfirmFix",
+              nodeId: card.nodeId,
+              fix: fix,
+            });
+          });
+        });
+        document.querySelectorAll("[data-confirm-skip]").forEach((el) => {
+          el.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const key = el.getAttribute("data-confirm-skip");
+            if (!key) return;
+            const parts = key.split(":");
+            skipConfirmFix(Number(parts[0]), Number(parts[1]));
+          });
+        });
+      }
+
       function render() {
         const app = document.getElementById("app");
         if (!app) return;
 
+        captureUiAccordionState();
+
         const resultHeaderHtml = renderResultHeaderHtml();
+        const confirmHtml = renderConfirmHtml();
         const reportHtml = renderReportHtml();
         const thanksHtml = state.summary ? REPORT_THANKS_HTML : "";
 
@@ -748,6 +1024,7 @@
             <div class="appMain">
               ${resultHeaderHtml}
               ${reportHtml}
+              ${confirmHtml}
               ${thanksHtml}
               ${
                 state.cards.length
@@ -760,8 +1037,11 @@
         `;
 
         wireButtons();
+        wireConfirmButtons();
         wireReportLayerClicks();
         wireCardClicks();
+        wireAccordionResize();
+        schedulePluginResize();
       }
 
       function wireButtons() {
@@ -846,6 +1126,13 @@
           state.summary = msg.result.summary;
           state.lastReport = msg.result.lastAutoApplyReport != null ? msg.result.lastAutoApplyReport : null;
           state.cards = msg.result.cards.map((c) => ({
+            nodeId: c.nodeId,
+            nodeName: c.nodeName,
+            originalText: c.originalText,
+            previewText: c.previewText,
+            fixes: c.fixes,
+          }));
+          state.confirmCards = (msg.result.confirmCards || []).map((c) => ({
             nodeId: c.nodeId,
             nodeName: c.nodeName,
             originalText: c.originalText,

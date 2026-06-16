@@ -1,6 +1,7 @@
 import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
 import { applyFixesFromScan } from "./apply-fixes";
 import { buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport, mergeAutoApplyReports } from "./build-auto-apply-report";
+import { postCheckResultToUi, setLastAutoApplyReport } from "./post-check-result";
 import { TEXT_REPLACEMENTS_CSV_URL } from "../config/text-replacements-remote-url";
 import { isGoogleSheetsUrl } from "../sheet/google-sheets-url";
 import { fetchCsvViaHttp, refreshTextReplacementsFromRemote } from "../sheet/refresh-from-remote";
@@ -25,24 +26,17 @@ export async function postPluginConfigToUi(sheetLoad?: SheetLoadStatusDto | null
   } satisfies PluginToUiMessage);
 }
 
-/** Сканирование → применение в цикле, пока есть правки; сводный отчёт в UI. */
-export async function runAutofixPipeline(): Promise<void> {
-  const selection = figma.currentPage.selection;
-  const sheetLoad = await refreshTextReplacementsFromRemote(
-    TEXT_REPLACEMENTS_CSV_URL,
-    fetchCsvForSheet,
-  );
-  await postPluginConfigToUi(sheetLoad);
-  if (!sheetLoad.ok) {
-    console.warn("[text-autofix] sheet load failed", sheetLoad);
-  }
-
-  let mergedReport: AutoApplyReportDto | null = null;
-  let totalApplied = 0;
+/** Сканирование → применение auto-правок в цикле; сводный отчёт. */
+export async function runAutofixAutoPasses(
+  selection: readonly SceneNode[],
+  existingReport: AutoApplyReportDto | null = null,
+): Promise<AutoApplyReportDto> {
+  let mergedReport = existingReport;
+  let totalApplied = existingReport?.summary.appliedFixCount ?? 0;
   let passCount = 0;
 
   while (passCount < MAX_AUTOFIX_PASSES) {
-    const { result: scan, nodeById } = scanSelectedTextNodes(selection);
+    const { result: scan, nodeById } = scanSelectedTextNodes(selection, { policy: "auto" });
     if (scan.summary.foundFixes === 0) break;
 
     const { appliedCount, appliedByNode } = await applyFixesFromScan(scan, nodeById);
@@ -59,15 +53,10 @@ export async function runAutofixPipeline(): Promise<void> {
     if (appliedCount === 0) break;
   }
 
-  const { result: scanAfter } = scanSelectedTextNodes(selection);
+  const { result: scanAfter } = scanSelectedTextNodes(selection, { policy: "auto" });
   const report = mergedReport
     ? { ...mergedReport, summary: { ...mergedReport.summary, appliedFixCount: totalApplied } }
     : buildEmptyAutoApplyReport(scanAfter.summary.checkedLayers);
-
-  figma.ui.postMessage({
-    type: "plugin:checkResult",
-    result: { ...scanAfter, lastAutoApplyReport: report },
-  } satisfies PluginToUiMessage);
 
   if (scanAfter.summary.foundFixes > 0 && passCount >= MAX_AUTOFIX_PASSES) {
     console.warn(
@@ -75,7 +64,27 @@ export async function runAutofixPipeline(): Promise<void> {
     );
   }
 
-  if (scanAfter.summary.foundFixes > 0 && totalApplied === 0) {
+  return report;
+}
+
+/** Сканирование → применение в цикле, пока есть правки; сводный отчёт в UI. */
+export async function runAutofixPipeline(): Promise<void> {
+  const selection = figma.currentPage.selection;
+  const sheetLoad = await refreshTextReplacementsFromRemote(
+    TEXT_REPLACEMENTS_CSV_URL,
+    fetchCsvForSheet,
+  );
+  await postPluginConfigToUi(sheetLoad);
+  if (!sheetLoad.ok) {
+    console.warn("[text-autofix] sheet load failed", sheetLoad);
+  }
+
+  const report = await runAutofixAutoPasses(selection);
+  setLastAutoApplyReport(report);
+  postCheckResultToUi(selection);
+
+  const { result: scanAfter } = scanSelectedTextNodes(selection, { policy: "auto" });
+  if (scanAfter.summary.foundFixes > 0 && report.summary.appliedFixCount === 0) {
     figma.notify(
       "Правки найдены, но не применились. Проверьте шрифты слоя или откройте консоль плагина.",
       { error: true },

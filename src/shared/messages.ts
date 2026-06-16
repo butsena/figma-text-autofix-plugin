@@ -1,6 +1,11 @@
+import type { ApplyPolicy } from "../core/apply-policy";
+
 export type CheckSummary = {
   checkedLayers: number;
+  /** Автоправки (ещё не применённые после прохода). */
   foundFixes: number;
+  /** Правки, ожидающие подтверждения. */
+  confirmFixes: number;
 };
 
 export type RuleInfo = {
@@ -8,6 +13,7 @@ export type RuleInfo = {
   category: string;
   message: string;
   priority: number;
+  applyPolicy: ApplyPolicy;
 };
 
 export type TextFixDto = {
@@ -61,6 +67,8 @@ export type AutoApplyReportDto = {
 export type CheckResultDto = {
   summary: CheckSummary;
   cards: TextNodeCardDto[];
+  /** Правки, требующие подтверждения пользователя. */
+  confirmCards: TextNodeCardDto[];
   /** Отчёт о автоисправлении (может объединять несколько проходов). */
   lastAutoApplyReport?: AutoApplyReportDto | null;
 };
@@ -85,6 +93,16 @@ export type UiToPluginMessage =
   | { type: "ui:ready" }
   | { type: "ui:focusLayer"; nodeId: string }
   | { type: "ui:close" }
+  | {
+      type: "ui:applyConfirmFix";
+      nodeId: string;
+      fix: TextFixDto;
+    }
+  | {
+      type: "ui:resize";
+      width: number;
+      height: number;
+    }
   | {
       type: "ui:sheetCsvResult";
       requestId: string;
