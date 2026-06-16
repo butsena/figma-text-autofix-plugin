@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAutoApplyReport, buildAutoApplyReportFromApplied } from "./build-auto-apply-report";
+import { buildAutoApplyReport, buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport } from "./build-auto-apply-report";
 import type { CheckResultDto } from "../shared/messages";
 import type { TextFix } from "../core/autofix-engine";
 
@@ -104,5 +104,15 @@ describe("buildAutoApplyReport", () => {
     expect(report.summary.appliedFixCount).toBe(1);
     expect(report.layers[0].fixes).toHaveLength(1);
     expect(report.layers[0].fixes[0].before).toBe("с");
+  });
+
+  it("пустой отчёт для случая без правок", () => {
+    const report = buildEmptyAutoApplyReport(3);
+    expect(report.summary).toEqual({
+      checkedLayers: 3,
+      appliedFixCount: 0,
+      changedLayerCount: 0,
+    });
+    expect(report.layers).toEqual([]);
   });
 });

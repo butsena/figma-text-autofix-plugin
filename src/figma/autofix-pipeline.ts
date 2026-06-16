@@ -1,6 +1,6 @@
 import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
 import { applyFixesFromScan } from "./apply-fixes";
-import { buildAutoApplyReportFromApplied, mergeAutoApplyReports } from "./build-auto-apply-report";
+import { buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport, mergeAutoApplyReports } from "./build-auto-apply-report";
 import { TEXT_REPLACEMENTS_CSV_URL } from "../config/text-replacements-remote-url";
 import { isGoogleSheetsUrl } from "../sheet/google-sheets-url";
 import { fetchCsvViaHttp, refreshTextReplacementsFromRemote } from "../sheet/refresh-from-remote";
@@ -62,7 +62,7 @@ export async function runAutofixPipeline(): Promise<void> {
   const { result: scanAfter } = scanSelectedTextNodes(selection);
   const report = mergedReport
     ? { ...mergedReport, summary: { ...mergedReport.summary, appliedFixCount: totalApplied } }
-    : null;
+    : buildEmptyAutoApplyReport(scanAfter.summary.checkedLayers);
 
   figma.ui.postMessage({
     type: "plugin:checkResult",

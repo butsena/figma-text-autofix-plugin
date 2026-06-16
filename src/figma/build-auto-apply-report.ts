@@ -76,6 +76,17 @@ export function buildAutoApplyReportFromApplied(
   };
 }
 
+export function buildEmptyAutoApplyReport(checkedLayers: number): AutoApplyReportDto {
+  return {
+    summary: {
+      checkedLayers,
+      appliedFixCount: 0,
+      changedLayerCount: 0,
+    },
+    layers: [],
+  };
+}
+
 /** @deprecated Используйте buildAutoApplyReportFromApplied. */
 export function buildAutoApplyReport(scan: CheckResultDto): AutoApplyReportDto {
   return {

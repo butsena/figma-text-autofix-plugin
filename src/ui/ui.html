@@ -640,7 +640,10 @@
           return "";
         }
         if (!r.layers.length) {
-          return '<div class="empty" style="padding:4px 0;margin-bottom:14px">В выделенных слоях правок нет</div>';
+          if (state.summary && state.summary.foundFixes === 0) {
+            return '<div class="empty" style="padding:4px 0;margin-bottom:14px">В выделенных слоях правок нет</div>';
+          }
+          return "";
         }
         const layerBlocks = r.layers
           .map((layer) => {
@@ -677,7 +680,7 @@
 
         const resultHeaderHtml = renderResultHeaderHtml();
         const reportHtml = renderReportHtml();
-        const thanksHtml = state.lastReport ? REPORT_THANKS_HTML : "";
+        const thanksHtml = state.summary ? REPORT_THANKS_HTML : "";
 
         let bodyHtml = "";
         if (state.cards.length) {
