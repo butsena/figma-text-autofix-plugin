@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import { MSG_TYPO_HYPHEN_COMPOUND, MSG_TYPO_NUMERIC_RANGE } from "../rule-messages";
 import { LATIN_CYRILLIC_LETTERS } from "../regex";
 import { HORIZONTAL_SPACE, NBSP } from "./constants";
 
@@ -52,8 +53,7 @@ export function buildHyphenCompoundRules(): AutofixRule[] {
         const right = formatNumericRangePart(nums[1]);
         return `${left}${NBSP}${EN_DASH}${NBSP}${right}`;
       },
-      message:
-        "Типографика: в числовом диапазоне — короткое тире с неразрывными пробелами (5 – 10).",
+      message: MSG_TYPO_NUMERIC_RANGE,
       priority: 59,
     }),
     rule({
@@ -64,8 +64,7 @@ export function buildHyphenCompoundRules(): AutofixRule[] {
         "g",
       ),
       replacement: (match) => match.replace(/[—–−]/g, "-"),
-      message:
-        "Типографика: в слитных конструкциях (без пробелов) длинное тире/минус заменить на дефис.",
+      message: MSG_TYPO_HYPHEN_COMPOUND,
       priority: 58,
     }),
   ]);

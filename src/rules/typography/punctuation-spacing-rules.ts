@@ -1,5 +1,9 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import {
+  MSG_TYPO_COLLAPSE_DOUBLE_PUNCT,
+  MSG_TYPO_REMOVE_SPACE_BEFORE_PUNCT,
+} from "../rule-messages";
 
 /**
  * Знаки, перед которыми в русской типографике не ставят пробел
@@ -14,8 +18,7 @@ export function buildPunctuationSpacingRules(): AutofixRule[] {
       category: "typography",
       pattern: SPACE_BEFORE_PUNCT,
       replacement: "",
-      message:
-        "Типографика: убрать лишние пробелы перед знаком препинания (, . ; : ! ? … % » ) ] и т.п.).",
+      message: MSG_TYPO_REMOVE_SPACE_BEFORE_PUNCT,
       priority: 57,
     }),
     rule({
@@ -24,7 +27,7 @@ export function buildPunctuationSpacingRules(): AutofixRule[] {
       // ,,  !!  ??  ::  ;;  и т.п. (точка — отдельно, чтобы не трогать «...» → «…»)
       pattern: /([,;:!?…])(?:\1)+/g,
       replacement: "$1",
-      message: "Типографика: двойной знак препинания заменить на одинарный.",
+      message: MSG_TYPO_COLLAPSE_DOUBLE_PUNCT,
       priority: 55,
     }),
     rule({
@@ -33,7 +36,7 @@ export function buildPunctuationSpacingRules(): AutofixRule[] {
       // «..» → «.»; «...» обрабатывает cian-118-ellipsis-three-dots
       pattern: /\.{2}(?!\.)/g,
       replacement: ".",
-      message: "Типографика: двойная точка заменить на одну.",
+      message: MSG_TYPO_COLLAPSE_DOUBLE_PUNCT,
       priority: 54,
     }),
     rule({
@@ -41,7 +44,7 @@ export function buildPunctuationSpacingRules(): AutofixRule[] {
       category: "typography",
       pattern: /—{2,}/g,
       replacement: "—",
-      message: "Типографика: двойное длинное тире заменить на одно.",
+      message: MSG_TYPO_COLLAPSE_DOUBLE_PUNCT,
       priority: 55,
     }),
     rule({
@@ -49,7 +52,7 @@ export function buildPunctuationSpacingRules(): AutofixRule[] {
       category: "typography",
       pattern: /…{2,}/g,
       replacement: "…",
-      message: "Типографика: двойное многоточие заменить на одно.",
+      message: MSG_TYPO_COLLAPSE_DOUBLE_PUNCT,
       priority: 55,
     }),
   ]);

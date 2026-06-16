@@ -2,6 +2,7 @@ import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
 import { CYRILLIC_WORD_EDGE, CYRILLIC_WORD_EDGE_END, escapeRegex } from "../regex";
 import { HORIZONTAL_SPACE, LINE_BREAK } from "../typography/constants";
+import { MSG_RED_POLICY_FORMAL_YOU_LOWERCASE, MSG_RED_POLICY_TY_VY_PRONOUN } from "../rule-messages";
 import {
   TY_VY_PRONOUN_PAIRS,
   capitalizeCyrillicFirst,
@@ -34,8 +35,7 @@ const SENTENCE_START = String.raw`(?<=^|[.!?…]${HORIZONTAL_SPACE}*|${LINE_BREA
 /** После точки/вопроса/восклицания/многоточия заглавная допустима (см. также replacement). */
 const NOT_SENTENCE_START = String.raw`(?<!^)(?<![.!?…]${HORIZONTAL_SPACE}*)(?<![\r\n]${HORIZONTAL_SPACE}*)`;
 
-const TY_TO_VY_MESSAGE =
-  "Обращение на «вы»: заменить форму обращения «ты» / «твой» на «вы» / «ваш».";
+const TY_TO_VY_MESSAGE = MSG_RED_POLICY_TY_VY_PRONOUN;
 
 function buildTyVyPronounConversionRules(): AutofixRule[] {
   const out: AutofixRule[] = [];
@@ -92,8 +92,7 @@ export function buildFormalPronounRules(): AutofixRule[] {
         "gu",
       ),
       replacement: replaceFormalPronoun,
-      message:
-        "Редполитика: «вы», его формы и притяжательное «ваш» в середине предложения — с маленькой буквы.",
+      message: MSG_RED_POLICY_FORMAL_YOU_LOWERCASE,
       priority: 58,
     }),
   ]);

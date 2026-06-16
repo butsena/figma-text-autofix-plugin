@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule } from "../../core/rule-def";
+import { MSG_TYPO_NBSP_NUMBER } from "../rule-messages";
 import { NBSP } from "./constants";
 
 const GROUP_SEP = NBSP;
@@ -42,7 +43,7 @@ export function buildNumberGroupingRules(): AutofixRule[] {
         const normalized = intPart.replace(/ +/g, NBSP);
         return `${prefix}${normalized}${fracPart ?? ""}`;
       },
-      message: "Типографика: в числе между разрядами — неразрывный пробел вместо обычного.",
+      message: MSG_TYPO_NBSP_NUMBER,
       priority: 51,
     }),
     rule({
@@ -56,8 +57,7 @@ export function buildNumberGroupingRules(): AutofixRule[] {
         if (isLikelyRuMobileDigits(intPart)) return match;
         return `${prefix}${formatThousands(intPart)}${fracPart ?? ""}`;
       },
-      message:
-        "Типографика: разбить длинное число на группы по три цифры с неразрывным пробелом (100 000).",
+      message: MSG_TYPO_NBSP_NUMBER,
       priority: 52,
     }),
   ];

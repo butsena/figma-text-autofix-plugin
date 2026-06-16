@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import { MSG_TYPO_QUOTES } from "../rule-messages";
 
 export function buildQuotesRules(): AutofixRule[] {
   return rules([
@@ -8,7 +9,7 @@ export function buildQuotesRules(): AutofixRule[] {
       category: "typography",
       pattern: /"([^"]*)"/g,
       replacement: (_match, inner) => `«${inner}»`,
-      message: 'Типографика: прямые кавычки "…" → ёлочки «…».',
+      message: MSG_TYPO_QUOTES,
       priority: 44,
     }),
     rule({
@@ -16,7 +17,7 @@ export function buildQuotesRules(): AutofixRule[] {
       category: "typography",
       pattern: /\u201C([^\u201C\u201D]+)\u201D/g,
       replacement: (_match, inner) => `«${inner}»`,
-      message: "Типографика: типографские кавычки “…” (Unicode) → ёлочки «…».",
+      message: MSG_TYPO_QUOTES,
       priority: 45,
     }),
   ]);

@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import { MSG_NORMALIZE_EMAIL } from "../rule-messages";
 
 export function buildEmailRules(): AutofixRule[] {
   return rules([
@@ -8,7 +9,7 @@ export function buildEmailRules(): AutofixRule[] {
       category: "text_formatting",
       pattern: /E-mail/g,
       replacement: "Email",
-      message: "Нормализовать «E-mail» → «Email».",
+      message: MSG_NORMALIZE_EMAIL,
       priority: 90,
     }),
     rule({
@@ -16,7 +17,7 @@ export function buildEmailRules(): AutofixRule[] {
       category: "text_formatting",
       pattern: /e-mail/g,
       replacement: "email",
-      message: "Нормализовать «e-mail» → «email».",
+      message: MSG_NORMALIZE_EMAIL,
       priority: 90,
     }),
   ]);

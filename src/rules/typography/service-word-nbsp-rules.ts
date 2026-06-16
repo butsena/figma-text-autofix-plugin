@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import { MSG_TYPO_NBSP_AFTER_SERVICE_WORD } from "../rule-messages";
 import { HORIZONTAL_SPACE, LINE_BREAK, NBSP } from "./constants";
 import { serviceWordPattern } from "./ru-service-words";
 
@@ -10,7 +11,7 @@ export function buildServiceWordNbspRules(): AutofixRule[] {
       category: "typography",
       pattern: serviceWordPattern(`(?:${HORIZONTAL_SPACE}+)(?=\\S)`),
       replacement: (_match, prefix, word) => `${prefix}${word}${NBSP}`,
-      message: "Типографика: неразрывный пробел после служебных слов.",
+      message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
       priority: 52,
     }),
     rule({
@@ -18,8 +19,7 @@ export function buildServiceWordNbspRules(): AutofixRule[] {
       category: "typography",
       pattern: serviceWordPattern(`(?:${HORIZONTAL_SPACE}{2,})(?=(?:${LINE_BREAK}|$))`),
       replacement: (_match, prefix, word) => `${prefix}${word}${NBSP}`,
-      message:
-        "Типографика: после служебного слова несколько пробелов/табов до конца строки или текста — один неразрывный пробел (перенос строки сохраняется).",
+      message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
       priority: 53,
     }),
     rule({
@@ -27,8 +27,7 @@ export function buildServiceWordNbspRules(): AutofixRule[] {
       category: "typography",
       pattern: serviceWordPattern(`((?:${LINE_BREAK})+)(?=\\S)`),
       replacement: (_match, prefix, word, newlines) => `${prefix}${word}${NBSP}${newlines}`,
-      message:
-        "Типографика: после служебного слова переводы строк перед текстом — вставить неразрывный пробел после слова, переносы сохранить.",
+      message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
       priority: 55,
     }),
     rule({
@@ -39,8 +38,7 @@ export function buildServiceWordNbspRules(): AutofixRule[] {
         const keepFinalNl = /(?:\r?\n)\s*$/.test(tail);
         return keepFinalNl ? `${prefix}${word}${NBSP}\n` : `${prefix}${word}${NBSP}`;
       },
-      message:
-        "Типографика: после служебного слова в конце фрагмента остались переносы/пробелы — неразрывный пробел; один финальный перенос сохраняется при необходимости.",
+      message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
       priority: 55,
     }),
     rule({
@@ -53,8 +51,7 @@ export function buildServiceWordNbspRules(): AutofixRule[] {
         const keepNl = /\r|\n/.test(tail) ? "\n" : "";
         return `${prefix}${word}${NBSP}${keepNl}`;
       },
-      message:
-        "Типографика: после служебного слова смесь пробелов и переводов строк перед текстом — неразрывный пробел и один перенос строки при необходимости.",
+      message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
       priority: 54,
     }),
   ]);

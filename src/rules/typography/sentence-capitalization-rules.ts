@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import { MSG_RED_POLICY_SENTENCE_CAP } from "../rule-messages";
 import {
   HORIZONTAL_SPACE,
   LINE_BREAK,
@@ -38,7 +39,7 @@ export function buildSentenceCapitalizationRules(): AutofixRule[] {
         "gu",
       ),
       replacement: (_match, prefix, letter) => `${prefix}${capitalizeLetter(letter)}`,
-      message: "Типографика: первая буква предложения — с заглавной.",
+      message: MSG_RED_POLICY_SENTENCE_CAP,
       priority: 90,
     }),
   ]);

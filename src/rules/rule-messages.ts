@@ -1,0 +1,73 @@
+/** Единые тексты комментариев к исправлениям в отчёте плагина. */
+
+// —— Редполитика ——
+
+export const MSG_RED_POLICY_TY_VY_PRONOUN =
+  "Редполитика: обращение «ты» / «твой» → «вы» / «ваш».";
+
+export const MSG_RED_POLICY_TY_VY_VERB = "Редполитика: глагол на «ты» → форма на «вы».";
+
+export const MSG_RED_POLICY_FORMAL_YOU_LOWERCASE =
+  "Редполитика: «вы» и «ваш» в середине предложения — со строчной.";
+
+export const MSG_RED_POLICY_SMS = "Редполитика: «СМС» / «SMS» → «Смс» / «смс».";
+
+export const MSG_RED_POLICY_SENTENCE_CAP =
+  "Редполитика: заглавная в начале предложения.";
+
+// —— Редполитика (лексикон) ——
+
+export function msgLexiconReplace(variants: string[], replace: string): string {
+  return `Редполитика: «${variants.join("» / «")}» → «${replace}».`;
+}
+
+// —— Бренд ——
+
+export const MSG_BRAND_UPPERCASE = "Бренд: «ЦИАН» → «Циан».";
+
+export const MSG_BRAND_PREP_DECLENSION = "Бренд: склонение «Циан» после предлога.";
+
+export const MSG_BRAND_NOUN_OR_NET = "Бренд: «нет ЦИАН» → «нет Циана».";
+
+// —— Типографика ——
+
+export const MSG_TYPO_NBSP_AFTER_SERVICE_WORD =
+  "Типографика: неразрывный пробел после служебного слова.";
+
+export const MSG_TYPO_NBSP_DATE_ADDRESS =
+  "Типографика: неразрывный пробел в дате и адресе.";
+
+export const MSG_TYPO_NBSP_ABBREVIATION = "Типографика: неразрывный пробел в сокращении.";
+
+export const MSG_TYPO_NBSP_NUMBER = "Типографика: неразрывный пробел у числа.";
+
+export const MSG_TYPO_NBSP_PERCENT = "Типографика: между числом и % пробел не ставить.";
+
+export const MSG_TYPO_REMOVE_EXTRA_SPACE = "Типографика: убрать лишний пробел.";
+
+export const MSG_TYPO_REMOVE_EXTRA_LINE_BREAK = "Типографика: убрать лишний перенос строки.";
+
+export const MSG_TYPO_REMOVE_SPACE_BEFORE_PUNCT =
+  "Типографика: убрать пробел перед знаком препинания.";
+
+export const MSG_TYPO_COLLAPSE_DOUBLE_PUNCT = "Типографика: убрать повтор знака препинания.";
+
+export const MSG_TYPO_ELLIPSIS = "Типографика: многоточие вместо трёх точек.";
+
+export const MSG_TYPO_QUOTES = "Типографика: кавычки-«ёлочки».";
+
+export const MSG_TYPO_EMDASH = "Типографика: длинное тире вместо дефиса с пробелами.";
+
+export const MSG_TYPO_EMDASH_SPACING = "Типографика: пробелы вокруг длинного тире.";
+
+export const MSG_TYPO_HYPHEN_COMPOUND = "Типографика: дефис в слитном написании.";
+
+export const MSG_TYPO_NUMERIC_RANGE = "Типографика: короткое тире в диапазоне чисел.";
+
+// —— Орфография и форматы ——
+
+export const MSG_ORTHOGRAPHY_YO = "Орфография: буква «ё» в словарных словах.";
+
+export const MSG_NORMALIZE_EMAIL = "Форматы: «email» без дефиса.";
+
+export const MSG_NORMALIZE_PHONE = "Форматы: телефон в формате +7 999 999-99-99.";

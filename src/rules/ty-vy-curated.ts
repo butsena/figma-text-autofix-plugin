@@ -1,5 +1,6 @@
 import { parseCsvRows } from "../sheet/csv";
 import type { SheetReplacementRow } from "../sheet/replacement-rows";
+import { MSG_RED_POLICY_TY_VY_VERB } from "./rule-messages";
 
 function splitVariantList(cell: string): string[] {
   return cell
@@ -20,11 +21,10 @@ export function parseTyVyCuratedRows(raw: string): SheetReplacementRow[] {
     const replace = row[1].trim();
     if (variants.length === 0 || !replace) continue;
 
-    const defaultMsg = `Обращение на «вы»: «${variants.join("» / «")}» → «${replace}»`;
     out.push({
       variants,
       replace,
-      message: defaultMsg,
+      message: MSG_RED_POLICY_TY_VY_VERB,
       category: "cian_editorial",
       priority: 59,
     });

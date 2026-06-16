@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import { MSG_NORMALIZE_PHONE } from "../rule-messages";
 import { NBSP } from "./constants";
 
 function formatRuPhoneToCianStandard(raw: string): string {
@@ -22,7 +23,7 @@ export function buildPhoneRules(): AutofixRule[] {
       category: "phone_formatting",
       pattern: /(^|[^0-9+])((?:\+7|8)[0-9\s\u00A0\u202F()\-–—]{8,25}[0-9])(?=[^0-9]|$)/g,
       replacement: (_match, prefix, phoneRaw) => `${prefix}${formatRuPhoneToCianStandard(phoneRaw)}`,
-      message: "Телефон: формат «+7 999 999-99-99» с неразрывными пробелами (скобки не используем).",
+      message: MSG_NORMALIZE_PHONE,
       priority: 55,
     }),
   ]);

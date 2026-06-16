@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import { MSG_RED_POLICY_SMS } from "../rule-messages";
 import {
   LATIN_CYRILLIC_WORD_EDGE_END,
   LATIN_CYRILLIC_WORD_LOOKBEHIND,
@@ -21,7 +22,7 @@ export function buildSmsRules(): AutofixRule[] {
         "iu",
       ),
       replacement: (_match, _word) => "Смс",
-      message: "Редполитика: «СМС» / «SMS» в начале предложения → «Смс».",
+      message: MSG_RED_POLICY_SMS,
       priority: 72,
     }),
     rule({
@@ -32,7 +33,7 @@ export function buildSmsRules(): AutofixRule[] {
         "iu",
       ),
       replacement: (_match, _word) => "смс",
-      message: "Редполитика: «СМС» / «SMS» в середине предложения → «смс».",
+      message: MSG_RED_POLICY_SMS,
       priority: 71,
     }),
   ]);

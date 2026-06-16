@@ -1,4 +1,8 @@
 import type { AutofixRule } from "../../core/autofix-engine";
+import {
+  MSG_BRAND_NOUN_OR_NET,
+  MSG_BRAND_PREP_DECLENSION,
+} from "../rule-messages";
 import { CYRILLIC_LETTERS, escapeRegex } from "../regex";
 
 type CianPrepReclinationRow = {
@@ -122,9 +126,7 @@ export function buildCianPrepositionDeclensionRules(): AutofixRule[] {
             const cq = closeQuote ? String(closeQuote) : "";
             return `${prefix}${oq}${row.target}${cq}`;
           },
-      message: allowWordsBetweenPrepAndCian
-        ? `Склонение «Циан» (${row.caseRu}): после перечисленных предлогов (в т.ч. с другими словами до бренда) → «${row.target}».`
-        : `Склонение «Циан» (${row.caseRu}): после перечисленных предлогов → «${row.target}».`,
+      message: MSG_BRAND_PREP_DECLENSION,
       priority: row.priority ?? 95,
     };
   });
@@ -143,7 +145,7 @@ export function buildCianNounOrNetDeclensionRule(): AutofixRule {
       const cq = closeQuote ? String(closeQuote) : "";
       return `${lead}${word} ${oq}Циана${cq}`;
     },
-    message: "Склонение «Циан»: после «нет» или перечисленных существительных → «Циана».",
+    message: MSG_BRAND_NOUN_OR_NET,
     priority: 95,
   };
 }

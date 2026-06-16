@@ -1,5 +1,12 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import {
+  MSG_TYPO_ELLIPSIS,
+  MSG_TYPO_NBSP_NUMBER,
+  MSG_TYPO_NBSP_PERCENT,
+  MSG_TYPO_REMOVE_EXTRA_LINE_BREAK,
+  MSG_TYPO_REMOVE_EXTRA_SPACE,
+} from "../rule-messages";
 import { EMPTY_LINE_BREAKS_PATTERN, NBSP } from "./constants";
 import { buildEmdashRules } from "./emdash-rules";
 import { buildPhoneRules } from "./phone-rules";
@@ -14,7 +21,7 @@ export function buildGeneralTypographyRules(): AutofixRule[] {
       pattern:
         /(\d+(?:[ \u00A0\u202F]\d{3})*(?:[.,]\d+)?)\s+(°C|°F|мм|см|м|км|г|кг|мг|л|мл|ч|мин|с|м²|м³|руб\.?|₽|р\.?)(?=[^\p{L}\p{N}]|$)/giu,
       replacement: (_match, num, unit) => `${num}${NBSP}${unit}`,
-      message: "Типографика: неразрывный пробел между числом и единицей измерения/знаком.",
+      message: MSG_TYPO_NBSP_NUMBER,
       priority: 53,
     }),
     rule({
@@ -22,7 +29,7 @@ export function buildGeneralTypographyRules(): AutofixRule[] {
       category: "numeric_formatting",
       pattern: /(\d+)\s+%/g,
       replacement: (_match, num) => `${num}%`,
-      message: "Типографика: между числом и % пробел не ставим.",
+      message: MSG_TYPO_NBSP_PERCENT,
       priority: 54,
     }),
     rule({
@@ -30,7 +37,7 @@ export function buildGeneralTypographyRules(): AutofixRule[] {
       category: "typography",
       pattern: / {2,}/g,
       replacement: " ",
-      message: "Типографика: убрать двойные пробелы.",
+      message: MSG_TYPO_REMOVE_EXTRA_SPACE,
       priority: 54,
     }),
     rule({
@@ -38,7 +45,7 @@ export function buildGeneralTypographyRules(): AutofixRule[] {
       category: "typography",
       pattern: EMPTY_LINE_BREAKS_PATTERN,
       replacement: "",
-      message: "Типографика: удалить пустые переносы строк.",
+      message: MSG_TYPO_REMOVE_EXTRA_LINE_BREAK,
       priority: 52,
     }),
     ...buildEmdashRules(),
@@ -47,7 +54,7 @@ export function buildGeneralTypographyRules(): AutofixRule[] {
       category: "typography",
       pattern: /(№)\s+(\d+)/g,
       replacement: (_match, sign, num) => `${sign}${NBSP}${num}`,
-      message: "Типографика: неразрывный пробел после знака №.",
+      message: MSG_TYPO_NBSP_NUMBER,
       priority: 53,
     }),
     rule({
@@ -55,7 +62,7 @@ export function buildGeneralTypographyRules(): AutofixRule[] {
       category: "typography",
       pattern: /(§)\s+(\d+)/g,
       replacement: (_match, sign, num) => `${sign}${NBSP}${num}`,
-      message: "Типографика: неразрывный пробел после знака §.",
+      message: MSG_TYPO_NBSP_NUMBER,
       priority: 53,
     }),
     ...buildQuotesRules(),
@@ -64,7 +71,7 @@ export function buildGeneralTypographyRules(): AutofixRule[] {
       category: "typography",
       pattern: /\.{3}/g,
       replacement: "…",
-      message: "Типографика: три точки заменить на многоточие (…).",
+      message: MSG_TYPO_ELLIPSIS,
       priority: 47,
     }),
   ]);

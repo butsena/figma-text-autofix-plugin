@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import { MSG_TYPO_EMDASH, MSG_TYPO_EMDASH_SPACING } from "../rule-messages";
 import { LATIN_CYRILLIC_LETTERS } from "../regex";
 import { HORIZONTAL_SPACE, NBSP } from "./constants";
 
@@ -13,7 +14,7 @@ export function buildEmdashRules(): AutofixRule[] {
         "g",
       ),
       replacement: `${NBSP}— `,
-      message: "Типографика: короткое тире/минус с пробелами заменяем на длинное тире.",
+      message: MSG_TYPO_EMDASH,
       priority: 56,
     }),
     rule({
@@ -21,7 +22,7 @@ export function buildEmdashRules(): AutofixRule[] {
       category: "punctuation_typography",
       pattern: new RegExp(`([${LATIN_CYRILLIC_LETTERS}0-9])${HORIZONTAL_SPACE}+—`, "g"),
       replacement: (_match, left) => `${left}${NBSP}—`,
-      message: "Типографика: перед длинным тире после слова ставить неразрывный пробел.",
+      message: MSG_TYPO_EMDASH_SPACING,
       priority: 54,
     }),
     rule({
@@ -29,7 +30,7 @@ export function buildEmdashRules(): AutofixRule[] {
       category: "punctuation_typography",
       pattern: new RegExp(`—${HORIZONTAL_SPACE}+([${LATIN_CYRILLIC_LETTERS}0-9])`, "g"),
       replacement: (_match, right) => `— ${right}`,
-      message: "Типографика: после длинного тире перед словом ставить обычный пробел.",
+      message: MSG_TYPO_EMDASH_SPACING,
       priority: 54,
     }),
   ]);

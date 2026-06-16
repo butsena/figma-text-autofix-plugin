@@ -1,6 +1,7 @@
 import type { AutofixRule } from "../core/autofix-engine";
 import { cyrillicWholeWordPattern, escapeRegex } from "../rules/regex";
 import { headerColIndex, isEnabledCell, parseCsvRows } from "./csv";
+import { resolveLexiconMessage } from "./lexicon-messages";
 
 export type SheetRulesMergeStats = {
   totalCount: number;
@@ -88,7 +89,7 @@ export function parseSheetReplacementRows(raw: string): SheetReplacementRow[] {
     if (Number.isNaN(priority)) continue;
 
     const category = iCat >= 0 && row[iCat]?.trim() !== "" ? row[iCat].trim() : "sheet_text";
-    const defaultMsg = `Замена: «${variants.join("» / «")}» → «${replace}»`;
+    const defaultMsg = resolveLexiconMessage(variants, replace);
     const message = iMsg >= 0 && row[iMsg]?.trim() !== "" ? row[iMsg].trim() : defaultMsg;
 
     out.push({ variants, replace, message, category, priority });

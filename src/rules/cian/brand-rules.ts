@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import { MSG_BRAND_UPPERCASE } from "../rule-messages";
 import { CYRILLIC_WORD_EDGE, CYRILLIC_WORD_EDGE_END } from "../regex";
 
 export function buildCianBrandRules(): AutofixRule[] {
@@ -15,8 +16,7 @@ export function buildCianBrandRules(): AutofixRule[] {
         const s = suffix ? String(suffix).toLowerCase() : "";
         return `${prefix}Циан${s}`;
       },
-      message:
-        "Заменить верхний регистр бренда: «ЦИАН/ЦИАНА/ЦИАНУ/ЦИАНОМ/ЦИАНЕ/ЦИАНе» → «Циан/Циана/Циану/Цианом/Циане».",
+      message: MSG_BRAND_UPPERCASE,
       priority: 100,
     }),
   ]);

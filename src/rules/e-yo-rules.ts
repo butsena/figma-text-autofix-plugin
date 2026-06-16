@@ -1,5 +1,6 @@
 import type { AutofixRule } from "../core/autofix-engine";
 import { rule, rules } from "../core/rule-def";
+import { MSG_ORTHOGRAPHY_YO } from "./rule-messages";
 import { CYRILLIC_LETTERS, cyrillicWholeWordPattern } from "./regex";
 import { getYoCorrection } from "./yo-dictionary";
 
@@ -17,7 +18,7 @@ export function buildEYoRules(): AutofixRule[] {
         if (!right) return match;
         return `${prefix}${right}`;
       },
-      message: "Буква ё: заменить «е» на «ё» (слова, где это обязательно: платёж, расчёт, учёт…).",
+      message: MSG_ORTHOGRAPHY_YO,
       priority: 78,
     }),
   ]);
