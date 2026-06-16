@@ -2,6 +2,7 @@ import type { AutofixRule } from "../core/autofix-engine";
 import { getSheetReplacementRules } from "../sheet/replacement-rules-store";
 import { buildCianBrandRules } from "./cian/brand-rules";
 import { buildFormalPronounRules } from "./cian/formal-pronoun-rules";
+import { buildFormalVerbRules } from "./cian/formal-verb-rules";
 import { buildSmsRules } from "./cian/sms-rules";
 import {
   buildCianNounOrNetDeclensionRule,
@@ -14,12 +15,14 @@ import { buildHyphenCompoundRules } from "./typography/hyphen-compound-rules";
 import { buildNumberGroupingRules } from "./typography/number-grouping";
 import { buildNbspBindingRules } from "./typography/nbsp-binding-rules";
 import { buildPunctuationSpacingRules } from "./typography/punctuation-spacing-rules";
+import { buildSentenceCapitalizationRules } from "./typography/sentence-capitalization-rules";
 import { buildServiceWordNbspRules } from "./typography/service-word-nbsp-rules";
 
 function composeAutofixRules(): AutofixRule[] {
   return [
     ...buildCianBrandRules(),
     ...buildFormalPronounRules(),
+    ...buildFormalVerbRules(),
     ...buildSmsRules(),
     ...buildCianPrepositionDeclensionRules(),
     buildCianNounOrNetDeclensionRule(),
@@ -32,6 +35,7 @@ function composeAutofixRules(): AutofixRule[] {
     ...buildGeneralTypographyRules(),
     ...buildHyphenCompoundRules(),
     ...buildPunctuationSpacingRules(),
+    ...buildSentenceCapitalizationRules(),
   ];
 }
 

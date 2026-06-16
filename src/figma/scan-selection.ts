@@ -7,9 +7,15 @@ function makeFixId(nodeId: string, ruleId: string, from: number, to: number): st
   return `${nodeId}:${ruleId}:${from}:${to}`;
 }
 
-export function scanSelectedTextNodes(selection: readonly SceneNode[]): CheckResultDto {
+export function scanSelectedTextNodes(selection: readonly SceneNode[]): {
+  result: CheckResultDto;
+  nodeById: Map<string, TextNode>;
+} {
   const autofixRules = getAutofixRules();
   const textNodes = [...collectTextNodesFromSelection(selection)];
+  const nodeById = new Map<string, TextNode>();
+  for (const node of textNodes) nodeById.set(node.id, node);
+
   const cards: TextNodeCardDto[] = [];
   let foundFixes = 0;
 
@@ -48,7 +54,10 @@ export function scanSelectedTextNodes(selection: readonly SceneNode[]): CheckRes
   }
 
   return {
-    summary: { checkedLayers: textNodes.length, foundFixes },
-    cards,
+    result: {
+      summary: { checkedLayers: textNodes.length, foundFixes },
+      cards,
+    },
+    nodeById,
   };
 }

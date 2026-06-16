@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { applyAllRules, fixesFor } from "../test/helpers";
+import { buildFormalVerbRules } from "./cian/formal-verb-rules";
 import { buildCianBrandRules } from "./cian/brand-rules";
 import { buildFormalPronounRules } from "./cian/formal-pronoun-rules";
 import { buildSmsRules } from "./cian/sms-rules";
 import { buildEYoRules } from "./e-yo-rules";
+import { buildSentenceCapitalizationRules } from "./typography/sentence-capitalization-rules";
 import { buildServiceWordNbspRules } from "./typography/service-word-nbsp-rules";
 
 /**
@@ -27,9 +29,28 @@ describe("диапазон замены не захватывает неизме
     expect(fix).toMatchObject({ before: "Вас", after: "вас", from: 5, to: 8 });
   });
 
+  it("твой: только слово", () => {
+    const [fix] = fixesFor("Заполни твой профиль", buildFormalPronounRules()).filter(
+      (f) => f.before === "твой",
+    );
+    expect(fix).toMatchObject({ before: "твой", after: "ваш", from: 8, to: 12 });
+  });
+
+  it("Заполни: только суффикс и → ите", () => {
+    const fix = fixesFor("Заполни твой профиль", buildFormalVerbRules()).find(
+      (f) => f.before === "и" && f.after === "ите",
+    );
+    expect(fix).toMatchObject({ from: 6, to: 7, before: "и", after: "ите" });
+  });
+
   it("ЦИАН: только бренд", () => {
     const [fix] = fixesFor("на ЦИАН", buildCianBrandRules());
     expect(fix).toMatchObject({ before: "ЦИАН", after: "Циан", from: 3, to: 7 });
+  });
+
+  it("сохраните: только первая буква с → С", () => {
+    const [fix] = fixesFor("сохраните файл", buildSentenceCapitalizationRules());
+    expect(fix).toMatchObject({ from: 0, to: 1, before: "с", after: "С" });
   });
 
   it("служебное слово: меняется только пробел после «в»", () => {

@@ -1,9 +1,10 @@
+import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
+import { applyFixesFromScan } from "./apply-fixes";
+import { buildAutoApplyReportFromApplied, mergeAutoApplyReports } from "./build-auto-apply-report";
 import { TEXT_REPLACEMENTS_CSV_URL } from "../config/text-replacements-remote-url";
 import { isGoogleSheetsUrl } from "../sheet/google-sheets-url";
 import { fetchCsvViaHttp, refreshTextReplacementsFromRemote } from "../sheet/refresh-from-remote";
 import type { PluginToUiMessage, SheetLoadStatusDto } from "../shared/messages";
-import { applyFixesFromScan } from "./apply-fixes";
-import { buildAutoApplyReport, mergeAutoApplyReports } from "./build-auto-apply-report";
 import { scanSelectedTextNodes } from "./scan-selection";
 import { fetchGoogleSheetCsvViaUi } from "./sheet-fetch-via-ui";
 
@@ -36,26 +37,32 @@ export async function runAutofixPipeline(): Promise<void> {
     console.warn("[text-autofix] sheet load failed", sheetLoad);
   }
 
-  let mergedReport: ReturnType<typeof buildAutoApplyReport> | null = null;
+  let mergedReport: AutoApplyReportDto | null = null;
   let totalApplied = 0;
   let passCount = 0;
 
   while (passCount < MAX_AUTOFIX_PASSES) {
-    const scan = scanSelectedTextNodes(selection);
+    const { result: scan, nodeById } = scanSelectedTextNodes(selection);
     if (scan.summary.foundFixes === 0) break;
 
-    const applied = await applyFixesFromScan(scan);
+    const { appliedCount, appliedByNode } = await applyFixesFromScan(scan, nodeById);
     passCount += 1;
-    totalApplied += applied;
-    mergedReport = mergeAutoApplyReports(mergedReport, buildAutoApplyReport(scan));
+    totalApplied += appliedCount;
 
-    if (applied === 0) break;
+    if (appliedCount > 0) {
+      mergedReport = mergeAutoApplyReports(
+        mergedReport,
+        buildAutoApplyReportFromApplied(scan, appliedByNode),
+      );
+    }
+
+    if (appliedCount === 0) break;
   }
 
-  const scanAfter = scanSelectedTextNodes(selection);
+  const { result: scanAfter } = scanSelectedTextNodes(selection);
   const report = mergedReport
     ? { ...mergedReport, summary: { ...mergedReport.summary, appliedFixCount: totalApplied } }
-    : buildAutoApplyReport(scanAfter);
+    : null;
 
   figma.ui.postMessage({
     type: "plugin:checkResult",
@@ -65,6 +72,13 @@ export async function runAutofixPipeline(): Promise<void> {
   if (scanAfter.summary.foundFixes > 0 && passCount >= MAX_AUTOFIX_PASSES) {
     console.warn(
       `[text-autofix] ${MAX_AUTOFIX_PASSES} passes reached with ${scanAfter.summary.foundFixes} fixes remaining`,
+    );
+  }
+
+  if (scanAfter.summary.foundFixes > 0 && totalApplied === 0) {
+    figma.notify(
+      "Правки найдены, но не применились. Проверьте шрифты слоя или откройте консоль плагина.",
+      { error: true },
     );
   }
 }

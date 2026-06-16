@@ -1,5 +1,6 @@
 import type { TextFix } from "../core/autofix-engine";
 import type { CheckResultDto, TextFixDto } from "../shared/messages";
+import { applyCharStyleAt, captureRangeStyles, restoreRangeStyles } from "./text-style-snapshot";
 
 function toEngineTextFix(f: TextFixDto): TextFix {
   return {
@@ -33,11 +34,32 @@ async function loadFontsForTextNode(textNode: TextNode): Promise<void> {
     const key = `${fontName.family}__${fontName.style}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    await loadFontName(fontName);
+    try {
+      await loadFontName(fontName);
+    } catch (error) {
+      console.warn("[text-autofix] font load failed", fontName, error);
+    }
   }
 }
 
-/** С конца к началу; при совпадении позиции — выше priority. */
+async function loadFontsForRange(textNode: TextNode, from: number, to: number): Promise<void> {
+  const len = textNode.characters.length;
+  if (len === 0 || to <= from) return;
+
+  const safeFrom = Math.max(0, Math.min(from, len));
+  const safeTo = Math.max(safeFrom, Math.min(to, len));
+  if (safeTo <= safeFrom) return;
+
+  const fontNames = textNode.getRangeAllFontNames(safeFrom, safeTo);
+  const seen = new Set<string>();
+  for (const fontName of fontNames) {
+    const key = `${fontName.family}__${fontName.style}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    await figma.loadFontAsync(fontName);
+  }
+}
+
 function orderFixesForApply(fixes: TextFix[]): TextFix[] {
   return [...fixes].sort((a, b) => {
     if (a.from !== b.from) return b.from - a.from;
@@ -46,6 +68,21 @@ function orderFixesForApply(fixes: TextFix[]): TextFix[] {
   });
 }
 
+/** Меняется только регистр (с → С, Вас → вас). */
+function isCaseOnlyChange(before: string, after: string): boolean {
+  return (
+    before.length > 0 &&
+    before.length === after.length &&
+    before !== after &&
+    before.toLowerCase() === after.toLowerCase()
+  );
+}
+
+export type ApplyFixesBatchResult = {
+  appliedCount: number;
+  appliedByNode: Map<string, TextFix[]>;
+};
+
 /**
  * Применить правки посимвольно, сохраняя смешанное форматирование слоя.
  * Индексы fix — относительно текста на момент сканирования; порядок с конца это учитывает.
@@ -53,28 +90,63 @@ function orderFixesForApply(fixes: TextFix[]): TextFix[] {
 export async function applyTextFixesToTextNode(
   textNode: TextNode,
   fixes: TextFix[],
-): Promise<number> {
-  if (fixes.length === 0) return 0;
+): Promise<TextFix[]> {
+  if (fixes.length === 0) return [];
 
   await loadFontsForTextNode(textNode);
 
-  let applied = 0;
+  const applied: TextFix[] = [];
   for (const fix of orderFixesForApply(fixes)) {
-    const current = textNode.characters.slice(fix.from, fix.to);
-    if (current !== fix.before || fix.before === fix.after) continue;
+    try {
+      const current = textNode.characters.slice(fix.from, fix.to);
+      if (current !== fix.before || fix.before === fix.after) {
+        if (current !== fix.before) {
+          console.warn(
+            "[text-autofix] skip fix: text changed",
+            fix.ruleId,
+            JSON.stringify({ expected: fix.before, actual: current, from: fix.from, to: fix.to }),
+          );
+        }
+        continue;
+      }
 
-    textNode.deleteCharacters(fix.from, fix.to);
-    if (fix.after.length > 0) {
-      textNode.insertCharacters(fix.from, fix.after);
+      await loadFontsForRange(textNode, fix.from, fix.to);
+
+      const capturedStyles = captureRangeStyles(textNode, fix.from, fix.to);
+      const caseOnly = isCaseOnlyChange(fix.before, fix.after);
+
+      textNode.deleteCharacters(fix.from, fix.to);
+      if (fix.after.length > 0) {
+        textNode.insertCharacters(fix.from, fix.after);
+        if (capturedStyles.length > 0) {
+          try {
+            if (caseOnly) {
+              for (let i = 0; i < fix.after.length; i++) {
+                const style = capturedStyles[Math.min(i, capturedStyles.length - 1)];
+                await applyCharStyleAt(textNode, fix.from + i, style);
+              }
+            } else {
+              await restoreRangeStyles(textNode, fix.from, capturedStyles, fix.after.length);
+            }
+          } catch (error) {
+            console.warn("[text-autofix] style restore failed", fix.ruleId, error);
+          }
+        }
+      }
+      applied.push(fix);
+    } catch (error) {
+      console.warn("[text-autofix] fix apply failed", fix.ruleId, fix.before, error);
     }
-    applied += 1;
   }
 
   return applied;
 }
 
 /** Применить все правки из снимка сканирования к текстовым слоям. */
-export async function applyFixesFromScan(result: CheckResultDto): Promise<number> {
+export async function applyFixesFromScan(
+  result: CheckResultDto,
+  nodeById: Map<string, TextNode>,
+): Promise<ApplyFixesBatchResult> {
   const fixByNodeId = new Map<string, TextFix[]>();
 
   for (const card of result.cards) {
@@ -85,17 +157,26 @@ export async function applyFixesFromScan(result: CheckResultDto): Promise<number
     }
   }
 
+  const appliedByNode = new Map<string, TextFix[]>();
   let appliedFixesCount = 0;
+
   for (const [nodeId, fixes] of fixByNodeId.entries()) {
-    const node = await figma.getNodeByIdAsync(nodeId);
-    if (!node || node.type !== "TEXT") continue;
+    const node = nodeById.get(nodeId);
+    if (!node) {
+      console.warn("[text-autofix] text layer not found for apply", nodeId);
+      continue;
+    }
 
     try {
-      appliedFixesCount += await applyTextFixesToTextNode(node, fixes);
+      const applied = await applyTextFixesToTextNode(node, fixes);
+      if (applied.length > 0) {
+        appliedByNode.set(nodeId, applied);
+        appliedFixesCount += applied.length;
+      }
     } catch (error) {
       console.warn("[text-autofix] failed to apply fixes to layer", nodeId, error);
     }
   }
 
-  return appliedFixesCount;
+  return { appliedCount: appliedFixesCount, appliedByNode };
 }

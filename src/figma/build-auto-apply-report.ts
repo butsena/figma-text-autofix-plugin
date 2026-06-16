@@ -1,3 +1,4 @@
+import type { TextFix } from "../core/autofix-engine";
 import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
 
 /** Склеить отчёты нескольких проходов автоисправления (по слоям и списку замен). */
@@ -36,6 +37,46 @@ export function mergeAutoApplyReports(
   };
 }
 
+export function buildAutoApplyReportFromApplied(
+  scan: CheckResultDto,
+  appliedByNode: Map<string, TextFix[]>,
+): AutoApplyReportDto {
+  const cardByNodeId = new Map(scan.cards.map((c) => [c.nodeId, c]));
+  const layers: AutoApplyReportDto["layers"] = [];
+
+  for (const [nodeId, fixes] of appliedByNode.entries()) {
+    if (fixes.length === 0) continue;
+    const card = cardByNodeId.get(nodeId);
+    layers.push({
+      nodeId,
+      nodeName: card?.nodeName ?? "",
+      fixes: fixes.map((f) => ({
+        fixId: `${nodeId}:${f.ruleId}:${f.from}:${f.to}`,
+        ruleId: f.ruleId,
+        category: f.category,
+        message: f.message,
+        before: f.before,
+        after: f.after,
+        from: f.from,
+        to: f.to,
+        sourceText: card?.originalText ?? "",
+      })),
+    });
+  }
+
+  const appliedFixCount = layers.reduce((sum, layer) => sum + layer.fixes.length, 0);
+
+  return {
+    summary: {
+      checkedLayers: scan.summary.checkedLayers,
+      appliedFixCount,
+      changedLayerCount: layers.length,
+    },
+    layers,
+  };
+}
+
+/** @deprecated Используйте buildAutoApplyReportFromApplied. */
 export function buildAutoApplyReport(scan: CheckResultDto): AutoApplyReportDto {
   return {
     summary: {

@@ -46,6 +46,41 @@ function tailsAreSeparatorsOnly(before: string, after: string): boolean {
   );
 }
 
+function narrowWordSuffixChange(
+  tailBefore: string,
+  tailAfter: string,
+): { sharedLen: number; before: string; after: string } | null {
+  let sharedLen = 0;
+  while (
+    sharedLen < tailBefore.length &&
+    sharedLen < tailAfter.length &&
+    tailBefore[sharedLen] === tailAfter[sharedLen]
+  ) {
+    sharedLen++;
+  }
+
+  while (sharedLen > 0) {
+    const restBefore = tailBefore.slice(sharedLen);
+    const restAfter = tailAfter.slice(sharedLen);
+    if (
+      restBefore.length > 0 &&
+      restAfter.startsWith(restBefore) &&
+      restBefore.length < restAfter.length
+    ) {
+      return { sharedLen, before: restBefore, after: restAfter };
+    }
+    if (
+      restAfter.length > 0 &&
+      restBefore.startsWith(restAfter) &&
+      restAfter.length < restBefore.length
+    ) {
+      return { sharedLen, before: restBefore, after: restAfter };
+    }
+    sharedLen--;
+  }
+  return null;
+}
+
 /**
  * Сужает диапазон замены до реально меняющейся части.
  * С краёв снимаются совпадающие разделители; неизменное слово в середине тоже
@@ -73,25 +108,32 @@ export function narrowReplacementRange(
   let tailBefore = before.slice(prefixLen);
   let tailAfter = after.slice(prefixLen);
 
-  let sharedWordPrefix = 0;
-  while (
-    sharedWordPrefix < tailBefore.length &&
-    sharedWordPrefix < tailAfter.length &&
-    tailBefore[sharedWordPrefix] === tailAfter[sharedWordPrefix]
-  ) {
-    sharedWordPrefix++;
-  }
+  const suffixChange = narrowWordSuffixChange(tailBefore, tailAfter);
+  if (suffixChange) {
+    prefixLen += suffixChange.sharedLen;
+    tailBefore = suffixChange.before;
+    tailAfter = suffixChange.after;
+  } else {
+    let sharedWordPrefix = 0;
+    while (
+      sharedWordPrefix < tailBefore.length &&
+      sharedWordPrefix < tailAfter.length &&
+      tailBefore[sharedWordPrefix] === tailAfter[sharedWordPrefix]
+    ) {
+      sharedWordPrefix++;
+    }
 
-  if (
-    sharedWordPrefix > 0 &&
-    tailsAreSeparatorsOnly(
-      tailBefore.slice(sharedWordPrefix),
-      tailAfter.slice(sharedWordPrefix),
-    )
-  ) {
-    prefixLen += sharedWordPrefix;
-    tailBefore = tailBefore.slice(sharedWordPrefix);
-    tailAfter = tailAfter.slice(sharedWordPrefix);
+    if (
+      sharedWordPrefix > 0 &&
+      tailsAreSeparatorsOnly(
+        tailBefore.slice(sharedWordPrefix),
+        tailAfter.slice(sharedWordPrefix),
+      )
+    ) {
+      prefixLen += sharedWordPrefix;
+      tailBefore = tailBefore.slice(sharedWordPrefix);
+      tailAfter = tailAfter.slice(sharedWordPrefix);
+    }
   }
 
   let suffixLen = 0;

@@ -68,6 +68,24 @@ describe("narrowReplacementRange", () => {
     });
   });
 
+  it("сужает расширение слова: Заполни → Заполните", () => {
+    expect(narrowReplacementRange(68, "Заполни", "Заполните")).toEqual({
+      from: 74,
+      to: 75,
+      before: "и",
+      after: "ите",
+    });
+  });
+
+  it("сужает расширение: нажми → нажмите", () => {
+    expect(narrowReplacementRange(0, "нажми", "нажмите")).toEqual({
+      from: 4,
+      to: 5,
+      before: "и",
+      after: "ите",
+    });
+  });
+
   it("отделяет неизменный пробел после служебного слова", () => {
     const nbsp = "\u00a0";
     expect(narrowReplacementRange(3, " в ", ` в${nbsp}`)).toEqual({
