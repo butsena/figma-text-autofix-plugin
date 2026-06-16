@@ -16,6 +16,7 @@ import { buildNumberGroupingRules } from "./typography/number-grouping";
 import { buildNbspBindingRules } from "./typography/nbsp-binding-rules";
 import { buildPunctuationSpacingRules } from "./typography/punctuation-spacing-rules";
 import { buildSentenceCapitalizationRules } from "./typography/sentence-capitalization-rules";
+import { buildSentenceTerminalPeriodRules } from "./typography/sentence-terminal-period-rules";
 import { buildServiceWordNbspRules } from "./typography/service-word-nbsp-rules";
 
 function composeAutofixRules(): AutofixRule[] {
@@ -36,6 +37,7 @@ function composeAutofixRules(): AutofixRule[] {
     ...buildHyphenCompoundRules(),
     ...buildPunctuationSpacingRules(),
     ...buildSentenceCapitalizationRules(),
+    ...buildSentenceTerminalPeriodRules(),
   ];
 }
 

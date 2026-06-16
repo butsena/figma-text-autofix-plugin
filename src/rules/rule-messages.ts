@@ -15,6 +15,9 @@ export const MSG_RED_POLICY_SMS = "Редполитика: «СМС» / «SMS» 
 export const MSG_RED_POLICY_SENTENCE_CAP =
   "Редполитика: заглавная в начале предложения.";
 
+export const MSG_RED_POLICY_SENTENCE_PERIOD =
+  "Редполитика: точка в конце предложения.";
+
 // —— Редполитика (лексикон) ——
 
 export function msgLexiconReplace(variants: string[], replace: string): string {

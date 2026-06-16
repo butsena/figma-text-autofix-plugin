@@ -400,6 +400,8 @@
         "cian-101-nbsp-after-service-words-mixed-ws-before-text": true,
       };
 
+      var SENTENCE_PERIOD_RULE_ID = "cian-139-sentence-terminal-period";
+
       var WORD_CHAR_RE = /[0-9A-Za-z\u0400-\u04FF\u0451\u0401]/;
 
       function isWhitespaceOnlyFragment(text) {
@@ -416,6 +418,18 @@
             code !== 0x00a0 &&
             code !== 0x202f
           ) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function isSentenceTerminalPunctuationFragment(text) {
+        if (text == null || text === "") return false;
+        var s = String(text);
+        for (var i = 0; i < s.length; i++) {
+          var ch = s.charAt(i);
+          if (ch !== "." && ch !== "!" && ch !== "?" && ch !== "…") {
             return false;
           }
         }
@@ -460,7 +474,36 @@
         );
       }
 
+      function formatSentencePeriodDiff(sourceText, from, before, after) {
+        if (!sourceText || from == null) return null;
+        if (!isWhitespaceOnlyFragment(before)) return null;
+        if (!isSentenceTerminalPunctuationFragment(after)) return null;
+        var word = extractContextWordBefore(sourceText, from);
+        if (!word) return null;
+        return (
+          '<span class="reportCtxWord">' +
+          escapeHtml(word) +
+          "</span>" +
+          ' <span style="color:#888;font-weight:400">→</span> <b>' +
+          '<span class="reportCtxWord">' +
+          escapeHtml(word + after) +
+          "</span></b>"
+        );
+      }
+
       function formatFixDiffHtml(fix) {
+        if (
+          fix.ruleId === SENTENCE_PERIOD_RULE_ID &&
+          fix.sourceText
+        ) {
+          var periodDiff = formatSentencePeriodDiff(
+            fix.sourceText,
+            fix.from,
+            fix.before,
+            fix.after,
+          );
+          if (periodDiff) return periodDiff;
+        }
         if (
           SERVICE_WORD_NBSP_RULE_IDS[fix.ruleId] &&
           isWhitespaceOnlyFragment(fix.before) &&

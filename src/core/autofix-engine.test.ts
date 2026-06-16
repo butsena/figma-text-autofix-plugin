@@ -95,6 +95,19 @@ describe("narrowReplacementRange", () => {
       after: nbsp,
     });
   });
+
+  it("сужает вставку в середину длинной строки", () => {
+    const before =
+      "Любого слона можно купить онлайн — цену скину вам в смс по запросу Главное — сохраните ваш профиль.";
+    const after =
+      "Любого слона можно купить онлайн — цену скину вам в смс по запросу. Главное — сохраните ваш профиль.";
+    expect(narrowReplacementRange(0, before, after)).toEqual({
+      from: 66,
+      to: 66,
+      before: "",
+      after: ".",
+    });
+  });
 });
 
 describe("applyTextFixes", () => {

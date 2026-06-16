@@ -81,6 +81,36 @@ function narrowWordSuffixChange(
   return null;
 }
 
+function simpleMiddleDiff(
+  before: string,
+  after: string,
+): { prefixLen: number; suffixLen: number; before: string; after: string } {
+  let prefixLen = 0;
+  while (
+    prefixLen < before.length &&
+    prefixLen < after.length &&
+    before[prefixLen] === after[prefixLen]
+  ) {
+    prefixLen++;
+  }
+
+  let suffixLen = 0;
+  while (
+    suffixLen < before.length - prefixLen &&
+    suffixLen < after.length - prefixLen &&
+    before[before.length - 1 - suffixLen] === after[after.length - 1 - suffixLen]
+  ) {
+    suffixLen++;
+  }
+
+  return {
+    prefixLen,
+    suffixLen,
+    before: before.slice(prefixLen, before.length - suffixLen),
+    after: after.slice(prefixLen, after.length - suffixLen),
+  };
+}
+
 /**
  * Сужает диапазон замены до реально меняющейся части.
  * С краёв снимаются совпадающие разделители; неизменное слово в середине тоже
@@ -146,11 +176,31 @@ export function narrowReplacementRange(
     suffixLen++;
   }
 
+  const narrowedBefore = tailBefore.slice(0, tailBefore.length - suffixLen);
+  const narrowedAfter = tailAfter.slice(0, tailAfter.length - suffixLen);
+
+  if (
+    narrowedBefore.length > 1 &&
+    narrowedBefore.length > before.length / 2 &&
+    before.length >= 40 &&
+    Math.abs(after.length - before.length) <= 3
+  ) {
+    const simple = simpleMiddleDiff(before, after);
+    if (simple.before.length < narrowedBefore.length && simple.before !== simple.after) {
+      return {
+        from: from + simple.prefixLen,
+        to: from + before.length - simple.suffixLen,
+        before: simple.before,
+        after: simple.after,
+      };
+    }
+  }
+
   return {
     from: from + prefixLen,
     to: from + before.length - suffixLen,
-    before: tailBefore.slice(0, tailBefore.length - suffixLen),
-    after: tailAfter.slice(0, tailAfter.length - suffixLen),
+    before: narrowedBefore,
+    after: narrowedAfter,
   };
 }
 
