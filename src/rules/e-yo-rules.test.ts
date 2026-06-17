@@ -47,6 +47,11 @@ describe("buildEYoRules", () => {
     expect(applyAllRules("нее", rules)).toBe("неё");
   });
 
+  it("исправляет пришлем → пришлём", () => {
+    expect(applyAllRules("Мы пришлем документы", rules)).toBe("Мы пришлём документы");
+    expect(applyAllRules("Пришлем", rules)).toBe("Пришлём");
+  });
+
   it("не трогает все (омоним, только confirm)", () => {
     expect(fixesFor("все", rules)).toHaveLength(0);
     expect(applyAllRules("все варианты", rules)).toBe("все варианты");

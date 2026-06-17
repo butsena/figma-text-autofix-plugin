@@ -1,5 +1,4 @@
 import { formatFixDiffHtml } from "./diff-format";
-import { fetchSheetViaGvizJsonp } from "./sheet-fetch";
 import {
   countConfirmFixes,
   detailsOpenAttr,
@@ -216,13 +215,13 @@ function renderTechDetailsHtml(): string {
   if (!sl) {
     bodyHtml = '<div class="empty" style="padding:4px 0">Статус загрузки словаря ещё не получен.</div>';
   } else if (sl.fromRemote && sl.ok) {
-    bodyHtml = `<div class="sheetStatus ok">Словарь с GitHub: <b>${sl.ruleCount}</b> прав.</div>`;
+    bodyHtml = `<div class="sheetStatus ok">Словарь с GitHub: <b>${sl.ruleCount}</b> правил</div>`;
   } else if (!sl.ok) {
-    bodyHtml = `<div class="sheetStatus err">GitHub недоступен — встроенный CSV (${sl.ruleCount} прав.). ${escapeHtml(
+    bodyHtml = `<div class="sheetStatus err">GitHub недоступен — встроенный CSV (${sl.ruleCount} правил). ${escapeHtml(
       displayText(sl.errorMessage),
     )}</div>`;
   } else {
-    bodyHtml = `<div class="sheetStatus ok">Встроенный CSV: <b>${sl.ruleCount}</b> прав.</div>`;
+    bodyHtml = `<div class="sheetStatus ok">Встроенный CSV: <b>${sl.ruleCount}</b> правил</div>`;
   }
 
   return `
@@ -468,33 +467,6 @@ window.addEventListener("message", (event) => {
         escapeHtml(msg.message || "Неизвестная ошибка") +
         "</div>";
     }
-    return;
-  }
-
-  if (msg.type === "plugin:fetchSheetCsv") {
-    const requestId = msg.requestId;
-    const spreadsheetId = msg.spreadsheetId;
-    const gid = msg.gid != null ? String(msg.gid) : "0";
-    const fetchUrl = msg.fetchUrl || "";
-    fetchSheetViaGvizJsonp(spreadsheetId, gid)
-      .then(function (csv) {
-        sendToPlugin({
-          type: "ui:sheetCsvResult",
-          requestId: requestId,
-          ok: true,
-          csv: csv,
-          fetchUrl: fetchUrl,
-        });
-      })
-      .catch(function (e) {
-        sendToPlugin({
-          type: "ui:sheetCsvResult",
-          requestId: requestId,
-          ok: false,
-          errorMessage: e instanceof Error ? e.message : String(e),
-          fetchUrl: fetchUrl,
-        });
-      });
     return;
   }
 

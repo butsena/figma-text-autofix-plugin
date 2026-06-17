@@ -7,11 +7,7 @@
   "main": "dist/main.js",
   "permissions": [],
   "networkAccess": {
-    "allowedDomains": [
-      "https://raw.githubusercontent.com",
-      "https://docs.google.com",
-      "https://script.google.com"
-    ],
-    "reasoning": "Словарь замен с GitHub; legacy Google Sheets (будет удалён)."
+    "allowedDomains": ["https://raw.githubusercontent.com"],
+    "reasoning": "Словарь замен с GitHub (public lexicon repo)."
   }
 }

@@ -4,7 +4,7 @@ import {
   formatFetchError,
   looksLikeHtmlNotCsv,
   previewResponseText,
-} from "./google-sheets-url";
+} from "./csv-fetch";
 import {
   applySheetRulesFromCsv,
   getSheetRulesLoadStats,

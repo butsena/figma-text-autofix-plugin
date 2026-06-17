@@ -3,7 +3,6 @@ import { collectTextNodesFromSelection } from "./figma/collect-text-nodes";
 import { runAutofixPipeline } from "./figma/autofix-pipeline";
 import { applyConfirmFixAndRefresh } from "./figma/apply-confirm-fix";
 import { focusLayerById } from "./figma/focus-layer";
-import { resolvePendingSheetCsv } from "./figma/sheet-fetch-via-ui";
 import {
   PLUGIN_UI_INITIAL_HEIGHT,
   PLUGIN_UI_MAX_HEIGHT,
@@ -43,15 +42,6 @@ if (collectTextNodesFromSelection(selection).length === 0) {
             runPipelineWhenReady = false;
             await runAutofixPipeline();
           }
-          break;
-        }
-        case "ui:sheetCsvResult": {
-          resolvePendingSheetCsv(
-            message.requestId,
-            message.ok,
-            message.csv,
-            message.errorMessage,
-          );
           break;
         }
         case "ui:applyConfirmFix": {

@@ -81,9 +81,9 @@ export type SheetLoadStatusDto = {
   ok: boolean;
   ruleCount: number;
   fromRemote: boolean;
-  /** Строк правил из Google Таблицы. */
+  /** Строк правил из удалённого CSV (GitHub). */
   remoteRuleCount?: number;
-  /** Строк правил только из локального CSV (не дублируют таблицу). */
+  /** Строк правил из встроенного CSV (fallback). */
   bundledOnlyRuleCount?: number;
   errorMessage?: string;
   fetchUrl?: string;
@@ -102,25 +102,10 @@ export type UiToPluginMessage =
       type: "ui:resize";
       width: number;
       height: number;
-    }
-  | {
-      type: "ui:sheetCsvResult";
-      requestId: string;
-      ok: boolean;
-      csv?: string;
-      errorMessage?: string;
-      fetchUrl: string;
     };
 
 export type PluginToUiMessage =
   | { type: "plugin:checkResult"; result: CheckResultDto }
   | { type: "plugin:error"; message: string }
-  | {
-      type: "plugin:fetchSheetCsv";
-      requestId: string;
-      spreadsheetId: string;
-      gid: string;
-      fetchUrl: string;
-    }
   | { type: "plugin:config"; sheetLoad?: SheetLoadStatusDto | null };
 
