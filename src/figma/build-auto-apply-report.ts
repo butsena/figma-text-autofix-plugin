@@ -1,5 +1,40 @@
 import type { TextFix } from "../core/autofix-engine";
 import type { AutoApplyReportDto, CheckResultDto, TextFixDto } from "../shared/messages";
+import { makeFixId } from "../shared/fix-id";
+
+type AutoApplyFixLine = AutoApplyReportDto["layers"][number]["fixes"][number];
+
+function toAutoApplyFixLineFromEngine(
+  nodeId: string,
+  fix: TextFix,
+  sourceText: string,
+): AutoApplyFixLine {
+  return {
+    fixId: makeFixId(nodeId, fix.ruleId, fix.from, fix.to),
+    ruleId: fix.ruleId,
+    category: fix.category,
+    message: fix.message,
+    before: fix.before,
+    after: fix.after,
+    from: fix.from,
+    to: fix.to,
+    sourceText,
+  };
+}
+
+function toAutoApplyFixLineFromDto(fix: TextFixDto, sourceText: string): AutoApplyFixLine {
+  return {
+    fixId: fix.fixId,
+    ruleId: fix.rule.id,
+    category: fix.rule.category,
+    message: fix.rule.message,
+    before: fix.before,
+    after: fix.after,
+    from: fix.from,
+    to: fix.to,
+    sourceText,
+  };
+}
 
 /** Склеить отчёты нескольких проходов автоисправления (по слоям и списку замен). */
 export function mergeAutoApplyReports(
@@ -47,20 +82,11 @@ export function buildAutoApplyReportFromApplied(
   for (const [nodeId, fixes] of appliedByNode.entries()) {
     if (fixes.length === 0) continue;
     const card = cardByNodeId.get(nodeId);
+    const sourceText = card?.originalText ?? "";
     layers.push({
       nodeId,
       nodeName: card?.nodeName ?? "",
-      fixes: fixes.map((f) => ({
-        fixId: `${nodeId}:${f.ruleId}:${f.from}:${f.to}`,
-        ruleId: f.ruleId,
-        category: f.category,
-        message: f.message,
-        before: f.before,
-        after: f.after,
-        from: f.from,
-        to: f.to,
-        sourceText: card?.originalText ?? "",
-      })),
+      fixes: fixes.map((f) => toAutoApplyFixLineFromEngine(nodeId, f, sourceText)),
     });
   }
 
@@ -92,19 +118,7 @@ export function buildAutoApplyReportFromConfirmFix(
       {
         nodeId,
         nodeName,
-        fixes: [
-          {
-            fixId: fix.fixId,
-            ruleId: fix.rule.id,
-            category: fix.rule.category,
-            message: fix.rule.message,
-            before: fix.before,
-            after: fix.after,
-            from: fix.from,
-            to: fix.to,
-            sourceText,
-          },
-        ],
+        fixes: [toAutoApplyFixLineFromDto(fix, sourceText)],
       },
     ],
   };
@@ -118,31 +132,5 @@ export function buildEmptyAutoApplyReport(checkedLayers: number): AutoApplyRepor
       changedLayerCount: 0,
     },
     layers: [],
-  };
-}
-
-/** @deprecated Используйте buildAutoApplyReportFromApplied. */
-export function buildAutoApplyReport(scan: CheckResultDto): AutoApplyReportDto {
-  return {
-    summary: {
-      checkedLayers: scan.summary.checkedLayers,
-      appliedFixCount: 0,
-      changedLayerCount: scan.cards.length,
-    },
-    layers: scan.cards.map((c) => ({
-      nodeId: c.nodeId,
-      nodeName: c.nodeName,
-      fixes: c.fixes.map((f) => ({
-        fixId: f.fixId,
-        ruleId: f.rule.id,
-        category: f.rule.category,
-        message: f.rule.message,
-        before: f.before,
-        after: f.after,
-        from: f.from,
-        to: f.to,
-        sourceText: c.originalText,
-      })),
-    })),
   };
 }

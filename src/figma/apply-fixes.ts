@@ -1,20 +1,8 @@
 import type { TextFix } from "../core/autofix-engine";
-import type { CheckResultDto, TextFixDto } from "../shared/messages";
+import { isConfirmPolicy } from "../core/apply-policy";
+import type { CheckResultDto } from "../shared/messages";
+import { textFixDtoToEngineFix } from "../shared/text-fix-mapping";
 import { applyCharStyleAt, captureRangeStyles, restoreRangeStyles } from "./text-style-snapshot";
-
-function toEngineTextFix(f: TextFixDto): TextFix {
-  return {
-    from: f.from,
-    to: f.to,
-    before: f.before,
-    after: f.after,
-    ruleId: f.rule.id,
-    category: f.rule.category,
-    message: f.rule.message,
-    priority: f.rule.priority,
-    applyPolicy: f.rule.applyPolicy,
-  };
-}
 
 async function loadFontName(font: FontName): Promise<void> {
   await figma.loadFontAsync(font);
@@ -152,9 +140,9 @@ export async function applyFixesFromScan(
 
   for (const card of result.cards) {
     for (const fix of card.fixes) {
-      if (fix.rule.applyPolicy === "confirm") continue;
+      if (isConfirmPolicy(fix.rule.applyPolicy)) continue;
       const list = fixByNodeId.get(card.nodeId) ?? [];
-      list.push(toEngineTextFix(fix));
+      list.push(textFixDtoToEngineFix(fix));
       fixByNodeId.set(card.nodeId, list);
     }
   }

@@ -3,4 +3,5 @@ node_modules/
 .DS_Store
 data/yo-map.json
 src/rules/yo-curated.generated.ts
+src/ui/ui.figma.html
 

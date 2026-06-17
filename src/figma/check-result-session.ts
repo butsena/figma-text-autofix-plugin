@@ -12,17 +12,23 @@ export function getLastAutoApplyReport(): AutoApplyReportDto | null {
   return lastAutoApplyReport;
 }
 
-export function buildCheckResultForUi(selection: readonly SceneNode[]): CheckResultDto {
-  const { result: scanAfter } = scanSelectedTextNodes(selection, { policy: "auto" });
+export function buildCheckResultForUi(
+  selection: readonly SceneNode[],
+  scan?: CheckResultDto,
+): CheckResultDto {
+  const scanResult = scan ?? scanSelectedTextNodes(selection, { policy: "auto" }).result;
   return {
-    ...scanAfter,
+    ...scanResult,
     lastAutoApplyReport,
   };
 }
 
-export function postCheckResultToUi(selection: readonly SceneNode[]): void {
+export function postCheckResultToUi(
+  selection: readonly SceneNode[],
+  scan?: CheckResultDto,
+): void {
   figma.ui.postMessage({
     type: "plugin:checkResult",
-    result: buildCheckResultForUi(selection),
+    result: buildCheckResultForUi(selection, scan),
   } satisfies PluginToUiMessage);
 }

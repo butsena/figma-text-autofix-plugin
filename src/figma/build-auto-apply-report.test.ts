@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildAutoApplyReport,
   buildAutoApplyReportFromApplied,
   buildAutoApplyReportFromConfirmFix,
   buildEmptyAutoApplyReport,
@@ -9,7 +8,7 @@ import {
 import type { CheckResultDto } from "../shared/messages";
 import type { TextFix } from "../core/autofix-engine";
 
-describe("buildAutoApplyReport", () => {
+describe("build-auto-apply-report", () => {
   it("передаёт позицию и исходный текст для контекста в UI", () => {
     const scan: CheckResultDto = {
       summary: { checkedLayers: 1, foundFixes: 1, confirmFixes: 0 },
@@ -39,7 +38,26 @@ describe("buildAutoApplyReport", () => {
       ],
     };
 
-    const report = buildAutoApplyReport(scan);
+    const applied = new Map<string, TextFix[]>([
+      [
+        "1:1",
+        [
+          {
+            from: 9,
+            to: 10,
+            before: " ",
+            after: "\u00a0",
+            ruleId: "cian-095-nbsp-after-short-words-strict",
+            category: "typography",
+            message: "NBSP после служебных слов",
+            priority: 52,
+            applyPolicy: "auto",
+          },
+        ],
+      ],
+    ]);
+
+    const report = buildAutoApplyReportFromApplied(scan, applied);
     expect(report.layers[0].fixes[0]).toMatchObject({
       from: 9,
       to: 10,

@@ -1,8 +1,9 @@
 import { getAutofixRules } from "../rules/autofix-rules";
 import { applyTextFixes, checkTextForAutofixes } from "../core/autofix-engine";
 import type { ApplyPolicy } from "../core/apply-policy";
-import { isConfirmPolicy, resolveApplyPolicy } from "../core/apply-policy";
+import { resolveApplyPolicy } from "../core/apply-policy";
 import type { CheckResultDto, RuleInfo, TextFixDto, TextNodeCardDto } from "../shared/messages";
+import { makeFixId } from "../shared/fix-id";
 import { collectTextNodesFromSelection } from "./collect-text-nodes";
 
 export type ScanPolicyFilter = ApplyPolicy | "all";
@@ -11,9 +12,6 @@ export type ScanSelectionOptions = {
   policy?: ScanPolicyFilter;
 };
 
-function makeFixId(nodeId: string, ruleId: string, from: number, to: number): string {
-  return `${nodeId}:${ruleId}:${from}:${to}`;
-}
 
 function filterRulesByPolicy(policy: ScanPolicyFilter) {
   const all = getAutofixRules();
@@ -115,6 +113,3 @@ export function scanSelectedTextNodes(
   };
 }
 
-export function isAutoFixDto(fix: TextFixDto): boolean {
-  return !isConfirmPolicy(fix.rule.applyPolicy);
-}

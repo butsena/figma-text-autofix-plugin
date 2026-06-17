@@ -1,7 +1,7 @@
 import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
 import { applyFixesFromScan } from "./apply-fixes";
 import { buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport, mergeAutoApplyReports } from "./build-auto-apply-report";
-import { postCheckResultToUi, setLastAutoApplyReport } from "./post-check-result";
+import { postCheckResultToUi, setLastAutoApplyReport } from "./check-result-session";
 import { TEXT_REPLACEMENTS_CSV_URL } from "../config/text-replacements-remote-url";
 import { isGoogleSheetsUrl } from "../sheet/google-sheets-url";
 import { fetchCsvViaHttp, refreshTextReplacementsFromRemote } from "../sheet/refresh-from-remote";
@@ -11,6 +11,11 @@ import { fetchGoogleSheetCsvViaUi } from "./sheet-fetch-via-ui";
 
 /** Защита от зацикливания, если правила конфликтуют или текст не меняется. */
 const MAX_AUTOFIX_PASSES = 20;
+
+export type AutofixAutoPassesResult = {
+  report: AutoApplyReportDto;
+  finalScan: CheckResultDto;
+};
 
 async function fetchCsvForSheet(fetchUrl: string): Promise<string> {
   if (isGoogleSheetsUrl(fetchUrl)) {
@@ -26,11 +31,32 @@ export async function postPluginConfigToUi(sheetLoad?: SheetLoadStatusDto | null
   } satisfies PluginToUiMessage);
 }
 
+async function refreshSheetAndPostConfig(): Promise<SheetLoadStatusDto> {
+  const sheetLoad = await refreshTextReplacementsFromRemote(
+    TEXT_REPLACEMENTS_CSV_URL,
+    fetchCsvForSheet,
+  );
+  await postPluginConfigToUi(sheetLoad);
+  if (!sheetLoad.ok) {
+    console.warn("[text-autofix] sheet load failed", sheetLoad);
+  }
+  return sheetLoad;
+}
+
+function notifyIfFixesStuck(scan: CheckResultDto, report: AutoApplyReportDto): void {
+  if (scan.summary.foundFixes > 0 && report.summary.appliedFixCount === 0) {
+    figma.notify(
+      "Правки найдены, но не применились. Проверьте шрифты слоя или откройте консоль плагина.",
+      { error: true },
+    );
+  }
+}
+
 /** Сканирование → применение auto-правок в цикле; сводный отчёт. */
 export async function runAutofixAutoPasses(
   selection: readonly SceneNode[],
   existingReport: AutoApplyReportDto | null = null,
-): Promise<AutoApplyReportDto> {
+): Promise<AutofixAutoPassesResult> {
   let mergedReport = existingReport;
   let totalApplied = existingReport?.summary.appliedFixCount ?? 0;
   let passCount = 0;
@@ -53,41 +79,27 @@ export async function runAutofixAutoPasses(
     if (appliedCount === 0) break;
   }
 
-  const { result: scanAfter } = scanSelectedTextNodes(selection, { policy: "auto" });
+  const { result: finalScan } = scanSelectedTextNodes(selection, { policy: "auto" });
   const report = mergedReport
     ? { ...mergedReport, summary: { ...mergedReport.summary, appliedFixCount: totalApplied } }
-    : buildEmptyAutoApplyReport(scanAfter.summary.checkedLayers);
+    : buildEmptyAutoApplyReport(finalScan.summary.checkedLayers);
 
-  if (scanAfter.summary.foundFixes > 0 && passCount >= MAX_AUTOFIX_PASSES) {
+  if (finalScan.summary.foundFixes > 0 && passCount >= MAX_AUTOFIX_PASSES) {
     console.warn(
-      `[text-autofix] ${MAX_AUTOFIX_PASSES} passes reached with ${scanAfter.summary.foundFixes} fixes remaining`,
+      `[text-autofix] ${MAX_AUTOFIX_PASSES} passes reached with ${finalScan.summary.foundFixes} fixes remaining`,
     );
   }
 
-  return report;
+  return { report, finalScan };
 }
 
 /** Сканирование → применение в цикле, пока есть правки; сводный отчёт в UI. */
 export async function runAutofixPipeline(): Promise<void> {
   const selection = figma.currentPage.selection;
-  const sheetLoad = await refreshTextReplacementsFromRemote(
-    TEXT_REPLACEMENTS_CSV_URL,
-    fetchCsvForSheet,
-  );
-  await postPluginConfigToUi(sheetLoad);
-  if (!sheetLoad.ok) {
-    console.warn("[text-autofix] sheet load failed", sheetLoad);
-  }
+  await refreshSheetAndPostConfig();
 
-  const report = await runAutofixAutoPasses(selection);
+  const { report, finalScan } = await runAutofixAutoPasses(selection);
   setLastAutoApplyReport(report);
-  postCheckResultToUi(selection);
-
-  const { result: scanAfter } = scanSelectedTextNodes(selection, { policy: "auto" });
-  if (scanAfter.summary.foundFixes > 0 && report.summary.appliedFixCount === 0) {
-    figma.notify(
-      "Правки найдены, но не применились. Проверьте шрифты слоя или откройте консоль плагина.",
-      { error: true },
-    );
-  }
+  postCheckResultToUi(selection, finalScan);
+  notifyIfFixesStuck(finalScan, report);
 }

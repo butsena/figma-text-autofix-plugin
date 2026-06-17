@@ -1,0 +1,395 @@
+:root {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 12px;
+        color: #1f1f1f;
+      }
+      html,
+      body {
+        min-height: 100%;
+      }
+      body {
+        margin: 0;
+        padding: 12px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+      }
+      #app {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+      }
+      .appShell {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+      }
+      .appMain {
+        flex: 0 0 auto;
+      }
+      .resultWaiting {
+        color: #666;
+        padding: 4px 0 12px;
+      }
+      .resultHeader {
+        margin-bottom: 14px;
+      }
+      .resultTitle {
+        margin: 0 0 12px;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.25;
+        color: #1f1f1f;
+      }
+      .resultStats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .resultStat {
+        text-align: center;
+      }
+      .resultStatLabel {
+        font-size: 11px;
+        color: #666;
+        line-height: 1.3;
+        margin-bottom: 4px;
+      }
+      .resultStatValue {
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: #1f1f1f;
+      }
+      button {
+        appearance: none;
+        border: 1px solid #d0d0d0;
+        background: #f6f6f6;
+        border-radius: 6px;
+        padding: 8px 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .reportThanksRow {
+        display: flex;
+        justify-content: center;
+        margin: 12px 0 14px;
+      }
+      button.thanksBtn {
+        min-width: 132px;
+        padding: 9px 16px;
+        border-color: #b8d4a8;
+        background: #eef6ea;
+      }
+      .reportBlock {
+        border: 1px solid #c8d8f0;
+        background: #f4f8ff;
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin-bottom: 14px;
+        box-sizing: border-box;
+      }
+      .reportDetails > summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        padding: 2px 0;
+        user-select: none;
+      }
+      .reportDetails > summary::-webkit-details-marker {
+        display: none;
+      }
+      .reportDetails > summary::before {
+        content: "▸";
+        color: #0b57d0;
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        margin-right: 4px;
+        border-radius: 6px;
+        background: #d6e6ff;
+        border: 1px solid #7aa8f0;
+        box-sizing: border-box;
+      }
+      .reportDetails > summary:hover::before {
+        background: #c4dbff;
+        border-color: #5a94eb;
+      }
+      .reportDetails[open] > summary::before {
+        content: "▾";
+        background: #b8d4ff;
+      }
+      .reportDetailsTitle {
+        font-weight: 700;
+        font-size: 13px;
+        color: #1f1f1f;
+      }
+      .reportDetailsBrief {
+        font-size: 11px;
+        color: #555;
+        font-weight: 400;
+      }
+      .reportDetailsBody {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #d8e4f8;
+      }
+      .reportSummary {
+        color: #333;
+        margin-bottom: 10px;
+        line-height: 1.45;
+      }
+      .reportLayer {
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px solid #d8e4f8;
+      }
+      .reportLayerTitle {
+        font-weight: 700;
+        margin-bottom: 6px;
+        cursor: pointer;
+        color: #0b57d0;
+      }
+      .reportLayerTitle:hover {
+        text-decoration: underline;
+      }
+      .reportFix {
+        padding: 6px 0 6px 8px;
+        border-left: 3px solid #8fb8ff;
+        margin-bottom: 6px;
+        background: #fff;
+        border-radius: 0 6px 6px 0;
+      }
+      .confirmBlock {
+        border: 1px solid #f0d48a;
+        background: #fff8e6;
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin-bottom: 14px;
+        box-sizing: border-box;
+      }
+      .confirmDetails > summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        padding: 2px 0;
+        user-select: none;
+      }
+      .confirmDetails > summary::-webkit-details-marker {
+        display: none;
+      }
+      .confirmDetails > summary::before {
+        content: "▸";
+        color: #8a6200;
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        margin-right: 4px;
+        border-radius: 6px;
+        background: #ffe8a3;
+        border: 1px solid #e6c25a;
+        box-sizing: border-box;
+      }
+      .confirmDetails > summary:hover::before {
+        background: #ffdf85;
+        border-color: #d4ad3f;
+      }
+      .confirmDetails[open] > summary::before {
+        content: "▾";
+        background: #ffd96b;
+      }
+      .confirmDetailsTitle {
+        font-weight: 700;
+        font-size: 13px;
+        color: #6b4f00;
+      }
+      .confirmDetailsBody {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #f0d48a;
+      }
+      .confirmFix {
+        padding: 6px 0 6px 8px;
+        border-left: 3px solid #e6a700;
+        margin-bottom: 8px;
+        background: #fff;
+        border-radius: 0 6px 6px 0;
+      }
+      .confirmActions {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .confirmApplyBtn {
+        background: #1a73e8;
+        color: #fff;
+        border-color: #1a73e8;
+      }
+      .confirmApplyBtn:hover {
+        background: #1558b0;
+      }
+      .confirmSkipBtn {
+        background: #f6f6f6;
+        color: #1f1f1f;
+      }
+      .reportWhy {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .reportMeta {
+        color: #555;
+        font-size: 11px;
+        margin-bottom: 4px;
+      }
+      .reportDiff {
+        color: #444;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+      .reportCtxWord {
+        font-family: var(--figma-font, Inter, -apple-system, BlinkMacSystemFont, sans-serif);
+        font-weight: 600;
+        color: #1f1f1f;
+        background: #eef3fc;
+        padding: 0 4px;
+        border-radius: 4px;
+      }
+      .ws-mark {
+        font-weight: 600;
+      }
+      .ws-sp {
+        color: #888;
+      }
+      .ws-nbsp {
+        color: #c45c00;
+      }
+      .ws-nnbsp {
+        color: #9a6b00;
+      }
+      .ws-tab {
+        color: #0b57d0;
+      }
+      .ws-nl {
+        color: #0b57d0;
+      }
+      .ws-empty {
+        color: #b00020;
+        font-style: italic;
+        font-weight: 400;
+      }
+      .cards {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .card {
+        border: 1px solid #dedede;
+        border-radius: 8px;
+        padding: 10px;
+        background: #fff;
+      }
+      .cardClickable {
+        cursor: pointer;
+      }
+      .cardTitle {
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .fieldLabel {
+        color: #444;
+        font-weight: 700;
+        margin-top: 10px;
+        margin-bottom: 6px;
+      }
+      .textPreview {
+        white-space: pre-wrap;
+        border: 1px solid #ededed;
+        border-radius: 6px;
+        padding: 8px;
+        background: #fcfcfc;
+        max-height: 100px;
+        overflow: auto;
+      }
+      .empty {
+        color: #666;
+        padding: 10px 4px;
+      }
+      .sectionTitle {
+        font-weight: 700;
+        margin: 14px 0 8px;
+        font-size: 12px;
+        color: #444;
+      }
+      .techBlock {
+        flex-shrink: 0;
+        margin-top: auto;
+        border: 1px solid #e8e8e8;
+        background: #fafafa;
+        border-radius: 6px;
+        padding: 6px 8px;
+        box-sizing: border-box;
+      }
+      .techDetails > summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 0;
+        user-select: none;
+      }
+      .techDetails > summary::-webkit-details-marker {
+        display: none;
+      }
+      .techDetails > summary::before {
+        content: "▸";
+        color: #999;
+        font-size: 10px;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+      .techDetails[open] > summary::before {
+        content: "▾";
+      }
+      .techDetailsTitle {
+        font-weight: 500;
+        font-size: 11px;
+        color: #777;
+      }
+      .techDetailsBody {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid #ececec;
+      }
+      .sheetStatus {
+        font-size: 11px;
+        line-height: 1.4;
+        font-weight: 400;
+      }
+      .sheetStatus.ok {
+        color: #1b6b2a;
+      }
+      .sheetStatus.err {
+        color: #b00020;
+      }
