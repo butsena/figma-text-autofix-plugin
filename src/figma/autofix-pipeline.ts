@@ -3,11 +3,9 @@ import { applyFixesFromScan } from "./apply-fixes";
 import { buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport, mergeAutoApplyReports } from "./build-auto-apply-report";
 import { postCheckResultToUi, setLastAutoApplyReport } from "./check-result-session";
 import { TEXT_REPLACEMENTS_CSV_URL } from "../config/text-replacements-remote-url";
-import { isGoogleSheetsUrl } from "../sheet/google-sheets-url";
 import { fetchCsvViaHttp, refreshTextReplacementsFromRemote } from "../sheet/refresh-from-remote";
 import type { PluginToUiMessage, SheetLoadStatusDto } from "../shared/messages";
 import { scanSelectedTextNodes } from "./scan-selection";
-import { fetchGoogleSheetCsvViaUi } from "./sheet-fetch-via-ui";
 
 /** Защита от зацикливания, если правила конфликтуют или текст не меняется. */
 const MAX_AUTOFIX_PASSES = 20;
@@ -17,13 +15,6 @@ export type AutofixAutoPassesResult = {
   finalScan: CheckResultDto;
 };
 
-async function fetchCsvForSheet(fetchUrl: string): Promise<string> {
-  if (isGoogleSheetsUrl(fetchUrl)) {
-    return fetchGoogleSheetCsvViaUi(fetchUrl);
-  }
-  return fetchCsvViaHttp(fetchUrl);
-}
-
 export async function postPluginConfigToUi(sheetLoad?: SheetLoadStatusDto | null): Promise<void> {
   figma.ui.postMessage({
     type: "plugin:config",
@@ -31,14 +22,14 @@ export async function postPluginConfigToUi(sheetLoad?: SheetLoadStatusDto | null
   } satisfies PluginToUiMessage);
 }
 
-async function refreshSheetAndPostConfig(): Promise<SheetLoadStatusDto> {
+async function refreshLexiconAndPostConfig(): Promise<SheetLoadStatusDto> {
   const sheetLoad = await refreshTextReplacementsFromRemote(
     TEXT_REPLACEMENTS_CSV_URL,
-    fetchCsvForSheet,
+    fetchCsvViaHttp,
   );
   await postPluginConfigToUi(sheetLoad);
   if (!sheetLoad.ok) {
-    console.warn("[text-autofix] sheet load failed", sheetLoad);
+    console.warn("[text-autofix] lexicon load failed, using bundled CSV", sheetLoad);
   }
   return sheetLoad;
 }
@@ -96,7 +87,7 @@ export async function runAutofixAutoPasses(
 /** Сканирование → применение в цикле, пока есть правки; сводный отчёт в UI. */
 export async function runAutofixPipeline(): Promise<void> {
   const selection = figma.currentPage.selection;
-  await refreshSheetAndPostConfig();
+  await refreshLexiconAndPostConfig();
 
   const { report, finalScan } = await runAutofixAutoPasses(selection);
   setLastAutoApplyReport(report);

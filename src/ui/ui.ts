@@ -214,19 +214,15 @@ function renderTechDetailsHtml(): string {
   let bodyHtml = "";
 
   if (!sl) {
-    bodyHtml = '<div class="empty" style="padding:4px 0">Статус загрузки таблицы ещё не получен.</div>';
+    bodyHtml = '<div class="empty" style="padding:4px 0">Статус загрузки словаря ещё не получен.</div>';
   } else if (sl.fromRemote && sl.ok) {
-    const extra =
-      sl.bundledOnlyRuleCount && sl.bundledOnlyRuleCount > 0
-        ? `, из сборки: <b>${sl.bundledOnlyRuleCount}</b>`
-        : "";
-    bodyHtml = `<div class="sheetStatus ok">Загружено правил замен: <b>${sl.ruleCount}</b> (таблица: <b>${sl.remoteRuleCount ?? 0}</b>${extra}).</div>`;
+    bodyHtml = `<div class="sheetStatus ok">Словарь с GitHub: <b>${sl.ruleCount}</b> прав.</div>`;
   } else if (!sl.ok) {
-    bodyHtml = `<div class="sheetStatus err">Таблица не загрузилась — встроенный CSV (${sl.ruleCount} прав.). ${escapeHtml(
+    bodyHtml = `<div class="sheetStatus err">GitHub недоступен — встроенный CSV (${sl.ruleCount} прав.). ${escapeHtml(
       displayText(sl.errorMessage),
     )}</div>`;
   } else {
-    bodyHtml = `<div class="sheetStatus ok">Используется встроенный CSV: <b>${sl.ruleCount}</b> прав.</div>`;
+    bodyHtml = `<div class="sheetStatus ok">Встроенный CSV: <b>${sl.ruleCount}</b> прав.</div>`;
   }
 
   return `

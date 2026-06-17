@@ -6,6 +6,7 @@
     "dev": "vite",
     "build:yo-curated": "node scripts/build-yo-curated.mjs",
     "build": "npm run build:yo-curated && node scripts/build-ui-html.mjs && vite build",
+    "sync:text-replacements": "node scripts/sync-text-replacements-from-google.mjs",
     "test": "npm run build:yo-curated && vitest run",
     "test:watch": "npm run build:yo-curated && vitest"
   },

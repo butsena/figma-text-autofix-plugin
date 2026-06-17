@@ -1,16 +1,13 @@
-import { TEAM_SPREADSHEET_ID } from "../config/text-replacements-remote-url";
 import { invalidateAutofixRulesCache } from "../rules/autofix-rules";
 import {
-  extractSpreadsheetId,
   fetchUrlWithCacheBust,
   formatFetchError,
   looksLikeHtmlNotCsv,
   previewResponseText,
-  resolveSheetFetchUrl,
 } from "./google-sheets-url";
 import {
-  applySheetRulesFromRemoteCsv,
-  getSheetRulesMergeStats,
+  applySheetRulesFromCsv,
+  getSheetRulesLoadStats,
   resetSheetRulesToBundled,
 } from "./replacement-rules-store";
 
@@ -28,11 +25,11 @@ function sheetLoadCounts(): Pick<
   RefreshSheetRulesResult,
   "ruleCount" | "remoteRuleCount" | "bundledOnlyRuleCount"
 > {
-  const stats = getSheetRulesMergeStats();
+  const stats = getSheetRulesLoadStats();
   return {
     ruleCount: stats.totalCount,
-    remoteRuleCount: stats.remoteCount,
-    bundledOnlyRuleCount: stats.bundledOnlyCount,
+    remoteRuleCount: stats.fromRemote ? stats.totalCount : 0,
+    bundledOnlyRuleCount: stats.fromRemote ? 0 : stats.totalCount,
   };
 }
 
@@ -42,12 +39,11 @@ function applyDownloadedCsv(text: string, fetchUrl: string): RefreshSheetRulesRe
       ok: false,
       fromRemote: false,
       ...sheetLoadCounts(),
-      errorMessage:
-        "Ответ не CSV (часто страница входа Google). Доступ: «все, у кого есть ссылка» → Читатель.",
+      errorMessage: "Ответ не CSV (возможно HTML-страница ошибки).",
       fetchUrl,
     };
   }
-  if (!applySheetRulesFromRemoteCsv(text)) {
+  if (!applySheetRulesFromCsv(text)) {
     return {
       ok: false,
       fromRemote: false,
@@ -65,17 +61,14 @@ function applyDownloadedCsv(text: string, fetchUrl: string): RefreshSheetRulesRe
   };
 }
 
-/**
- * Подтянуть CSV таблицы замен. Для Google Sheets `fetchCsv` — через JSONP в UI (обход CORS).
- */
+/** Подтянуть CSV словаря замен по URL; при ошибке — fallback на bundled. */
 export async function refreshTextReplacementsFromRemote(
   csvUrl: string,
   fetchCsv: (fetchUrl: string) => Promise<string>,
 ): Promise<RefreshSheetRulesResult> {
-  const fallback = csvUrl.trim();
-  const fetchUrl = resolveSheetFetchUrl(csvUrl, fallback);
+  const fetchUrl = csvUrl.trim();
 
-  if (!fallback) {
+  if (!fetchUrl) {
     resetSheetRulesToBundled();
     invalidateAutofixRulesCache();
     return { ok: true, fromRemote: false, ...sheetLoadCounts() };
@@ -83,20 +76,16 @@ export async function refreshTextReplacementsFromRemote(
 
   try {
     console.log("[text-autofix] load CSV:", fetchUrl);
-    const text = await fetchCsv(fetchUrl);
+    const text = await fetchCsv(fetchUrlWithCacheBust(fetchUrl));
     console.log("[text-autofix] CSV bytes:", text.length);
     const result = applyDownloadedCsv(text, fetchUrl);
     if (!result.ok) {
       resetSheetRulesToBundled();
       invalidateAutofixRulesCache();
     }
-    const loadedId = extractSpreadsheetId(fetchUrl);
-    if (result.ok && loadedId && loadedId !== TEAM_SPREADSHEET_ID) {
-      console.warn("[text-autofix] loaded sheet id differs from TEAM_SPREADSHEET_ID");
-    }
     return result;
   } catch (e) {
-    console.warn("[text-autofix] sheet load failed:", e);
+    console.warn("[text-autofix] CSV load failed:", e);
     resetSheetRulesToBundled();
     invalidateAutofixRulesCache();
     return {
@@ -109,9 +98,8 @@ export async function refreshTextReplacementsFromRemote(
   }
 }
 
-/** Прямой fetch (для не-Google URL). В Figma для Sheets не работает из‑за CORS. */
 export async function fetchCsvViaHttp(fetchUrl: string): Promise<string> {
-  const res = await fetch(fetchUrlWithCacheBust(fetchUrl), { method: "GET", cache: "no-store" });
+  const res = await fetch(fetchUrl, { method: "GET", cache: "no-store" });
   const text = await res.text();
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}. Начало ответа: ${previewResponseText(text)}`);
