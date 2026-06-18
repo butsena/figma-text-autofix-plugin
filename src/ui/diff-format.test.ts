@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
+import { fixesFor } from "../test/helpers";
+import { buildSingleSentenceRemovePeriodRules } from "../rules/typography/single-sentence-remove-period-rules";
 import { formatFixDiffHtml } from "./diff-format";
 
 describe("formatFixDiffHtml", () => {
+  it("показывает контекстное слово при снятии точки в одном предложении", () => {
+    const [fix] = fixesFor("Заполните профиль.", buildSingleSentenceRemovePeriodRules());
+    const html = formatFixDiffHtml(fix, "Заполните профиль.");
+    expect(html).toContain("профиль.");
+    expect(html).toContain("профиль</span></b>");
+    expect(html).not.toContain("∅");
+  });
+
   it("показывает контекстное слово для неявной точки", () => {
     const sourceText = "по запросу Главное";
     const html = formatFixDiffHtml(

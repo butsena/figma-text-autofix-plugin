@@ -18,8 +18,11 @@ export const MSG_RED_POLICY_SENTENCE_CAP =
 export const MSG_RED_POLICY_SENTENCE_PERIOD =
   "Редполитика: точка в конце предложения.";
 
+export const MSG_RED_POLICY_SINGLE_SENTENCE_NO_PERIOD =
+  "Редполитика: одно предложение, точка не нужна.";
+
 export const MSG_CONFIRM_IMPLICIT_SENTENCE_PERIOD =
-  "Похоже, между словами пропущена точка.";
+  "Редполитика: похоже, между словами пропущена точка.";
 
 export function msgConfirmYoHomograph(eForm: string, yoForm: string): string {
   return `Проверьте: «${eForm}» или «${yoForm}»?`;

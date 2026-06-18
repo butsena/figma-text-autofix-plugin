@@ -19,6 +19,7 @@ import { buildPunctuationSpacingRules } from "./typography/punctuation-spacing-r
 import { buildSentenceCapitalizationRules } from "./typography/sentence-capitalization-rules";
 import { buildImplicitSentencePeriodRules } from "./typography/implicit-sentence-period-rules";
 import { buildSentenceTerminalPeriodRules } from "./typography/sentence-terminal-period-rules";
+import { buildSingleSentenceRemovePeriodRules } from "./typography/single-sentence-remove-period-rules";
 import { buildServiceWordNbspRules } from "./typography/service-word-nbsp-rules";
 
 function composeAutofixRules(): AutofixRule[] {
@@ -41,6 +42,7 @@ function composeAutofixRules(): AutofixRule[] {
     ...buildPunctuationSpacingRules(),
     ...buildSentenceCapitalizationRules(),
     ...buildSentenceTerminalPeriodRules(),
+    ...buildSingleSentenceRemovePeriodRules(),
     ...buildImplicitSentencePeriodRules(),
   ];
 }

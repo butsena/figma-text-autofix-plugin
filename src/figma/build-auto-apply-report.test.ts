@@ -157,7 +157,7 @@ describe("build-auto-apply-report", () => {
         rule: {
           id: "cian-139a-implicit-sentence-period",
           category: "cian_editorial",
-          message: "Похоже, между словами пропущена точка.",
+          message: "Редполитика: похоже, между словами пропущена точка.",
           priority: 87,
           applyPolicy: "confirm",
         },

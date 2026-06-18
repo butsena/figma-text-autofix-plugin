@@ -20,6 +20,7 @@ const SERVICE_WORD_NBSP_RULE_IDS: Record<string, true> = {
 const SENTENCE_PERIOD_RULE_IDS: Record<string, true> = {
   "cian-139-sentence-terminal-period": true,
   "cian-139a-implicit-sentence-period": true,
+  "cian-139b-single-sentence-remove-period": true,
 };
 
 const WORD_CHAR_RE = /[0-9A-Za-z\u0400-\u04FF\u0451\u0401]/;
@@ -140,19 +141,36 @@ function formatSentencePeriodDiff(
   before: string | undefined,
   after: string | undefined,
 ): string | null {
-  if (!isWhitespaceOnlyFragment(before)) return null;
-  if (!isSentenceTerminalPunctuationFragment(after)) return null;
-  const word = extractContextWordBefore(sourceText, from);
-  if (!word) return null;
-  return (
-    '<span class="reportCtxWord">' +
-    escapeHtml(word) +
-    "</span>" +
-    ' <span style="color:#888;font-weight:400">→</span> <b>' +
-    '<span class="reportCtxWord">' +
-    escapeHtml(word + (after ?? "")) +
-    "</span></b>"
-  );
+  if (isWhitespaceOnlyFragment(before) && isSentenceTerminalPunctuationFragment(after)) {
+    const word = extractContextWordBefore(sourceText, from);
+    if (!word) return null;
+    return (
+      '<span class="reportCtxWord">' +
+      escapeHtml(word) +
+      "</span>" +
+      ' <span style="color:#888;font-weight:400">→</span> <b>' +
+      '<span class="reportCtxWord">' +
+      escapeHtml(word + (after ?? "")) +
+      "</span></b>"
+    );
+  }
+
+  if (before?.endsWith(".") && (!after || after === "" || after === before.slice(0, -1))) {
+    const periodAt = from + before.length - 1;
+    const word = extractContextWordBefore(sourceText, periodAt);
+    if (!word) return null;
+    return (
+      '<span class="reportCtxWord">' +
+      escapeHtml(word + ".") +
+      "</span>" +
+      ' <span style="color:#888;font-weight:400">→</span> <b>' +
+      '<span class="reportCtxWord">' +
+      escapeHtml(word) +
+      "</span></b>"
+    );
+  }
+
+  return null;
 }
 
 export function formatFixDiffHtml(fix: FixDiffInput, sourceText?: string): string {

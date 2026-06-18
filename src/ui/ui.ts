@@ -4,6 +4,7 @@ import {
   detailsOpenAttr,
   displayText,
   escapeHtml,
+  formatFixCategoryLabel,
 } from "./ui-helpers";
 import {
   PLUGIN_UI_MAX_HEIGHT,
@@ -161,7 +162,7 @@ function renderFixRow(
   return `
     <div class="${wrapperClass}"${dataAttrs}>
       <div class="reportWhy">${escapeHtml(fix.message)}</div>
-      <div class="reportMeta">Правило: <code>${escapeHtml(fix.ruleId)}</code> · ${escapeHtml(fix.category)}</div>
+      <div class="reportMeta">Правило: <code>${escapeHtml(fix.ruleId)}</code> · ${escapeHtml(formatFixCategoryLabel(fix.category, fix.ruleId))}</div>
       <div class="reportDiff">${formatFixDiffHtml(fix, sourceText)}</div>
       ${actionsHtml}
     </div>

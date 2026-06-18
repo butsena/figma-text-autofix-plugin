@@ -30,3 +30,16 @@ export function countConfirmFixes(
 export function detailsOpenAttr(isOpen: boolean): string {
   return isOpen ? " open" : "";
 }
+
+const SENTENCE_PERIOD_RULE_IDS: Record<string, true> = {
+  "cian-139-sentence-terminal-period": true,
+  "cian-139a-implicit-sentence-period": true,
+  "cian-139b-single-sentence-remove-period": true,
+};
+
+/** Человекочитаемая категория правки в отчёте UI. */
+export function formatFixCategoryLabel(category: string, ruleId?: string): string {
+  if (ruleId && SENTENCE_PERIOD_RULE_IDS[ruleId]) return "Редполитика";
+  if (category === "cian_editorial") return "Редполитика";
+  return category;
+}

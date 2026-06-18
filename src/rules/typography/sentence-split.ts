@@ -113,6 +113,32 @@ function insertTerminalPeriod(fragment: string): string {
   return `${core}.${trailingWs}`;
 }
 
+function removeTrailingPeriod(text: string): string {
+  const trailingWs = text.match(/[ \t\u00A0\u202F\r\n]*$/u)?.[0] ?? "";
+  const core = text.slice(0, text.length - trailingWs.length);
+  if (!core.endsWith(".")) return text;
+  return `${core.slice(0, -1)}${trailingWs}`;
+}
+
+function endsWithSentencePeriod(text: string): boolean {
+  const trimmedEnd = text.replace(/[ \t\u00A0\u202F]+$/u, "");
+  return trimmedEnd.endsWith(".");
+}
+
+export function removeSingleSentenceTerminalPeriod(text: string): string {
+  if (!hasLetter(text)) return text;
+  if (isListOnlyLayer(text)) return text;
+
+  const normalized = normalizeSpaceAfterSentenceEnd(text);
+  const fragments = splitIntoSentenceFragments(normalized);
+  const sentenceLike = fragments.filter((part) => hasLetter(part.trim()));
+
+  if (sentenceLike.length !== 1) return text;
+  if (!endsWithSentencePeriod(normalized)) return text;
+
+  return removeTrailingPeriod(normalized);
+}
+
 export function normalizeSpaceAfterSentenceEnd(text: string): string {
   return text
     .replace(MISSING_SPACE_AFTER_PERIOD, ". ")
