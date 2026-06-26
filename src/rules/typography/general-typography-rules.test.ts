@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { applyAllRules } from "../../test/helpers";
+import { applyAllRulesMultiPass } from "../../test/multi-pass";
+import { getAutofixRules } from "../autofix-rules";
 import { buildGeneralTypographyRules } from "./general-typography-rules";
 
 const rules = buildGeneralTypographyRules();
@@ -40,5 +42,64 @@ describe("buildGeneralTypographyRules", () => {
 
   it("убирает двойные пробелы", () => {
     expect(applyAllRules("слишком  много   пробелов", rules)).toBe("слишком много пробелов");
+  });
+
+  it("схлопывает пустую строку в один перенос, не склеивая абзацы", () => {
+    const input =
+      "Считаем, сколько раз пользователи добавили ваши объявления в избранное:\n\nпоказываем общее количество\n• не учитываем ваши действия\n\nПоказываем на графике";
+    expect(applyAllRules(input, rules)).toBe(input);
+  });
+
+  it("схлопывает три и более переноса до абзацного разрыва", () => {
+    expect(applyAllRules("первый\n\n\nвторой", rules)).toBe("первый\n\nвторой");
+    expect(applyAllRules("первый\n\n\n\nвторой", rules)).toBe("первый\n\nвторой");
+  });
+
+  it("сохраняет одиночные переносы в маркированном списке", () => {
+    const input = "• первый пункт\n• второй пункт";
+    expect(applyAllRules(input, rules)).toBe(input);
+  });
+
+  it("убирает переносы только в начале и конце", () => {
+    expect(applyAllRules("\n\nтекст\n\n", rules)).toBe("текст");
+  });
+});
+
+describe("модальное окно со списком (полный пайплайн)", () => {
+  const modalText = `Считаем, сколько раз пользователи добавили ваши объявления в избранное:
+
+показываем общее количество по всем объявлениям за каждый день в выбранный период
+• не учитываем ваши действия: если вы добавили своё объявление в избранное, это не попадает в статистику
+
+Показываем на графике данные по всем объявлениям за выбранный период, но не раньше марта 2024 года. Сколько раз добавили в избранное каждое отдельное объявление можно посмотреть в Моих объявлениях.
+
+• Работало продвижение`;
+
+  it("не склеивает абзацы и пункты списка", () => {
+    const out = applyAllRules(modalText, getAutofixRules());
+    expect(out).toContain("избранное:\n\nпоказываем");
+    expect(out).not.toContain("избранное:показываем");
+    expect(out).toContain("статистику\n\nПоказываем");
+    expect(out).not.toContain("статистикуПоказываем");
+    expect(out).toMatch(/• не.\s*учитываем/);
+    expect(out).toContain("• Работало продвижение");
+  });
+
+  it("не склеивает при многоходовом пайплайне", () => {
+    const { text: out, passes } = applyAllRulesMultiPass(modalText, getAutofixRules());
+    expect(passes).toBeGreaterThan(0);
+    expect(out).toContain("избранное:\n\nпоказываем");
+    expect(out).not.toContain("избранное:показываем");
+    expect(out).toContain("статистику\n\nПоказываем");
+    expect(out).not.toContain("статистикуПоказываем");
+  });
+
+  it("не склеивает при одиночных переносах между блоками", () => {
+    const singleBreak = modalText.replace(/\n\n/g, "\n");
+    const { text: out } = applyAllRulesMultiPass(singleBreak, getAutofixRules());
+    expect(out).toContain("избранное:\nпоказываем");
+    expect(out).not.toContain("избранное:показываем");
+    expect(out).toContain("статистику\nПоказываем");
+    expect(out).not.toContain("статистикуПоказываем");
   });
 });

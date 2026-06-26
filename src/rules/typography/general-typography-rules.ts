@@ -7,7 +7,12 @@ import {
   MSG_TYPO_REMOVE_EXTRA_LINE_BREAK,
   MSG_TYPO_REMOVE_EXTRA_SPACE,
 } from "../rule-messages";
-import { EMPTY_LINE_BREAKS_PATTERN, NBSP } from "./constants";
+import {
+  EXCESS_LINE_BREAKS_PATTERN,
+  LEADING_LINE_BREAKS_PATTERN,
+  NBSP,
+  TRAILING_LINE_BREAKS_PATTERN,
+} from "./constants";
 import { buildEmdashRules } from "./emdash-rules";
 import { buildPhoneRules } from "./phone-rules";
 import { buildQuotesRules } from "./quotes-rules";
@@ -41,10 +46,26 @@ export function buildGeneralTypographyRules(): AutofixRule[] {
       priority: 54,
     }),
     rule({
-      id: "cian-121-remove-empty-line-breaks",
+      id: "cian-121-remove-leading-line-breaks",
       category: "typography",
-      pattern: EMPTY_LINE_BREAKS_PATTERN,
+      pattern: LEADING_LINE_BREAKS_PATTERN,
       replacement: "",
+      message: MSG_TYPO_REMOVE_EXTRA_LINE_BREAK,
+      priority: 52,
+    }),
+    rule({
+      id: "cian-121-remove-trailing-line-breaks",
+      category: "typography",
+      pattern: TRAILING_LINE_BREAKS_PATTERN,
+      replacement: "",
+      message: MSG_TYPO_REMOVE_EXTRA_LINE_BREAK,
+      priority: 52,
+    }),
+    rule({
+      id: "cian-121-collapse-excess-line-breaks",
+      category: "typography",
+      pattern: EXCESS_LINE_BREAKS_PATTERN,
+      replacement: "\n\n",
       message: MSG_TYPO_REMOVE_EXTRA_LINE_BREAK,
       priority: 52,
     }),
