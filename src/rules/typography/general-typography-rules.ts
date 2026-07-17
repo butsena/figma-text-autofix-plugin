@@ -2,6 +2,7 @@ import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
 import {
   MSG_TYPO_ELLIPSIS,
+  MSG_TYPO_NBSP_BEFORE_UNIT,
   MSG_TYPO_NBSP_NUMBER,
   MSG_TYPO_NBSP_PERCENT,
   MSG_TYPO_REMOVE_EXTRA_LINE_BREAK,
@@ -17,16 +18,27 @@ import { buildEmdashRules } from "./emdash-rules";
 import { buildPhoneRules } from "./phone-rules";
 import { buildQuotesRules } from "./quotes-rules";
 
+/** Число + единица: NBSP между ними; для ₽/руб./млн/тыс — даже если пробела нет. */
+const NUMBER_UNIT_PATTERN =
+  /(\d+(?:[ \u00A0\u202F]\d{3})*(?:[.,]\d+)?)([ \u00A0\u202F]*)((?:°C|°F|мм|см|км|кг|мг|мл|мин|млн|тыс|м²|м³|руб\.?|₽|р\.?|ч|с|м|л|г))(?=[^\p{L}\p{N}]|$)/giu;
+
+const GLUED_UNIT = /^(?:руб\.?|₽|р\.?|млн|тыс)$/iu;
+
+function nbspBeforeUnit(num: string, sep: string, unit: string, matched: string): string {
+  if (sep.length > 0) return `${num}${NBSP}${unit}`;
+  if (GLUED_UNIT.test(unit)) return `${num}${NBSP}${unit}`;
+  return matched;
+}
+
 export function buildGeneralTypographyRules(): AutofixRule[] {
   return rules([
     ...buildPhoneRules(),
     rule({
       id: "cian-110-nbsp-number-unit",
       category: "typography",
-      pattern:
-        /(\d+(?:[ \u00A0\u202F]\d{3})*(?:[.,]\d+)?)\s+(°C|°F|мм|см|м|км|г|кг|мг|л|мл|ч|мин|с|м²|м³|руб\.?|₽|р\.?)(?=[^\p{L}\p{N}]|$)/giu,
-      replacement: (_match, num, unit) => `${num}${NBSP}${unit}`,
-      message: MSG_TYPO_NBSP_NUMBER,
+      pattern: NUMBER_UNIT_PATTERN,
+      replacement: (match, num, sep, unit) => nbspBeforeUnit(num, sep, unit, match),
+      message: MSG_TYPO_NBSP_BEFORE_UNIT,
       priority: 53,
     }),
     rule({

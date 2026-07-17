@@ -1,6 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule } from "../../core/rule-def";
-import { MSG_TYPO_NBSP_NUMBER } from "../rule-messages";
+import { MSG_TYPO_NBSP_NUMBER, MSG_TYPO_NUMBER_GROUPING } from "../rule-messages";
 import { NBSP } from "./constants";
 
 const GROUP_SEP = NBSP;
@@ -14,13 +14,35 @@ function isAlreadyGrouped(num: string): boolean {
   return parts.slice(1).every((p) => p.length === 3);
 }
 
-/** «100 000» / «1 000 000» с обычными пробелами между разрядами. */
-const GROUPED_WITH_REGULAR_SPACE =
-  /(^|[^0-9])((?:\d{1,3})(?: \d{3})+)([.,]\d+)?(?=[^0-9]|$)/g;
+/** «100 000» / «1 000 000» с пробелами или NBSP между разрядами. */
+const GROUPED_WITH_MIXED_SPACE =
+  /(^|(?<!\d)[^0-9])((?:\d{1,3})(?:[ \u00A0\u202F]\d{3})+)([.,]\d+)?(?=[^0-9]|$)/g;
+
+function normalizeGroupedNumberSpaces(intPart: string): string | null {
+  if (!isAlreadyGrouped(intPart)) return null;
+  if (!/ /.test(intPart)) return null;
+  return intPart.replace(/ +/g, NBSP);
+}
+
+/** Число с пробелами/NBSP, но с неверной разбивкой: «100 0 000». */
+const MALFORMED_GROUPED_NUMBER =
+  /(^|(?<!\d)[^0-9])((?:\d+[ \u00A0\u202F]+)+\d+)([.,]\d+)?(?=[^0-9]|$)/g;
 
 /** 11 цифр с 7/8 в начале — мобильный РФ, не трогаем (отдельное правило телефона). */
 function isLikelyRuMobileDigits(digits: string): boolean {
   return digits.length === 11 && (digits[0] === "7" || digits[0] === "8");
+}
+
+/** Собрать цифры и перегруппировать; null — если правка не нужна. */
+export function fixMalformedGroupedNumber(intPart: string): string | null {
+  if (!/[ \u00A0\u202F]/.test(intPart)) return null;
+  if (isAlreadyGrouped(intPart)) return null;
+
+  const digits = intPart.replace(/\D/g, "");
+  if (digits.length < 5) return null;
+  if (isLikelyRuMobileDigits(digits)) return null;
+
+  return formatThousands(digits);
 }
 
 /** Группы по 3 цифры справа: 100000 → 100 000. */
@@ -36,11 +58,25 @@ export function formatThousands(digits: string, sep = GROUP_SEP): string {
 export function buildNumberGroupingRules(): AutofixRule[] {
   return [
     rule({
+      id: "cian-136-fix-malformed-grouped-numbers",
+      category: "numeric_formatting",
+      pattern: MALFORMED_GROUPED_NUMBER,
+      replacement: (match, prefix, intPart, fracPart?: string) => {
+        if (prefix.endsWith("+")) return match;
+        const fixed = fixMalformedGroupedNumber(intPart);
+        if (!fixed) return match;
+        return `${prefix}${fixed}${fracPart ?? ""}`;
+      },
+      message: MSG_TYPO_NUMBER_GROUPING,
+      priority: 51,
+    }),
+    rule({
       id: "cian-135-nbsp-within-grouped-numbers",
       category: "numeric_formatting",
-      pattern: GROUPED_WITH_REGULAR_SPACE,
-      replacement: (_match, prefix, intPart, fracPart?: string) => {
-        const normalized = intPart.replace(/ +/g, NBSP);
+      pattern: GROUPED_WITH_MIXED_SPACE,
+      replacement: (match, prefix, intPart, fracPart?: string) => {
+        const normalized = normalizeGroupedNumberSpaces(intPart);
+        if (!normalized) return match;
         return `${prefix}${normalized}${fracPart ?? ""}`;
       },
       message: MSG_TYPO_NBSP_NUMBER,
@@ -57,7 +93,7 @@ export function buildNumberGroupingRules(): AutofixRule[] {
         if (isLikelyRuMobileDigits(intPart)) return match;
         return `${prefix}${formatThousands(intPart)}${fracPart ?? ""}`;
       },
-      message: MSG_TYPO_NBSP_NUMBER,
+      message: MSG_TYPO_NUMBER_GROUPING,
       priority: 52,
     }),
   ];

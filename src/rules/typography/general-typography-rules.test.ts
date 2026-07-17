@@ -18,6 +18,29 @@ describe("buildGeneralTypographyRules", () => {
     expect(applyAllRules("площадь 45 м²", rules)).toBe(`площадь 45${nbsp}м²`);
   });
 
+  it("неразрывный пробел перед ₽", () => {
+    expect(applyAllRules("от 100 000 ₽", rules)).toBe(`от 100 000${nbsp}₽`);
+    expect(applyAllRules("от 100 000₽", rules)).toBe(`от 100 000${nbsp}₽`);
+    expect(applyAllRules("от 100000₽", rules)).toBe(`от 100000${nbsp}₽`);
+    expect(applyAllRules("5 ₽", rules)).toBe(`5${nbsp}₽`);
+    expect(applyAllRules("5₽", rules)).toBe(`5${nbsp}₽`);
+  });
+
+  it("неразрывный пробел перед ₽ (полный пайплайн)", () => {
+    const allRules = getAutofixRules();
+    expect(applyAllRules("от 100 000 ₽", allRules)).toBe(`От${nbsp}100${nbsp}000${nbsp}₽`);
+    expect(applyAllRules("от 100000₽", allRules)).toBe(`От${nbsp}100${nbsp}000${nbsp}₽`);
+  });
+
+  it("неразрывный пробел перед млн и тыс", () => {
+    expect(applyAllRules("от 5 млн", rules)).toBe(`от 5${nbsp}млн`);
+    expect(applyAllRules("от 5млн", rules)).toBe(`от 5${nbsp}млн`);
+    expect(applyAllRules("1,5 млн", rules)).toBe(`1,5${nbsp}млн`);
+    expect(applyAllRules("1,5млн", rules)).toBe(`1,5${nbsp}млн`);
+    expect(applyAllRules("100 тыс", rules)).toBe(`100${nbsp}тыс`);
+    expect(applyAllRules("100тыс", rules)).toBe(`100${nbsp}тыс`);
+  });
+
   it("процент без пробела", () => {
     expect(
       applyAllRules("скидка 10 %", rules.filter((r) => r.id === "cian-113-percent-without-space")),

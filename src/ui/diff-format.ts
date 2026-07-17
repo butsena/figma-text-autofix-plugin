@@ -9,12 +9,10 @@ export type FixDiffInput = {
   sourceText?: string;
 };
 
-const SERVICE_WORD_NBSP_RULE_IDS: Record<string, true> = {
-  "cian-095-nbsp-after-short-words-strict": true,
-  "cian-097-nbsp-after-service-words-before-line-end": true,
-  "cian-098-nbsp-after-service-words-newlines-before-text": true,
-  "cian-099-nbsp-after-service-words-trailing-newlines-at-eof": true,
-  "cian-101-nbsp-after-service-words-mixed-ws-before-text": true,
+const LINE_BREAK_RULE_IDS: Record<string, true> = {
+  "cian-121-remove-leading-line-breaks": true,
+  "cian-121-remove-trailing-line-breaks": true,
+  "cian-121-collapse-excess-line-breaks": true,
 };
 
 const SENTENCE_PERIOD_RULE_IDS: Record<string, true> = {
@@ -24,6 +22,16 @@ const SENTENCE_PERIOD_RULE_IDS: Record<string, true> = {
 };
 
 const WORD_CHAR_RE = /[0-9A-Za-z\u0400-\u04FF\u0451\u0401]/;
+
+/** Цифры и разделители разрядов слева от пробела. */
+const NUMBER_CONTEXT_CHAR_RE = /[0-9.,]/;
+
+/** Единицы измерения, валюта и символы справа от пробела. */
+const UNIT_CONTEXT_CHAR_RE = /[0-9A-Za-z\u0400-\u04FF\u0451\u0401%°²³№§₽]/;
+
+function isGroupingSpaceChar(ch: string, code: number): boolean {
+  return ch === " " || code === 0x00a0 || code === 0x202f;
+}
 
 /** Показать невидимые символы в фрагменте diff. */
 export function visualizeDiffFragment(text: string | null | undefined): string {
@@ -99,6 +107,48 @@ function extractContextWordAfter(text: string, index: number): string {
   return text.slice(index, i);
 }
 
+function extractNumberContextBefore(text: string, index: number): string {
+  let i = index - 1;
+  while (i >= 0) {
+    const ch = text.charAt(i);
+    const code = text.charCodeAt(i);
+    if (NUMBER_CONTEXT_CHAR_RE.test(ch) || isGroupingSpaceChar(ch, code)) {
+      i--;
+      continue;
+    }
+    break;
+  }
+  return text.slice(i + 1, index);
+}
+
+function extractUnitContextAfter(text: string, index: number): string {
+  let i = index;
+  while (i < text.length && UNIT_CONTEXT_CHAR_RE.test(text.charAt(i))) i++;
+  return text.slice(index, i);
+}
+
+function extractContextBefore(text: string, index: number): string {
+  const number = extractNumberContextBefore(text, index);
+  if (number && NUMBER_CONTEXT_CHAR_RE.test(number)) return number;
+  return extractContextWordBefore(text, index);
+}
+
+function extractContextAfter(text: string, index: number): string {
+  const unit = extractUnitContextAfter(text, index);
+  if (unit) return unit;
+  return extractContextWordAfter(text, index);
+}
+
+function shouldShowContextualWhitespaceDiff(fix: FixDiffInput): boolean {
+  if (!fix.sourceText) return false;
+  if (!isWhitespaceOnlyFragment(fix.before) || !isWhitespaceOnlyFragment(fix.after)) return false;
+  if (fix.ruleId && LINE_BREAK_RULE_IDS[fix.ruleId]) return false;
+  if (fix.from == null || fix.to == null) return false;
+  const left = extractContextBefore(fix.sourceText, fix.from);
+  const right = extractContextAfter(fix.sourceText, fix.to);
+  return Boolean(left || right);
+}
+
 function formatContextSide(
   leftWord: string,
   fragment: string | undefined,
@@ -107,13 +157,13 @@ function formatContextSide(
 ): string {
   const parts: string[] = [];
   if (leftWord) {
-    parts.push('<span class="reportCtxWord">' + escapeHtml(leftWord) + "</span>");
+    parts.push('<span class="reportCtxWord">' + visualizeDiffFragment(leftWord) + "</span>");
   }
   parts.push(
     bold ? "<b>" + visualizeDiffFragment(fragment) + "</b>" : visualizeDiffFragment(fragment),
   );
   if (rightWord) {
-    parts.push('<span class="reportCtxWord">' + escapeHtml(rightWord) + "</span>");
+    parts.push('<span class="reportCtxWord">' + visualizeDiffFragment(rightWord) + "</span>");
   }
   return parts.join(" ");
 }
@@ -125,8 +175,8 @@ function formatContextualWhitespaceDiff(
   before: string | undefined,
   after: string | undefined,
 ): string | null {
-  const leftWord = extractContextWordBefore(sourceText, from);
-  const rightWord = extractContextWordAfter(sourceText, to);
+  const leftWord = extractContextBefore(sourceText, from);
+  const rightWord = extractContextAfter(sourceText, to);
   if (!leftWord && !rightWord) return null;
   return (
     formatContextSide(leftWord, before, rightWord, false) +
@@ -189,19 +239,11 @@ export function formatFixDiffHtml(fix: FixDiffInput, sourceText?: string): strin
     if (periodDiff) return periodDiff;
   }
 
-  if (
-    enriched.ruleId &&
-    SERVICE_WORD_NBSP_RULE_IDS[enriched.ruleId] &&
-    isWhitespaceOnlyFragment(enriched.before) &&
-    isWhitespaceOnlyFragment(enriched.after) &&
-    enriched.sourceText &&
-    enriched.from != null &&
-    enriched.to != null
-  ) {
+  if (shouldShowContextualWhitespaceDiff(enriched)) {
     const contextual = formatContextualWhitespaceDiff(
-      enriched.sourceText,
-      enriched.from,
-      enriched.to,
+      enriched.sourceText!,
+      enriched.from!,
+      enriched.to!,
       enriched.before,
       enriched.after,
     );

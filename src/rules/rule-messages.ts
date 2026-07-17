@@ -54,6 +54,11 @@ export const MSG_TYPO_NBSP_ABBREVIATION = "Типографика: неразр�
 
 export const MSG_TYPO_NBSP_NUMBER = "Типографика: неразрывный пробел у числа.";
 
+export const MSG_TYPO_NBSP_BEFORE_UNIT =
+  "Типографика: неразрывный пробел перед единицей измерения.";
+
+export const MSG_TYPO_NUMBER_GROUPING = "Типографика: разрядность чисел.";
+
 export const MSG_TYPO_NBSP_PERCENT = "Типографика: между числом и % пробел не ставить.";
 
 export const MSG_TYPO_REMOVE_EXTRA_SPACE = "Типографика: убрать лишний пробел.";
