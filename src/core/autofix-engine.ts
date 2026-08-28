@@ -10,9 +10,15 @@ export type AutofixRule = {
   pattern: RegExp;
   replacement: string | ((match: string, ...groups: string[]) => string);
   message: string;
+  /** Доп. подсказка в UI (например, мнемоника для confirm/choice-правок). */
+  hint?: string;
+  /** Равноправные варианты выбора (policy choice): кнопки в UI вместо «Исправить». */
+  choiceOptions?: string[];
   priority: number;
-  /** auto — применять сразу; confirm — только после подтверждения в UI. */
+  /** auto — применять сразу; confirm — после подтверждения; choice — выбор из вариантов. */
   applyPolicy?: ApplyPolicy;
+  /** Доп. фильтр совпадения (например, отсечь ложные срабатывания на имена). */
+  matchFilter?: (text: string, match: RegExpExecArray) => boolean;
 };
 
 export type TextFix = {
@@ -25,6 +31,8 @@ export type TextFix = {
   ruleId: string;
   category: string;
   message: string;
+  hint?: string;
+  choiceOptions?: string[];
   priority: number;
   applyPolicy: ApplyPolicy;
 };
@@ -248,8 +256,29 @@ export function checkTextForAutofixes(text: string, rules: AutofixRule[]): TextC
       // If "pattern" matched an empty string, there's nothing meaningful to replace.
       if (matched.length === 0) continue;
 
+      if (rule.matchFilter && !rule.matchFilter(text, match)) continue;
+
       const after = computeAfter(text, match, rule);
-      if (after === matched) continue;
+      const isChoice = Boolean(rule.choiceOptions?.length);
+
+      if (!isChoice && after === matched) continue;
+
+      if (isChoice) {
+        fixes.push({
+          from,
+          to,
+          before: matched,
+          after: matched,
+          ruleId: rule.id,
+          category: rule.category,
+          message: rule.message,
+          ...(rule.hint ? { hint: rule.hint } : {}),
+          choiceOptions: rule.choiceOptions,
+          priority: rule.priority,
+          applyPolicy: resolveApplyPolicy(rule.applyPolicy),
+        });
+        continue;
+      }
 
       const narrowed = narrowReplacementRange(from, matched, after);
       if (narrowed.before === narrowed.after) continue;
@@ -263,6 +292,7 @@ export function checkTextForAutofixes(text: string, rules: AutofixRule[]): TextC
         ruleId: rule.id,
         category: rule.category,
         message: rule.message,
+        ...(rule.hint ? { hint: rule.hint } : {}),
         priority: rule.priority,
         applyPolicy: resolveApplyPolicy(rule.applyPolicy),
       });

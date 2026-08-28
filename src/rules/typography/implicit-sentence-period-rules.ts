@@ -2,6 +2,7 @@ import type { AutofixRule } from "../../core/autofix-engine";
 import { APPLY_POLICY_CONFIRM } from "../../core/apply-policy";
 import { rule, rules } from "../../core/rule-def";
 import { MSG_CONFIRM_IMPLICIT_SENTENCE_PERIOD } from "../rule-messages";
+import { isValidImplicitSentenceBoundary } from "./implicit-sentence-boundary-filters";
 import { IMPLICIT_SENTENCE_BOUNDARY } from "./sentence-split";
 
 export function buildImplicitSentencePeriodRules(): AutofixRule[] {
@@ -14,6 +15,7 @@ export function buildImplicitSentencePeriodRules(): AutofixRule[] {
       message: MSG_CONFIRM_IMPLICIT_SENTENCE_PERIOD,
       priority: 87,
       applyPolicy: APPLY_POLICY_CONFIRM,
+      matchFilter: (text, match) => isValidImplicitSentenceBoundary(text, match.index),
     }),
   ]);
 }

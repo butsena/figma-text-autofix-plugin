@@ -47,6 +47,21 @@ describe("checkTextForAutofixes", () => {
     expect(fixes.map((f) => f.after)).toEqual(["[one]", "[two]"]);
     expect(applyTextFixes("one two", fixes)).toBe("[one] [two]");
   });
+
+  it("пропускает совпадения, отфильтрованные matchFilter", () => {
+    const filteredRule: AutofixRule = rule({
+      id: "test-filter",
+      category: "test",
+      pattern: / /g,
+      replacement: "_",
+      message: "test",
+      priority: 1,
+      matchFilter: (_text, match) => match.index !== 3,
+    });
+    const { fixes } = checkTextForAutofixes("foo bar baz", [filteredRule]);
+    expect(fixes).toHaveLength(1);
+    expect(fixes[0]).toMatchObject({ from: 7, before: " ", after: "_" });
+  });
 });
 
 describe("narrowReplacementRange", () => {

@@ -1,4 +1,5 @@
 import { SENTENCE_END_PERIOD } from "./constants";
+import { isValidImplicitSentenceBoundary } from "./implicit-sentence-boundary-filters";
 
 /** Граница предложения: точка (с оговорками), !, ?, … */
 const SENTENCE_TERMINATOR = new RegExp(`${SENTENCE_END_PERIOD}|[!?…]`, "gu");
@@ -47,9 +48,8 @@ function collectFragmentStarts(text: string, includeImplicit: boolean): number[]
   }
 
   if (includeImplicit) {
-    IMPLICIT_SENTENCE_BOUNDARY.lastIndex = 0;
-    while ((match = IMPLICIT_SENTENCE_BOUNDARY.exec(text)) !== null) {
-      starts.add(match.index);
+    for (const index of findImplicitSentenceBoundaryIndices(text)) {
+      starts.add(index);
     }
   }
 
@@ -81,10 +81,36 @@ export function splitIntoSentenceFragments(text: string): string[] {
   return splitIntoSentenceFragmentsInternal(text, false);
 }
 
+export function findImplicitSentenceBoundaryIndices(text: string): number[] {
+  const indices: number[] = [];
+  IMPLICIT_SENTENCE_BOUNDARY.lastIndex = 0;
+
+  let match: RegExpExecArray | null;
+  while ((match = IMPLICIT_SENTENCE_BOUNDARY.exec(text)) !== null) {
+    if (match[0].length === 0) {
+      IMPLICIT_SENTENCE_BOUNDARY.lastIndex += 1;
+      continue;
+    }
+    if (isValidImplicitSentenceBoundary(text, match.index)) {
+      indices.push(match.index);
+    }
+  }
+
+  return indices;
+}
+
 export function insertImplicitSentencePeriods(text: string): string {
   if (!LETTER.test(text)) return text;
   if (isListOnlyLayer(text)) return text;
-  return text.replace(IMPLICIT_SENTENCE_BOUNDARY, ". ");
+
+  const boundaries = findImplicitSentenceBoundaryIndices(text);
+  let out = text;
+  for (let i = boundaries.length - 1; i >= 0; i--) {
+    const wsStart = boundaries[i]!;
+    const ws = out.slice(wsStart).match(/^[ \t\u00A0\u202F]+/u)?.[0] ?? "";
+    out = `${out.slice(0, wsStart)}. ${out.slice(wsStart + ws.length)}`;
+  }
+  return out;
 }
 
 function hasLetter(text: string): boolean {

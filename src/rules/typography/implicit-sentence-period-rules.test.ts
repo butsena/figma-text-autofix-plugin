@@ -30,6 +30,24 @@ describe("insertImplicitSentencePeriods", () => {
   it("не путает короткий предлог и заглавное имя", () => {
     expect(insertImplicitSentencePeriods("квартира в Москве")).toBe("квартира в Москве");
   });
+
+  it("не ставит точку перед многословным брендом", () => {
+    expect(
+      insertImplicitSentencePeriods("согласно отчёту Knight Frank рынок вырос"),
+    ).toBe("согласно отчёту Knight Frank рынок вырос");
+  });
+
+  it("не ставит точку перед латинским брендом после кириллицы", () => {
+    expect(
+      insertImplicitSentencePeriods("оплатите в приложении Google Pay сегодня"),
+    ).toBe("оплатите в приложении Google Pay сегодня");
+  });
+
+  it("не ставит точку перед названием в кавычках", () => {
+    expect(insertImplicitSentencePeriods("партнёр «Knight Frank» подтвердил")).toBe(
+      "партнёр «Knight Frank» подтвердил",
+    );
+  });
 });
 
 describe("buildImplicitSentencePeriodRules", () => {
@@ -50,6 +68,16 @@ describe("buildImplicitSentencePeriodRules", () => {
       after: ".",
       message: "Редполитика: похоже, между словами пропущена точка.",
     });
+  });
+
+  it("не предлагает точку перед Knight Frank", () => {
+    const input = "согласно отчёту Knight Frank рынок вырос за квартал";
+    expect(fixesFor(input, rules)).toHaveLength(0);
+  });
+
+  it("не предлагает точку перед Google Pay", () => {
+    const input = "оплатите аренду в приложении Google Pay до пятницы";
+    expect(fixesFor(input, rules)).toHaveLength(0);
   });
 
   it("после confirm-точек срабатывает авто-правило конца предложения", () => {
