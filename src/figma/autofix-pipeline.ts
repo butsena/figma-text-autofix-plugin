@@ -2,9 +2,8 @@ import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
 import { applyFixesFromScan } from "./apply-fixes";
 import { buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport, mergeAutoApplyReports } from "./build-auto-apply-report";
 import { postCheckResultToUi, setLastAutoApplyReport } from "./check-result-session";
-import { TEXT_REPLACEMENTS_CSV_URL } from "../config/text-replacements-remote-url";
-import { fetchCsvViaHttp, refreshTextReplacementsFromRemote } from "../sheet/refresh-from-remote";
-import type { PluginToUiMessage, SheetLoadStatusDto } from "../shared/messages";
+import { refreshLexiconFromRemote } from "../lexicon/refresh-lexicon";
+import type { LexiconLoadStatusDto, PluginToUiMessage } from "../shared/messages";
 import { scanSelectedTextNodes } from "./scan-selection";
 
 /** Защита от зацикливания, если правила конфликтуют или текст не меняется. */
@@ -15,23 +14,11 @@ export type AutofixAutoPassesResult = {
   finalScan: CheckResultDto;
 };
 
-export async function postPluginConfigToUi(sheetLoad?: SheetLoadStatusDto | null): Promise<void> {
+export async function postPluginConfigToUi(lexiconLoad?: LexiconLoadStatusDto | null): Promise<void> {
   figma.ui.postMessage({
     type: "plugin:config",
-    sheetLoad: sheetLoad ?? null,
+    lexiconLoad: lexiconLoad ?? null,
   } satisfies PluginToUiMessage);
-}
-
-async function refreshLexiconAndPostConfig(): Promise<SheetLoadStatusDto> {
-  const sheetLoad = await refreshTextReplacementsFromRemote(
-    TEXT_REPLACEMENTS_CSV_URL,
-    fetchCsvViaHttp,
-  );
-  await postPluginConfigToUi(sheetLoad);
-  if (!sheetLoad.ok) {
-    console.warn("[text-autofix] lexicon load failed, using bundled CSV", sheetLoad);
-  }
-  return sheetLoad;
 }
 
 function notifyIfFixesStuck(scan: CheckResultDto, report: AutoApplyReportDto): void {
@@ -87,7 +74,7 @@ export async function runAutofixAutoPasses(
 /** Сканирование → применение в цикле, пока есть правки; сводный отчёт в UI. */
 export async function runAutofixPipeline(): Promise<void> {
   const selection = figma.currentPage.selection;
-  await refreshLexiconAndPostConfig();
+  await postPluginConfigToUi(await refreshLexiconFromRemote());
 
   const { report, finalScan } = await runAutofixAutoPasses(selection);
   setLastAutoApplyReport(report);

@@ -1,10 +1,15 @@
 import { formatFixDiffHtml } from "./diff-format";
 import {
+  capitalizeLike,
   countConfirmFixes,
   detailsOpenAttr,
   displayText,
   escapeHtml,
+  formatChoiceHintHtml,
   formatFixCategoryLabel,
+  formatLayerTitleHtml,
+  formatTextLayersBlockHtml,
+  isChoiceRuleWithoutSkip,
 } from "./ui-helpers";
 import {
   PLUGIN_UI_MAX_HEIGHT,
@@ -13,8 +18,9 @@ import {
 } from "../shared/plugin-ui-layout";
 import type {
   AutoApplyReportDto,
+  CheckedTextLayerDto,
   PluginToUiMessage,
-  SheetLoadStatusDto,
+  LexiconLoadStatusDto,
   TextFixDto,
   TextNodeCardDto,
   UiToPluginMessage,
@@ -25,30 +31,46 @@ type UiState = {
     checkedLayers: number;
     foundFixes: number;
     confirmFixes: number;
+    choiceFixes: number;
   } | null;
+  checkedTextLayers: CheckedTextLayerDto[];
   cards: TextNodeCardDto[];
   confirmCards: TextNodeCardDto[];
+  choiceCards: TextNodeCardDto[];
   lastReport: AutoApplyReportDto | null;
-  sheetLoad: SheetLoadStatusDto | null;
+  lexiconLoad: LexiconLoadStatusDto | null;
   ui: {
     confirmDetailsOpen: boolean;
+    choiceDetailsOpen: boolean;
     reportDetailsOpen: boolean;
+    textLayersDetailsOpen: boolean;
     techDetailsOpen: boolean;
   };
+  /** Выбранный вариант choice-правки: ключ «cardIdx:fixIdx» → индекс опции. */
+  choiceSelection: Record<string, number>;
 };
 
 const state: UiState = {
   summary: null,
+  checkedTextLayers: [],
   cards: [],
   confirmCards: [],
+  choiceCards: [],
   lastReport: null,
-  sheetLoad: null,
+  lexiconLoad: null,
   ui: {
     confirmDetailsOpen: true,
+    choiceDetailsOpen: true,
     reportDetailsOpen: false,
+    textLayersDetailsOpen: false,
     techDetailsOpen: false,
   },
+  choiceSelection: {},
 };
+
+function choiceSelectionKey(cardIdx: number, fixIdx: number): string {
+  return `${cardIdx}:${fixIdx}`;
+}
 
 function sendToPlugin(message: UiToPluginMessage): void {
   parent.postMessage({ pluginMessage: message }, "*");
@@ -99,21 +121,31 @@ function schedulePluginResize(): void {
 function captureUiAccordionState(): void {
   const confirmEl = document.querySelector("details.confirmDetails");
   if (confirmEl instanceof HTMLDetailsElement) state.ui.confirmDetailsOpen = confirmEl.open;
+  const choiceEl = document.querySelector("details.choiceDetails");
+  if (choiceEl instanceof HTMLDetailsElement) state.ui.choiceDetailsOpen = choiceEl.open;
   const reportEl = document.querySelector("details.reportDetails");
   if (reportEl instanceof HTMLDetailsElement) state.ui.reportDetailsOpen = reportEl.open;
+  const textLayersEl = document.querySelector("details.textLayersDetails");
+  if (textLayersEl instanceof HTMLDetailsElement) state.ui.textLayersDetailsOpen = textLayersEl.open;
   const techEl = document.querySelector("details.techDetails");
   if (techEl instanceof HTMLDetailsElement) state.ui.techDetailsOpen = techEl.open;
 }
 
 function wireAccordionResize(): void {
   document
-    .querySelectorAll("details.reportDetails, details.confirmDetails, details.techDetails")
+    .querySelectorAll(
+      "details.reportDetails, details.confirmDetails, details.choiceDetails, details.textLayersDetails, details.techDetails",
+    )
     .forEach(function (el) {
       el.addEventListener("toggle", function () {
         if (el.classList.contains("confirmDetails")) {
           state.ui.confirmDetailsOpen = (el as HTMLDetailsElement).open;
+        } else if (el.classList.contains("choiceDetails")) {
+          state.ui.choiceDetailsOpen = (el as HTMLDetailsElement).open;
         } else if (el.classList.contains("reportDetails")) {
           state.ui.reportDetailsOpen = (el as HTMLDetailsElement).open;
+        } else if (el.classList.contains("textLayersDetails")) {
+          state.ui.textLayersDetailsOpen = (el as HTMLDetailsElement).open;
         } else if (el.classList.contains("techDetails")) {
           state.ui.techDetailsOpen = (el as HTMLDetailsElement).open;
         }
@@ -132,6 +164,7 @@ function renderFixRow(
     ruleId: string;
     category: string;
     message: string;
+    hint?: string;
     from: number;
     to: number;
     before: string;
@@ -159,9 +192,14 @@ function renderFixRow(
     ? ` data-confirm-card="${confirmActions.cardIdx}" data-confirm-fix="${confirmActions.fixIdx}"`
     : "";
 
+  const hintHtml = fix.hint
+    ? `<div class="reportHint">${escapeHtml(fix.hint)}</div>`
+    : "";
+
   return `
     <div class="${wrapperClass}"${dataAttrs}>
       <div class="reportWhy">${escapeHtml(fix.message)}</div>
+      ${hintHtml}
       <div class="reportMeta">Правило: <code>${escapeHtml(fix.ruleId)}</code> · ${escapeHtml(formatFixCategoryLabel(fix.category, fix.ruleId))}</div>
       <div class="reportDiff">${formatFixDiffHtml(fix, sourceText)}</div>
       ${actionsHtml}
@@ -187,7 +225,8 @@ function renderResultHeaderHtml(): string {
     return '<div class="resultWaiting">Шуршу по макету…</div>';
   }
   const applied = state.lastReport ? state.lastReport.summary.appliedFixCount : 0;
-  const confirmCount = countConfirmFixes(state.confirmCards);
+  const pendingCount =
+    countConfirmFixes(state.confirmCards) + countConfirmFixes(state.choiceCards);
   return `
     <div class="resultHeader">
       <h1 class="resultTitle">Проверка окончена</h1>
@@ -202,27 +241,45 @@ function renderResultHeaderHtml(): string {
         </div>
         <div class="resultStat">
           <div class="resultStatLabel">На подтверждение</div>
-          <div class="resultStatValue">${confirmCount}</div>
+          <div class="resultStatValue">${pendingCount}</div>
         </div>
       </div>
     </div>
   `;
 }
 
+function renderTextLayersHtml(): string {
+  return formatTextLayersBlockHtml(state.checkedTextLayers, state.ui.textLayersDetailsOpen);
+}
+
 function renderTechDetailsHtml(): string {
-  const sl = state.sheetLoad;
+  const lex = state.lexiconLoad;
   let bodyHtml = "";
 
-  if (!sl) {
+  if (!lex) {
     bodyHtml = '<div class="empty" style="padding:4px 0">Статус загрузки словаря ещё не получен.</div>';
-  } else if (sl.fromRemote && sl.ok) {
-    bodyHtml = `<div class="sheetStatus ok">Словарь с GitHub: <b>${sl.ruleCount}</b> правил</div>`;
-  } else if (!sl.ok) {
-    bodyHtml = `<div class="sheetStatus err">GitHub недоступен — встроенный CSV (${sl.ruleCount} правил). ${escapeHtml(
-      displayText(sl.errorMessage),
-    )}</div>`;
   } else {
-    bodyHtml = `<div class="sheetStatus ok">Встроенный CSV: <b>${sl.ruleCount}</b> правил</div>`;
+    const rep = lex.replacements;
+    if (rep.fromRemote && rep.ok) {
+      bodyHtml = `<div class="sheetStatus ok">Словарь замен с GitHub: <b>${rep.count}</b> правил</div>`;
+    } else if (!rep.ok) {
+      bodyHtml = `<div class="sheetStatus err">GitHub недоступен — встроенный CSV (${rep.count} правил). ${escapeHtml(
+        displayText(rep.errorMessage),
+      )}</div>`;
+    } else {
+      bodyHtml = `<div class="sheetStatus ok">Встроенный CSV: <b>${rep.count}</b> правил</div>`;
+    }
+
+    const boundary = lex.boundaryExceptions;
+    if (boundary.fromRemote && boundary.ok) {
+      bodyHtml += `<div class="sheetStatus ok">Исключения границ с GitHub: <b>${boundary.count}</b> фраз</div>`;
+    } else if (!boundary.ok) {
+      bodyHtml += `<div class="sheetStatus err">Исключения границ — встроенный список (${boundary.count} фраз). ${escapeHtml(
+        displayText(boundary.errorMessage),
+      )}</div>`;
+    } else {
+      bodyHtml += `<div class="sheetStatus ok">Встроенный список исключений: <b>${boundary.count}</b> фраз</div>`;
+    }
   }
 
   return `
@@ -268,9 +325,7 @@ function renderReportHtml(): string {
         .join("");
       return `
         <div class="reportLayer">
-          <div class="reportLayerTitle" data-node-id="${escapeHtml(layer.nodeId)}">${escapeHtml(
-            layer.nodeName || "Без имени",
-          )}</div>
+          ${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}
           ${fixesHtml}
         </div>
       `;
@@ -289,11 +344,13 @@ function renderConfirmHtml(): string {
           const ruleId = f.rule?.id ?? "";
           const category = f.rule?.category ?? "";
           const message = f.rule?.message ?? "";
+          const hint = f.rule?.hint;
           return renderFixRow(
             {
               ruleId,
               category,
               message,
+              hint,
               from: f.from,
               to: f.to,
               before: f.before,
@@ -306,9 +363,7 @@ function renderConfirmHtml(): string {
         .join("");
       return `
         <div class="reportLayer">
-          <div class="reportLayerTitle" data-node-id="${escapeHtml(layer.nodeId)}">${escapeHtml(
-            layer.nodeName || "Без имени",
-          )}</div>
+          ${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}
           ${fixesHtml}
         </div>
       `;
@@ -327,6 +382,74 @@ function renderConfirmHtml(): string {
   `;
 }
 
+function renderChoiceFixRow(
+  fix: TextFixDto,
+  cardIdx: number,
+  fixIdx: number,
+): string {
+  const ruleId = fix.rule?.id ?? "";
+  const category = fix.rule?.category ?? "";
+  const message = fix.rule?.message ?? "";
+  const options = fix.rule?.choiceOptions ?? [];
+  const current = fix.before;
+  const hintHtml = formatChoiceHintHtml(ruleId, fix.rule?.hint);
+  const selectionKey = choiceSelectionKey(cardIdx, fixIdx);
+  const selectedIdx = state.choiceSelection[selectionKey];
+  const optionsHtml = options
+    .map((option, optionIdx) => {
+      const cls =
+        selectedIdx === optionIdx ? "choiceOptionBtn choiceOptionSelected" : "choiceOptionBtn";
+      return `<button type="button" class="${cls}" data-choice-pick="${cardIdx}:${fixIdx}:${optionIdx}">${escapeHtml(option)}</button>`;
+    })
+    .join("");
+  const skipHtml = isChoiceRuleWithoutSkip(ruleId)
+    ? ""
+    : `<button type="button" class="confirmSkipBtn" data-choice-skip="${cardIdx}:${fixIdx}">Пропустить</button>`;
+  const confirmDisabled = selectedIdx == null ? " disabled" : "";
+
+  return `
+    <div class="choiceFix" data-choice-card="${cardIdx}" data-choice-fix="${fixIdx}">
+      <div class="reportWhy">${escapeHtml(message)}</div>
+      ${hintHtml}
+      <div class="reportMeta">Правило: <code>${escapeHtml(ruleId)}</code> · ${escapeHtml(formatFixCategoryLabel(category, ruleId))}</div>
+      <div class="reportDiff"><span class="reportCtxWord">${escapeHtml(current)}</span></div>
+      <div class="choiceActions">
+        ${optionsHtml}
+        <button type="button" class="choiceConfirmBtn" data-choice-confirm="${cardIdx}:${fixIdx}"${confirmDisabled}>Подтвердить</button>
+        ${skipHtml}
+      </div>
+    </div>
+  `;
+}
+
+function renderChoiceHtml(): string {
+  if (!state.choiceCards.length) return "";
+  const layerBlocks = state.choiceCards
+    .map((layer, cardIdx) => {
+      const fixesHtml = layer.fixes
+        .map((f, fixIdx) => renderChoiceFixRow(f, cardIdx, fixIdx))
+        .join("");
+      return `
+        <div class="reportLayer">
+          ${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}
+          ${fixesHtml}
+        </div>
+      `;
+    })
+    .join("");
+
+  return `
+    <div class="choiceBlock">
+      <details class="choiceDetails"${detailsOpenAttr(state.ui.choiceDetailsOpen)}>
+        <summary class="choiceDetailsSummary">
+          <span class="choiceDetailsTitle">Выберите вариант</span>
+        </summary>
+        <div class="choiceDetailsBody">${layerBlocks}</div>
+      </details>
+    </div>
+  `;
+}
+
 function skipConfirmFix(cardIdx: number, fixIdx: number): void {
   const card = state.confirmCards[cardIdx];
   if (!card || !card.fixes[fixIdx]) return;
@@ -338,6 +461,55 @@ function skipConfirmFix(cardIdx: number, fixIdx: number): void {
     state.summary.confirmFixes = countConfirmFixes(state.confirmCards);
   }
   render();
+}
+
+function skipChoiceFix(cardIdx: number, fixIdx: number): void {
+  const card = state.choiceCards[cardIdx];
+  if (!card || !card.fixes[fixIdx]) return;
+  delete state.choiceSelection[choiceSelectionKey(cardIdx, fixIdx)];
+  card.fixes.splice(fixIdx, 1);
+  if (card.fixes.length === 0) {
+    state.choiceCards.splice(cardIdx, 1);
+  }
+  if (state.summary) {
+    state.summary.choiceFixes = countConfirmFixes(state.choiceCards);
+  }
+  render();
+}
+
+function selectChoiceOption(cardIdx: number, fixIdx: number, optionIdx: number): void {
+  state.choiceSelection[choiceSelectionKey(cardIdx, fixIdx)] = optionIdx;
+  state.ui.choiceDetailsOpen = true;
+  render();
+}
+
+function confirmChoiceSelection(cardIdx: number, fixIdx: number): void {
+  const card = state.choiceCards[cardIdx];
+  if (!card) return;
+  const fix = card.fixes[fixIdx];
+  if (!fix) return;
+
+  const selectionKey = choiceSelectionKey(cardIdx, fixIdx);
+  const optionIdx = state.choiceSelection[selectionKey];
+  const option = optionIdx != null ? fix.rule?.choiceOptions?.[optionIdx] : undefined;
+  if (!option) return;
+
+  delete state.choiceSelection[selectionKey];
+
+  const chosen = capitalizeLike(fix.before, option);
+  state.ui.choiceDetailsOpen = true;
+  sendToPlugin({
+    type: "ui:applyManualFix",
+    nodeId: card.nodeId,
+    fix: {
+      ...fix,
+      after: chosen,
+      rule: {
+        ...fix.rule,
+        applyPolicy: fix.rule.applyPolicy,
+      },
+    },
+  });
 }
 
 function wireConfirmButtons(): void {
@@ -355,7 +527,7 @@ function wireConfirmButtons(): void {
       if (!fix) return;
       state.ui.confirmDetailsOpen = true;
       sendToPlugin({
-        type: "ui:applyConfirmFix",
+        type: "ui:applyManualFix",
         nodeId: card.nodeId,
         fix: fix as TextFixDto,
       });
@@ -368,6 +540,37 @@ function wireConfirmButtons(): void {
       if (!key) return;
       const parts = key.split(":");
       skipConfirmFix(Number(parts[0]), Number(parts[1]));
+    });
+  });
+}
+
+function wireChoiceButtons(): void {
+  document.querySelectorAll("[data-choice-pick]").forEach((el) => {
+    el.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const key = el.getAttribute("data-choice-pick");
+      if (!key) return;
+      const parts = key.split(":");
+      selectChoiceOption(Number(parts[0]), Number(parts[1]), Number(parts[2]));
+    });
+  });
+  document.querySelectorAll("[data-choice-confirm]").forEach((el) => {
+    el.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if ((el as HTMLButtonElement).disabled) return;
+      const key = el.getAttribute("data-choice-confirm");
+      if (!key) return;
+      const parts = key.split(":");
+      confirmChoiceSelection(Number(parts[0]), Number(parts[1]));
+    });
+  });
+  document.querySelectorAll("[data-choice-skip]").forEach((el) => {
+    el.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const key = el.getAttribute("data-choice-skip");
+      if (!key) return;
+      const parts = key.split(":");
+      skipChoiceFix(Number(parts[0]), Number(parts[1]));
     });
   });
 }
@@ -406,7 +609,9 @@ function render(): void {
   captureUiAccordionState();
 
   const resultHeaderHtml = renderResultHeaderHtml();
+  const textLayersHtml = renderTextLayersHtml();
   const confirmHtml = renderConfirmHtml();
+  const choiceHtml = renderChoiceHtml();
   const reportHtml = renderReportHtml();
   const thanksHtml = state.summary ? REPORT_THANKS_HTML : "";
 
@@ -433,13 +638,15 @@ function render(): void {
       <div class="appMain">
         ${resultHeaderHtml}
         ${reportHtml}
+        ${choiceHtml}
         ${confirmHtml}
-        ${thanksHtml}
         ${
           state.cards.length
             ? `<div class="sectionTitle">Оставшиеся совпадения (если есть)</div><div class="cards">${bodyHtml}</div>`
             : ""
         }
+        ${textLayersHtml}
+        ${thanksHtml}
       </div>
       ${techDetailsHtml}
     </div>
@@ -447,6 +654,7 @@ function render(): void {
 
   wireButtons();
   wireConfirmButtons();
+  wireChoiceButtons();
   wireReportLayerClicks();
   wireCardClicks();
   wireAccordionResize();
@@ -459,6 +667,7 @@ window.addEventListener("message", (event) => {
 
   if (msg.type === "plugin:error") {
     state.summary = null;
+    state.checkedTextLayers = [];
     state.lastReport = null;
     state.cards = [];
     const app = document.getElementById("app");
@@ -472,19 +681,22 @@ window.addEventListener("message", (event) => {
   }
 
   if (msg.type === "plugin:config") {
-    state.sheetLoad = msg.sheetLoad != null ? msg.sheetLoad : null;
+    state.lexiconLoad = msg.lexiconLoad != null ? msg.lexiconLoad : null;
     render();
     return;
   }
 
   if (msg.type === "plugin:checkResult") {
+    state.choiceSelection = {};
     state.summary = msg.result.summary;
+    state.checkedTextLayers = msg.result.checkedTextLayers || [];
     state.lastReport = msg.result.lastAutoApplyReport != null ? msg.result.lastAutoApplyReport : null;
     state.cards = msg.result.cards.map((c) => ({
       nodeId: c.nodeId,
       nodeName: c.nodeName,
       originalText: c.originalText,
       previewText: c.previewText,
+      characterCount: c.characterCount,
       fixes: c.fixes,
     }));
     state.confirmCards = (msg.result.confirmCards || []).map((c) => ({
@@ -492,6 +704,15 @@ window.addEventListener("message", (event) => {
       nodeName: c.nodeName,
       originalText: c.originalText,
       previewText: c.previewText,
+      characterCount: c.characterCount,
+      fixes: c.fixes,
+    }));
+    state.choiceCards = (msg.result.choiceCards || []).map((c) => ({
+      nodeId: c.nodeId,
+      nodeName: c.nodeName,
+      originalText: c.originalText,
+      previewText: c.previewText,
+      characterCount: c.characterCount,
       fixes: c.fixes,
     }));
     render();

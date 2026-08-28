@@ -1,4 +1,4 @@
-import { matchesBoundaryExceptionAt } from "./boundary-exceptions-data";
+import { matchesBoundaryExceptionAt } from "./boundary-exception-match";
 
 const HORIZONTAL_WS = /[ \t\u00A0\u202F]/u;
 const TITLE_CASE_WORD = /^[А-ЯЁA-Z][а-яёa-zА-Яа-яЁёA-Za-z\-']*/u;

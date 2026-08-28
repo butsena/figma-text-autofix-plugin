@@ -28,6 +28,13 @@ export function msgConfirmYoHomograph(eForm: string, yoForm: string): string {
   return `Проверьте: «${eForm}» или «${yoForm}»?`;
 }
 
+export const MSG_CHOICE_ISHCHITE_ISHCHETE = "Выберите форму глагола";
+
+export const MSG_CHOICE_VSE_VSYO = "Выберите букву";
+
+export const MSG_CHOICE_VSE_VSYO_HINT =
+  "по редполитике Циана мы пишем ё там, где это требуется";
+
 // —— Редполитика (лексикон) ——
 
 export function msgLexiconReplace(variants: string[], replace: string): string {

@@ -6,12 +6,16 @@ export type CheckSummary = {
   foundFixes: number;
   /** Правки, ожидающие подтверждения. */
   confirmFixes: number;
+  /** Правки с выбором равноправных вариантов. */
+  choiceFixes: number;
 };
 
 export type RuleInfo = {
   id: string;
   category: string;
   message: string;
+  hint?: string;
+  choiceOptions?: string[];
   priority: number;
   applyPolicy: ApplyPolicy;
 };
@@ -30,7 +34,16 @@ export type TextNodeCardDto = {
   nodeName: string;
   originalText: string;
   previewText: string;
+  /** Длина текста слоя на момент сканирования. */
+  characterCount: number;
   fixes: TextFixDto[];
+};
+
+/** Текстовый слой из выделения (счётчик символов — всегда, независимо от правок). */
+export type CheckedTextLayerDto = {
+  nodeId: string;
+  nodeName: string;
+  characterCount: number;
 };
 
 /** Одна применённая замена (для отчёта после автоприменения). */
@@ -50,6 +63,8 @@ export type AutoApplyFixLineDto = {
 export type AutoApplyLayerReportDto = {
   nodeId: string;
   nodeName: string;
+  /** Длина текста слоя после применённых правок в этом отчёте. */
+  characterCount: number;
   fixes: AutoApplyFixLineDto[];
 };
 
@@ -66,9 +81,13 @@ export type AutoApplyReportDto = {
 
 export type CheckResultDto = {
   summary: CheckSummary;
+  /** Все проверенные текстовые слои с длиной текста. */
+  checkedTextLayers: CheckedTextLayerDto[];
   cards: TextNodeCardDto[];
   /** Правки, требующие подтверждения пользователя. */
   confirmCards: TextNodeCardDto[];
+  /** Правки с выбором равноправных вариантов. */
+  choiceCards: TextNodeCardDto[];
   /** Отчёт о автоисправлении (может объединять несколько проходов). */
   lastAutoApplyReport?: AutoApplyReportDto | null;
 };
@@ -77,24 +96,28 @@ export type CheckResultDto = {
 export const NO_TEXT_IN_SELECTION_NOTICE =
   "Выберите хотя бы один фрейм с текстовыми полями";
 
-export type SheetLoadStatusDto = {
+export type LexiconResourceLoadStatus = {
   ok: boolean;
-  ruleCount: number;
+  count: number;
   fromRemote: boolean;
-  /** Строк правил из удалённого CSV (GitHub). */
-  remoteRuleCount?: number;
-  /** Строк правил из встроенного CSV (fallback). */
-  bundledOnlyRuleCount?: number;
   errorMessage?: string;
   fetchUrl?: string;
 };
+
+export type LexiconLoadStatusDto = {
+  replacements: LexiconResourceLoadStatus;
+  boundaryExceptions: LexiconResourceLoadStatus;
+};
+
+/** @deprecated Используйте LexiconLoadStatusDto. */
+export type SheetLoadStatusDto = LexiconLoadStatusDto;
 
 export type UiToPluginMessage =
   | { type: "ui:ready" }
   | { type: "ui:focusLayer"; nodeId: string }
   | { type: "ui:close" }
   | {
-      type: "ui:applyConfirmFix";
+      type: "ui:applyManualFix";
       nodeId: string;
       fix: TextFixDto;
     }
@@ -107,5 +130,5 @@ export type UiToPluginMessage =
 export type PluginToUiMessage =
   | { type: "plugin:checkResult"; result: CheckResultDto }
   | { type: "plugin:error"; message: string }
-  | { type: "plugin:config"; sheetLoad?: SheetLoadStatusDto | null };
+  | { type: "plugin:config"; lexiconLoad?: LexiconLoadStatusDto | null };
 

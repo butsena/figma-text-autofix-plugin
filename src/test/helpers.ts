@@ -10,7 +10,7 @@ export function fixesFor(text: string, rules: AutofixRule[]): TextFix[] {
 }
 
 export function autoFixesFor(text: string, rules: AutofixRule[]): TextFix[] {
-  return fixesFor(text, rules).filter((f) => f.applyPolicy !== "confirm");
+  return fixesFor(text, rules).filter((f) => f.applyPolicy === "auto" || f.applyPolicy == null);
 }
 
 export function applyAllRules(text: string, rules: AutofixRule[]): string {

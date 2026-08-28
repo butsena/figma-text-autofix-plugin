@@ -2,6 +2,7 @@ dist/
 node_modules/
 .DS_Store
 data/yo-map.json
+data/.google-sheet-snapshot.csv
 src/rules/yo-curated.generated.ts
 src/ui/ui.figma.html
 

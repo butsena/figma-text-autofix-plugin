@@ -18,10 +18,10 @@ export function formatFetchError(e: unknown): string {
       // ignore
     }
   }
-  return "Сетевая ошибка при загрузке CSV.";
+  return "Сетевая ошибка при загрузке.";
 }
 
-export function looksLikeHtmlNotCsv(text: string): boolean {
+export function looksLikeHtmlResponse(text: string): boolean {
   const t = text.trimStart();
   return t.startsWith("<!") || t.startsWith("<html") || t.includes("<!DOCTYPE");
 }

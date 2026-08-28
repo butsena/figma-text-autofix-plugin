@@ -1,7 +1,7 @@
 import uiHtml from "./ui/ui.figma.html?raw";
 import { collectTextNodesFromSelection } from "./figma/collect-text-nodes";
 import { runAutofixPipeline } from "./figma/autofix-pipeline";
-import { applyConfirmFixAndRefresh } from "./figma/apply-confirm-fix";
+import { applyManualFixAndRefresh } from "./figma/apply-manual-fix";
 import { focusLayerById } from "./figma/focus-layer";
 import {
   PLUGIN_UI_INITIAL_HEIGHT,
@@ -44,8 +44,8 @@ if (collectTextNodesFromSelection(selection).length === 0) {
           }
           break;
         }
-        case "ui:applyConfirmFix": {
-          await applyConfirmFixAndRefresh(message.nodeId, message.fix);
+        case "ui:applyManualFix": {
+          await applyManualFixAndRefresh(message.nodeId, message.fix);
           break;
         }
         case "ui:resize": {

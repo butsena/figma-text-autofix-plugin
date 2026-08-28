@@ -11,13 +11,15 @@ import type { TextFix } from "../core/autofix-engine";
 describe("build-auto-apply-report", () => {
   it("передаёт позицию и исходный текст для контекста в UI", () => {
     const scan: CheckResultDto = {
-      summary: { checkedLayers: 1, foundFixes: 1, confirmFixes: 0 },
+      summary: { checkedLayers: 1, foundFixes: 1, confirmFixes: 0, choiceFixes: 0 },
+      checkedTextLayers: [{ nodeId: "1:1", nodeName: "Текст", characterCount: 14 }],
       cards: [
         {
           nodeId: "1:1",
           nodeName: "Текст",
           originalText: "квартира и дом",
           previewText: "квартира и\u00a0дом",
+          characterCount: 14,
           fixes: [
             {
               fixId: "1:1:cian-095:9:10",
@@ -64,17 +66,20 @@ describe("build-auto-apply-report", () => {
       sourceText: "квартира и дом",
       ruleId: "cian-095-nbsp-after-short-words-strict",
     });
+    expect(report.layers[0].characterCount).toBe(14);
   });
 
   it("отчёт только по реально применённым правкам", () => {
     const scan: CheckResultDto = {
-      summary: { checkedLayers: 1, foundFixes: 2, confirmFixes: 0 },
+      summary: { checkedLayers: 1, foundFixes: 2, confirmFixes: 0, choiceFixes: 0 },
+      checkedTextLayers: [{ nodeId: "1:1", nodeName: "Текст", characterCount: 20 }],
       cards: [
         {
           nodeId: "1:1",
           nodeName: "Текст",
           originalText: "сохрани твой профиль",
           previewText: "Сохраните ваш профиль",
+          characterCount: 20,
           fixes: [
             {
               fixId: "1:1:a:0:1",
@@ -170,6 +175,7 @@ describe("build-auto-apply-report", () => {
       {
         nodeId: "1:1",
         nodeName: "Текст",
+        characterCount: 4,
         fixes: [
           {
             fixId: "a",
@@ -201,5 +207,6 @@ describe("build-auto-apply-report", () => {
     expect(merged.summary.appliedFixCount).toBe(3);
     expect(merged.layers[0].fixes).toHaveLength(3);
     expect(merged.layers[0].fixes[0].ruleId).toBe("cian-139a-implicit-sentence-period");
+    expect(confirmReport.layers[0].characterCount).toBe(19);
   });
 });

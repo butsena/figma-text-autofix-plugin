@@ -1,5 +1,5 @@
-import { parseCsvRows } from "../sheet/csv";
-import type { SheetReplacementRow } from "../sheet/replacement-rows";
+import { parseCsvRows } from "../lexicon/csv";
+import type { SheetReplacementRow } from "../lexicon/replacement-rows";
 import { MSG_RED_POLICY_TY_VY_VERB } from "./rule-messages";
 
 function splitVariantList(cell: string): string[] {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { matchesBoundaryExceptionAt, parseBoundaryExceptions } from "./boundary-exceptions-data";
+import { parseBoundaryExceptions } from "../../lexicon/boundary-exceptions-parse";
+import { matchesBoundaryExceptionAt } from "./boundary-exception-match";
 
 describe("parseBoundaryExceptions", () => {
   it("парсит фразы и сортирует длинные первыми", () => {

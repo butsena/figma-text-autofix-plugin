@@ -1,5 +1,5 @@
 import type { AutofixRule } from "../../core/autofix-engine";
-import { rowsToAutofixRules } from "../../sheet/replacement-rows";
+import { rowsToAutofixRules } from "../../lexicon/replacement-rows";
 import tyVyCuratedRaw from "../../../data/ty-vy-curated.txt?raw";
 import { parseTyVyCuratedRows } from "../ty-vy-curated";
 

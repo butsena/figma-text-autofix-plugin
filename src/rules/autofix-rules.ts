@@ -1,5 +1,5 @@
 import type { AutofixRule } from "../core/autofix-engine";
-import { getSheetReplacementRules } from "../sheet/replacement-rules-store";
+import { getLexiconReplacementRules } from "../lexicon/replacement-rules-store";
 import { buildCianBrandRules } from "./cian/brand-rules";
 import { buildFormalPronounRules } from "./cian/formal-pronoun-rules";
 import { buildFormalVerbRules } from "./cian/formal-verb-rules";
@@ -10,6 +10,7 @@ import {
 } from "./cian/prep-declension-table";
 import { buildEYoRules } from "./e-yo-rules";
 import { buildYoHomographRules } from "./yo-homograph-rules";
+import { buildAmbiguousFormChoiceRules } from "./choice/ambiguous-form-rules";
 import { buildEmailRules } from "./formatting/email-rules";
 import { buildGeneralTypographyRules } from "./typography/general-typography-rules";
 import { buildHyphenCompoundRules } from "./typography/hyphen-compound-rules";
@@ -33,7 +34,8 @@ function composeAutofixRules(): AutofixRule[] {
     ...buildEmailRules(),
     ...buildEYoRules(),
     ...buildYoHomographRules(),
-    ...getSheetReplacementRules(),
+    ...buildAmbiguousFormChoiceRules(),
+    ...getLexiconReplacementRules(),
     ...buildServiceWordNbspRules(),
     ...buildNbspBindingRules(),
     ...buildNumberGroupingRules(),

@@ -2,6 +2,7 @@ import type { AutofixRule } from "../core/autofix-engine";
 import { APPLY_POLICY_CONFIRM } from "../core/apply-policy";
 import { rule, rules } from "../core/rule-def";
 import { cyrillicWholeWordPattern, escapeRegex } from "./regex";
+import { capitalizeLike } from "../shared/case";
 import { msgConfirmYoHomograph } from "./rule-messages";
 import yoHomographsRaw from "../../data/yo-homographs.txt?raw";
 
@@ -22,17 +23,6 @@ export function parseYoHomographPairs(raw: string): YoHomographPair[] {
       }
       return { eForm, yoForm };
     });
-}
-
-function capitalizeLike(source: string, target: string): string {
-  if (!source) return target;
-  if (source === source.toUpperCase() && source !== source.toLowerCase()) {
-    return target.toUpperCase();
-  }
-  if (source.charAt(0) === source.charAt(0).toUpperCase()) {
-    return target.charAt(0).toUpperCase() + target.slice(1);
-  }
-  return target;
 }
 
 function eFormVariants(eForm: string): string[] {

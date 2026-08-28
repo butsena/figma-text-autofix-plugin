@@ -7,10 +7,14 @@
 | Репозиторий | Назначение |
 |---|---|
 | [figma-text-autofix-plugin](https://github.com/butsena/figma-text-autofix-plugin) (private) | Код плагина, bundled CSV как fallback |
-| [figma-text-autofix-lexicon](https://github.com/butsena/figma-text-autofix-lexicon) (public) | Словарь `text-replacements.csv` для редакторов |
+| [figma-text-autofix-lexicon](https://github.com/butsena/figma-text-autofix-lexicon) (public) | Словарь замен `text-replacements.csv` |
+| [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) (public) | Исключения для правила про точку: `boundary-exceptions.txt` |
 
 Raw URL для плагина:  
-`https://raw.githubusercontent.com/butsena/figma-text-autofix-lexicon/main/text-replacements.csv`
+`https://raw.githubusercontent.com/butsena/figma-text-autofix-lexicon/main/text-replacements.csv`  
+`https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt`
+
+Подробнее про второй репозиторий: [boundary-exceptions-github.md](./boundary-exceptions-github.md).
 
 ## Шаги
 
@@ -32,13 +36,21 @@ Raw URL для плагина:
 - [x] Шаг 4 — Google-код удалён
 - [ ] Шаг 5
 
-## Синхронизация lexicon → plugin (для разработчиков)
+## Синхронизация remote → bundled fallback (для разработчиков)
 
-После merge PR в lexicon-репо скопируйте CSV в основной проект:
+После merge PR в lexicon-репо:
 
 ```bash
 curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-lexicon/main/text-replacements.csv" \
   -o data/text-replacements.csv
+npm run build
+```
+
+После merge PR в репозиторий исключений:
+
+```bash
+curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt" \
+  -o data/boundary-exceptions.txt
 npm run build
 ```
 

@@ -1,5 +1,5 @@
 import type { TextFix } from "../core/autofix-engine";
-import { isConfirmPolicy } from "../core/apply-policy";
+import { isManualPolicy } from "../core/apply-policy";
 import type { CheckResultDto } from "../shared/messages";
 import { textFixDtoToEngineFix } from "../shared/text-fix-mapping";
 import { applyCharStyleAt, captureRangeStyles, restoreRangeStyles } from "./text-style-snapshot";
@@ -140,7 +140,7 @@ export async function applyFixesFromScan(
 
   for (const card of result.cards) {
     for (const fix of card.fixes) {
-      if (isConfirmPolicy(fix.rule.applyPolicy)) continue;
+      if (isManualPolicy(fix.rule.applyPolicy)) continue;
       const list = fixByNodeId.get(card.nodeId) ?? [];
       list.push(textFixDtoToEngineFix(fix));
       fixByNodeId.set(card.nodeId, list);

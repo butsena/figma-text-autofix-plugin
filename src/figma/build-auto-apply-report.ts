@@ -1,5 +1,7 @@
 import type { TextFix } from "../core/autofix-engine";
+import { applyTextFixes } from "../core/autofix-engine";
 import type { AutoApplyReportDto, CheckResultDto, TextFixDto } from "../shared/messages";
+import { countTextCharacters } from "../shared/text-char-count";
 import { makeFixId } from "../shared/fix-id";
 
 type AutoApplyFixLine = AutoApplyReportDto["layers"][number]["fixes"][number];
@@ -57,6 +59,7 @@ export function mergeAutoApplyReports(
     if (prev) {
       prev.fixes.push(...layer.fixes);
       if (layer.nodeName) prev.nodeName = layer.nodeName;
+      prev.characterCount = layer.characterCount;
     } else {
       layerMap.set(layer.nodeId, { ...layer, fixes: [...layer.fixes] });
     }
@@ -86,6 +89,7 @@ export function buildAutoApplyReportFromApplied(
     layers.push({
       nodeId,
       nodeName: card?.nodeName ?? "",
+      characterCount: countTextCharacters(applyTextFixes(sourceText, fixes)),
       fixes: fixes.map((f) => toAutoApplyFixLineFromEngine(nodeId, f, sourceText)),
     });
   }
@@ -108,6 +112,11 @@ export function buildAutoApplyReportFromConfirmFix(
   fix: TextFixDto,
   sourceText: string,
 ): AutoApplyReportDto {
+  const textAfter =
+    fix.before !== fix.after
+      ? sourceText.slice(0, fix.from) + fix.after + sourceText.slice(fix.to)
+      : sourceText;
+
   return {
     summary: {
       checkedLayers: 1,
@@ -118,6 +127,7 @@ export function buildAutoApplyReportFromConfirmFix(
       {
         nodeId,
         nodeName,
+        characterCount: countTextCharacters(textAfter),
         fixes: [toAutoApplyFixLineFromDto(fix, sourceText)],
       },
     ],
