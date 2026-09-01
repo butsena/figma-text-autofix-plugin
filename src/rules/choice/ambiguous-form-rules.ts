@@ -2,47 +2,16 @@ import type { AutofixRule } from "../../core/autofix-engine";
 import { APPLY_POLICY_CHOICE } from "../../core/apply-policy";
 import { rule, rules } from "../../core/rule-def";
 import { CYRILLIC_LETTERS, escapeRegex } from "../regex";
+import ambiguousFormChoicesRaw from "../../../data/ambiguous-form-choices.txt?raw";
 import {
-  MSG_CHOICE_ISHCHITE_ISHCHETE,
-  MSG_CHOICE_VSE_VSYO,
-  MSG_CHOICE_VSE_VSYO_HINT,
-} from "../rule-messages";
+  parseAmbiguousFormChoices,
+  type AmbiguousFormChoice,
+} from "./ambiguous-form-choices-parse";
 
-const HINT_HTML_ISHCHITE_ISHCHETE = `
-  <div class="reportHint">
-    <div class="reportHintTitle">Подсказка:</div>
-    <ul class="reportHintList">
-      <li>что делаете? <span class="reportHintSep">|</span> ищете квартиру целую вечность</li>
-      <li>что делайте? <span class="reportHintSep">|</span> повелеваю: ищите квартиру только на Циане!</li>
-    </ul>
-  </div>`;
+export type { AmbiguousFormChoice };
 
-export type AmbiguousFormChoice = {
-  id: string;
-  options: [string, string];
-  message: string;
-  hint?: string;
-  hintHtml?: string;
-  allowSkip?: boolean;
-};
-
-/** Пары равноправных форм: плагин просит выбрать, а не «исправить». */
-export const AMBIGUOUS_FORM_CHOICES: AmbiguousFormChoice[] = [
-  {
-    id: "cian-choice-ishchite-ishchete",
-    options: ["ищите", "ищете"],
-    message: MSG_CHOICE_ISHCHITE_ISHCHETE,
-    hintHtml: HINT_HTML_ISHCHITE_ISHCHETE,
-    allowSkip: false,
-  },
-  {
-    id: "cian-choice-vse-vsyo",
-    options: ["все", "всё"],
-    message: MSG_CHOICE_VSE_VSYO,
-    hint: MSG_CHOICE_VSE_VSYO_HINT,
-    allowSkip: false,
-  },
-];
+export const AMBIGUOUS_FORM_CHOICES: AmbiguousFormChoice[] =
+  parseAmbiguousFormChoices(ambiguousFormChoicesRaw);
 
 const CHOICE_BY_ID = new Map(AMBIGUOUS_FORM_CHOICES.map((choice) => [choice.id, choice]));
 
