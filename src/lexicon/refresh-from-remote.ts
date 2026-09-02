@@ -16,6 +16,11 @@ import {
   resetBoundaryExceptionsToBundled,
 } from "./boundary-exceptions-store";
 import {
+  applyFormChoicesFromRaw,
+  getFormChoicesLoadStats,
+  resetFormChoicesToBundled,
+} from "./form-choices-store";
+import {
   applyHunspellDictionaryFromRaw,
   getHunspellDictionaryLoadStats,
   resetHunspellDictionaryToBundled,
@@ -52,6 +57,14 @@ export type RefreshBoundaryExceptionsResult = {
 export type RefreshSpellWordListResult = {
   ok: boolean;
   wordCount: number;
+  fromRemote: boolean;
+  errorMessage?: string;
+  fetchUrl?: string;
+};
+
+export type RefreshFormChoicesResult = {
+  ok: boolean;
+  choiceCount: number;
   fromRemote: boolean;
   errorMessage?: string;
   fetchUrl?: string;
@@ -110,6 +123,10 @@ function replacementLoadCounts(): Pick<RefreshLexiconReplacementsResult, "ruleCo
 
 function boundaryLoadCounts(): Pick<RefreshBoundaryExceptionsResult, "phraseCount"> {
   return { phraseCount: getBoundaryExceptionsLoadStats().count };
+}
+
+function formChoicesLoadCounts(): Pick<RefreshFormChoicesResult, "choiceCount"> {
+  return { choiceCount: getFormChoicesLoadStats().count };
 }
 
 function spellSupplementLoadCounts(): Pick<RefreshSpellWordListResult, "wordCount"> {
@@ -179,6 +196,34 @@ function applyDownloadedBoundaryExceptions(
     ok: true,
     fromRemote: true,
     ...boundaryLoadCounts(),
+    fetchUrl,
+  };
+}
+
+function applyDownloadedFormChoices(text: string, fetchUrl: string): RefreshFormChoicesResult {
+  if (looksLikeHtmlResponse(text)) {
+    return {
+      ok: false,
+      fromRemote: false,
+      ...formChoicesLoadCounts(),
+      errorMessage: "Ответ не текстовый список (возможно HTML-страница ошибки).",
+      fetchUrl,
+    };
+  }
+  if (!applyFormChoicesFromRaw(text)) {
+    return {
+      ok: false,
+      fromRemote: false,
+      ...formChoicesLoadCounts(),
+      errorMessage: `Файл получен, но choice-пары не распознаны. Начало: ${previewResponseText(text)}`,
+      fetchUrl,
+    };
+  }
+  invalidateAutofixRulesCache();
+  return {
+    ok: true,
+    fromRemote: true,
+    ...formChoicesLoadCounts(),
     fetchUrl,
   };
 }
@@ -271,6 +316,25 @@ export async function refreshBoundaryExceptionsFromRemote(
       ok: false,
       fromRemote: false,
       ...boundaryLoadCounts(),
+      errorMessage: formatFetchError(e),
+      fetchUrl,
+    }),
+  });
+}
+
+/** Подтянуть choice-пары по URL; при ошибке — fallback на bundled. */
+export async function refreshFormChoicesFromRemote(
+  txtUrl: string,
+  fetchText: (fetchUrl: string) => Promise<string>,
+): Promise<RefreshFormChoicesResult> {
+  return runRemoteRefresh(txtUrl, "form choices", fetchText, {
+    resetBundled: resetFormChoicesToBundled,
+    buildEmptyUrlResult: () => ({ ok: true, fromRemote: false, ...formChoicesLoadCounts() }),
+    processDownload: applyDownloadedFormChoices,
+    buildNetworkErrorResult: (fetchUrl, e) => ({
+      ok: false,
+      fromRemote: false,
+      ...formChoicesLoadCounts(),
       errorMessage: formatFetchError(e),
       fetchUrl,
     }),

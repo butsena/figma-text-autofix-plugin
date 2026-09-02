@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetBoundaryExceptionsToBundled } from "./boundary-exceptions-store";
+import { resetFormChoicesToBundled } from "./form-choices-store";
 import { resetSheetRulesToBundled } from "./replacement-rules-store";
 import {
   refreshBoundaryExceptionsFromRemote,
+  refreshFormChoicesFromRemote,
   refreshTextReplacementsFromRemote,
 } from "./refresh-from-remote";
 
@@ -10,6 +12,7 @@ describe("refresh-from-remote", () => {
   beforeEach(() => {
     resetSheetRulesToBundled();
     resetBoundaryExceptionsToBundled();
+    resetFormChoicesToBundled();
   });
 
   it("возвращает bundled при пустом URL", async () => {
@@ -42,6 +45,14 @@ describe("refresh-from-remote", () => {
       async () => "Knight Frank\nИИ\n",
     );
     expect(result).toMatchObject({ ok: true, fromRemote: true, phraseCount: 2 });
+  });
+
+  it("подставляет remote form choices", async () => {
+    const result = await refreshFormChoicesFromRemote(
+      "https://example.com/x.txt",
+      async () => "# id: test\nfoo - bar - hint\n",
+    );
+    expect(result).toMatchObject({ ok: true, fromRemote: true, choiceCount: 1 });
   });
 
   it("сбрасывает boundary exceptions на bundled при сетевой ошибке", async () => {

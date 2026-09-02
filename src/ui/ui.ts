@@ -281,6 +281,17 @@ function renderTechDetailsHtml(): string {
       bodyHtml += `<div class="sheetStatus ok">Встроенный список исключений: <b>${boundary.count}</b> фраз</div>`;
     }
 
+    const formChoices = lex.formChoices;
+    if (formChoices.fromRemote && formChoices.ok) {
+      bodyHtml += `<div class="sheetStatus ok">Choice-пары с GitHub: <b>${formChoices.count}</b></div>`;
+    } else if (!formChoices.ok) {
+      bodyHtml += `<div class="sheetStatus err">Choice-пары — встроенный список (${formChoices.count}). ${escapeHtml(
+        displayText(formChoices.errorMessage),
+      )}</div>`;
+    } else {
+      bodyHtml += `<div class="sheetStatus ok">Встроенный список choice-пар: <b>${formChoices.count}</b></div>`;
+    }
+
     const spellDictionary = lex.spellDictionary;
     if (spellDictionary.fromRemote && spellDictionary.ok) {
       bodyHtml += `<div class="sheetStatus ok">Hunspell ru_RU с GitHub: <b>${spellDictionary.count}</b> лемм</div>`;

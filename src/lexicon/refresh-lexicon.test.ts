@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { mergeLexiconLoadStatus } from "./refresh-lexicon";
 import type {
   RefreshBoundaryExceptionsResult,
+  RefreshFormChoicesResult,
   RefreshLexiconReplacementsResult,
   RefreshSpellDictionaryResult,
 } from "./refresh-from-remote";
@@ -18,6 +19,12 @@ describe("mergeLexiconLoadStatus", () => {
       phraseCount: 11,
       fromRemote: true,
       fetchUrl: "https://example.com/boundary-exceptions.txt",
+    };
+    const formChoices: RefreshFormChoicesResult = {
+      ok: true,
+      choiceCount: 2,
+      fromRemote: true,
+      fetchUrl: "https://example.com/ambiguous-form-choices.txt",
     };
     const spellDictionary: RefreshSpellDictionaryResult = {
       ok: true,
@@ -41,6 +48,7 @@ describe("mergeLexiconLoadStatus", () => {
       mergeLexiconLoadStatus(
         replacements,
         boundary,
+        formChoices,
         spellDictionary,
         spellSupplement,
         spellWhitelist,
@@ -56,6 +64,12 @@ describe("mergeLexiconLoadStatus", () => {
         count: 11,
         fromRemote: true,
         fetchUrl: "https://example.com/boundary-exceptions.txt",
+      },
+      formChoices: {
+        ok: true,
+        count: 2,
+        fromRemote: true,
+        fetchUrl: "https://example.com/ambiguous-form-choices.txt",
       },
       spellDictionary: {
         ok: true,

@@ -8,6 +8,6 @@
   "permissions": [],
   "networkAccess": {
     "allowedDomains": ["https://raw.githubusercontent.com"],
-    "reasoning": "Словари с GitHub: замены, исключения границы, орфографический Hunspell и доп. списки."
+    "reasoning": "Словари с GitHub: замены, исключения границы, choice-пары, орфографический Hunspell и доп. списки."
   }
 }

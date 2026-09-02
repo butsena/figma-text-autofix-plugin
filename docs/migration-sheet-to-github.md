@@ -9,6 +9,7 @@
 | [figma-text-autofix-plugin](https://github.com/butsena/figma-text-autofix-plugin) (private) | Код плагина, bundled CSV как fallback |
 | [figma-text-autofix-lexicon](https://github.com/butsena/figma-text-autofix-lexicon) (public) | Словарь замен `text-replacements.csv` |
 | [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) (public) | Исключения для правила про точку: `boundary-exceptions.txt` |
+| [figma-text-autofix-form-choices](https://github.com/butsena/figma-text-autofix-form-choices) (public) | Choice-пары форм: `ambiguous-form-choices.txt` |
 | [figma-text-autofix-spell-dictionary](https://github.com/butsena/figma-text-autofix-spell-dictionary) (public) | Hunspell `ru_RU.aff` / `ru_RU.dic`, `spell-supplement.txt`, `spell-whitelist.txt` |
 
 Raw URL для плагина:  
@@ -52,6 +53,14 @@ npm run build
 ```bash
 curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt" \
   -o data/boundary-exceptions.txt
+npm run build
+```
+
+После merge PR в репозиторий choice-пар:
+
+```bash
+curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-form-choices/main/ambiguous-form-choices.txt" \
+  -o data/ambiguous-form-choices.txt
 npm run build
 ```
 

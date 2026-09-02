@@ -107,6 +107,7 @@ export type LexiconResourceLoadStatus = {
 export type LexiconLoadStatusDto = {
   replacements: LexiconResourceLoadStatus;
   boundaryExceptions: LexiconResourceLoadStatus;
+  formChoices: LexiconResourceLoadStatus;
   spellDictionary: LexiconResourceLoadStatus;
   spellSupplement: LexiconResourceLoadStatus;
   spellWhitelist: LexiconResourceLoadStatus;

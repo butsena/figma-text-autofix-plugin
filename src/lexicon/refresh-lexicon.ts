@@ -1,5 +1,6 @@
 import type { LexiconLoadStatusDto, LexiconResourceLoadStatus } from "../shared/messages";
 import { BOUNDARY_EXCEPTIONS_TXT_URL } from "../config/boundary-exceptions-remote-url";
+import { FORM_CHOICES_TXT_URL } from "../config/form-choices-remote-url";
 import {
   SPELL_DICTIONARY_AFF_URL,
   SPELL_DICTIONARY_DIC_URL,
@@ -10,11 +11,13 @@ import { TEXT_REPLACEMENTS_CSV_URL } from "../config/text-replacements-remote-ur
 import {
   fetchRemoteTextViaHttp,
   refreshBoundaryExceptionsFromRemote,
+  refreshFormChoicesFromRemote,
   refreshSpellDictionaryFromRemote,
   refreshSpellSupplementFromRemote,
   refreshSpellWhitelistFromRemote,
   refreshTextReplacementsFromRemote,
   type RefreshBoundaryExceptionsResult,
+  type RefreshFormChoicesResult,
   type RefreshLexiconReplacementsResult,
   type RefreshSpellDictionaryResult,
   type RefreshSpellWordListResult,
@@ -26,6 +29,7 @@ function toResourceStatus(
   result:
     | RefreshLexiconReplacementsResult
     | RefreshBoundaryExceptionsResult
+    | RefreshFormChoicesResult
     | RefreshSpellDictionaryResult
     | RefreshSpellWordListResult,
 ): LexiconResourceLoadStatus {
@@ -36,9 +40,11 @@ function toResourceStatus(
         ? result.ruleCount
         : "phraseCount" in result
           ? result.phraseCount
-          : "entryCount" in result
-            ? result.entryCount
-            : result.wordCount,
+          : "choiceCount" in result
+            ? result.choiceCount
+            : "entryCount" in result
+              ? result.entryCount
+              : result.wordCount,
     fromRemote: result.fromRemote,
     ...(result.errorMessage ? { errorMessage: result.errorMessage } : {}),
     ...(result.fetchUrl ? { fetchUrl: result.fetchUrl } : {}),
@@ -48,6 +54,7 @@ function toResourceStatus(
 export function mergeLexiconLoadStatus(
   replacements: RefreshLexiconReplacementsResult,
   boundaryExceptions: RefreshBoundaryExceptionsResult,
+  formChoices: RefreshFormChoicesResult,
   spellDictionary: RefreshSpellDictionaryResult,
   spellSupplement: RefreshSpellWordListResult,
   spellWhitelist: RefreshSpellWordListResult,
@@ -55,6 +62,7 @@ export function mergeLexiconLoadStatus(
   return {
     replacements: toResourceStatus(replacements),
     boundaryExceptions: toResourceStatus(boundaryExceptions),
+    formChoices: toResourceStatus(formChoices),
     spellDictionary: toResourceStatus(spellDictionary),
     spellSupplement: toResourceStatus(spellSupplement),
     spellWhitelist: toResourceStatus(spellWhitelist),
@@ -73,18 +81,25 @@ export async function refreshLexiconFromRemote(
     return cachedLexiconStatus;
   }
 
-  const [replacements, boundaryExceptions, spellDictionary, spellSupplement, spellWhitelist] =
-    await Promise.all([
-      refreshTextReplacementsFromRemote(TEXT_REPLACEMENTS_CSV_URL, fetchRemoteTextViaHttp),
-      refreshBoundaryExceptionsFromRemote(BOUNDARY_EXCEPTIONS_TXT_URL, fetchRemoteTextViaHttp),
-      refreshSpellDictionaryFromRemote(
-        SPELL_DICTIONARY_AFF_URL,
-        SPELL_DICTIONARY_DIC_URL,
-        fetchRemoteTextViaHttp,
-      ),
-      refreshSpellSupplementFromRemote(SPELL_SUPPLEMENT_TXT_URL, fetchRemoteTextViaHttp),
-      refreshSpellWhitelistFromRemote(SPELL_WHITELIST_TXT_URL, fetchRemoteTextViaHttp),
-    ]);
+  const [
+    replacements,
+    boundaryExceptions,
+    formChoices,
+    spellDictionary,
+    spellSupplement,
+    spellWhitelist,
+  ] = await Promise.all([
+    refreshTextReplacementsFromRemote(TEXT_REPLACEMENTS_CSV_URL, fetchRemoteTextViaHttp),
+    refreshBoundaryExceptionsFromRemote(BOUNDARY_EXCEPTIONS_TXT_URL, fetchRemoteTextViaHttp),
+    refreshFormChoicesFromRemote(FORM_CHOICES_TXT_URL, fetchRemoteTextViaHttp),
+    refreshSpellDictionaryFromRemote(
+      SPELL_DICTIONARY_AFF_URL,
+      SPELL_DICTIONARY_DIC_URL,
+      fetchRemoteTextViaHttp,
+    ),
+    refreshSpellSupplementFromRemote(SPELL_SUPPLEMENT_TXT_URL, fetchRemoteTextViaHttp),
+    refreshSpellWhitelistFromRemote(SPELL_WHITELIST_TXT_URL, fetchRemoteTextViaHttp),
+  ]);
 
   if (!replacements.ok) {
     console.warn("[text-autofix] lexicon load failed, using bundled CSV", replacements);
@@ -94,6 +109,9 @@ export async function refreshLexiconFromRemote(
       "[text-autofix] boundary exceptions load failed, using bundled list",
       boundaryExceptions,
     );
+  }
+  if (!formChoices.ok) {
+    console.warn("[text-autofix] form choices load failed, using bundled list", formChoices);
   }
   if (!spellDictionary.ok) {
     console.warn("[text-autofix] spell dictionary load failed, using bundled Hunspell", spellDictionary);
@@ -108,6 +126,7 @@ export async function refreshLexiconFromRemote(
   cachedLexiconStatus = mergeLexiconLoadStatus(
     replacements,
     boundaryExceptions,
+    formChoices,
     spellDictionary,
     spellSupplement,
     spellWhitelist,
