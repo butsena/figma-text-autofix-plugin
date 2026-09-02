@@ -1,5 +1,5 @@
-import bundledSupplementRaw from "../../data/spell-supplement.txt?raw";
-import bundledWhitelistRaw from "../../data/spell-whitelist.txt?raw";
+import bundledSupplementRaw from "../../data/hunspell/spell-supplement.txt?raw";
+import bundledWhitelistRaw from "../../data/hunspell/spell-whitelist.txt?raw";
 import { stripUtf8Bom } from "../shared/text-normalize";
 import { createRemoteBackedStore } from "../lexicon/remote-backed-store";
 import { mergeSpellWordLists, parseSpellWordList } from "./spell-word-list-parse";

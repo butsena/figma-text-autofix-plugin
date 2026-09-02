@@ -281,6 +281,17 @@ function renderTechDetailsHtml(): string {
       bodyHtml += `<div class="sheetStatus ok">Встроенный список исключений: <b>${boundary.count}</b> фраз</div>`;
     }
 
+    const spellDictionary = lex.spellDictionary;
+    if (spellDictionary.fromRemote && spellDictionary.ok) {
+      bodyHtml += `<div class="sheetStatus ok">Hunspell ru_RU с GitHub: <b>${spellDictionary.count}</b> лемм</div>`;
+    } else if (!spellDictionary.ok) {
+      bodyHtml += `<div class="sheetStatus err">Hunspell — встроенный словарь (${spellDictionary.count} лемм). ${escapeHtml(
+        displayText(spellDictionary.errorMessage),
+      )}</div>`;
+    } else {
+      bodyHtml += `<div class="sheetStatus ok">Встроенный Hunspell ru_RU: <b>${spellDictionary.count}</b> лемм</div>`;
+    }
+
     const supplement = lex.spellSupplement;
     if (supplement.fromRemote && supplement.ok) {
       bodyHtml += `<div class="sheetStatus ok">Доп. слова орфографии с GitHub: <b>${supplement.count}</b></div>`;

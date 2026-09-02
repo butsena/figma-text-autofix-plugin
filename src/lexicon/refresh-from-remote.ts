@@ -16,6 +16,11 @@ import {
   resetBoundaryExceptionsToBundled,
 } from "./boundary-exceptions-store";
 import {
+  applyHunspellDictionaryFromRaw,
+  getHunspellDictionaryLoadStats,
+  resetHunspellDictionaryToBundled,
+} from "../spell/hunspell-dictionary-store";
+import {
   applySpellSupplementFromRaw,
   applySpellWhitelistFromRaw,
   getSpellSupplementLoadStats,
@@ -47,6 +52,14 @@ export type RefreshBoundaryExceptionsResult = {
 export type RefreshSpellWordListResult = {
   ok: boolean;
   wordCount: number;
+  fromRemote: boolean;
+  errorMessage?: string;
+  fetchUrl?: string;
+};
+
+export type RefreshSpellDictionaryResult = {
+  ok: boolean;
+  entryCount: number;
   fromRemote: boolean;
   errorMessage?: string;
   fetchUrl?: string;
@@ -105,6 +118,10 @@ function spellSupplementLoadCounts(): Pick<RefreshSpellWordListResult, "wordCoun
 
 function spellWhitelistLoadCounts(): Pick<RefreshSpellWordListResult, "wordCount"> {
   return { wordCount: getSpellWhitelistLoadStats().count };
+}
+
+function spellDictionaryLoadCounts(): Pick<RefreshSpellDictionaryResult, "entryCount"> {
+  return { entryCount: getHunspellDictionaryLoadStats().entryCount };
 }
 
 function applyDownloadedCsv(text: string, fetchUrl: string): RefreshLexiconReplacementsResult {
@@ -296,6 +313,74 @@ export async function refreshSpellWhitelistFromRemote(
       fetchUrl,
     }),
   });
+}
+
+/** Подтянуть Hunspell ru_RU (.aff + .dic) по URL; при ошибке — fallback на bundled. */
+export async function refreshSpellDictionaryFromRemote(
+  affUrl: string,
+  dicUrl: string,
+  fetchText: (fetchUrl: string) => Promise<string>,
+): Promise<RefreshSpellDictionaryResult> {
+  const affFetchUrl = affUrl.trim();
+  const dicFetchUrl = dicUrl.trim();
+
+  if (!affFetchUrl || !dicFetchUrl) {
+    resetHunspellDictionaryToBundled();
+    resetSpellCheckerCache();
+    return { ok: true, fromRemote: false, ...spellDictionaryLoadCounts() };
+  }
+
+  try {
+    console.log("[text-autofix] load spell dictionary:", affFetchUrl, dicFetchUrl);
+    const [aff, dic] = await Promise.all([
+      fetchText(fetchUrlWithCacheBust(affFetchUrl)),
+      fetchText(fetchUrlWithCacheBust(dicFetchUrl)),
+    ]);
+    console.log("[text-autofix] spell dictionary bytes:", aff.length, dic.length);
+
+    if (looksLikeHtmlResponse(aff) || looksLikeHtmlResponse(dic)) {
+      resetHunspellDictionaryToBundled();
+      resetSpellCheckerCache();
+      return {
+        ok: false,
+        fromRemote: false,
+        ...spellDictionaryLoadCounts(),
+        errorMessage: "Ответ не Hunspell (возможно HTML-страница ошибки).",
+        fetchUrl: dicFetchUrl,
+      };
+    }
+
+    if (!applyHunspellDictionaryFromRaw(aff, dic)) {
+      resetHunspellDictionaryToBundled();
+      resetSpellCheckerCache();
+      return {
+        ok: false,
+        fromRemote: false,
+        ...spellDictionaryLoadCounts(),
+        errorMessage: `Hunspell получен, но не распознан. Начало .dic: ${previewResponseText(dic)}`,
+        fetchUrl: dicFetchUrl,
+      };
+    }
+
+    resetSpellCheckerCache();
+    return {
+      ok: true,
+      fromRemote: true,
+      ...spellDictionaryLoadCounts(),
+      fetchUrl: dicFetchUrl,
+    };
+  } catch (e) {
+    console.warn("[text-autofix] spell dictionary load failed:", e);
+    resetHunspellDictionaryToBundled();
+    resetSpellCheckerCache();
+    return {
+      ok: false,
+      fromRemote: false,
+      ...spellDictionaryLoadCounts(),
+      errorMessage: formatFetchError(e),
+      fetchUrl: dicFetchUrl,
+    };
+  }
 }
 
 export async function fetchRemoteTextViaHttp(fetchUrl: string): Promise<string> {

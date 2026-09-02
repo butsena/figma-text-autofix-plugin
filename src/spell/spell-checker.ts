@@ -1,11 +1,10 @@
-import { ungzip } from "pako";
 import nspell from "nspell";
-import {
-  HUNSPELL_AFF_GZ_BASE64,
-  HUNSPELL_DIC_GZ_BASE64,
-  HUNSPELL_SOURCE,
-} from "./hunspell-dict.generated";
 import { getAllSpellExtraWords } from "./spell-word-list-store";
+import {
+  getHunspellDictionary,
+  getHunspellDictionaryLoadStats,
+  HUNSPELL_SOURCE,
+} from "./hunspell-dictionary-store";
 
 export type SpellChecker = ReturnType<typeof nspell>;
 
@@ -13,45 +12,45 @@ export { HUNSPELL_SOURCE };
 
 let checker: SpellChecker | null = null;
 let initPromise: Promise<SpellChecker> | null = null;
-let extraWordsSignature = "";
+let signature = "";
 
-function decodeGzipBase64(base64: string): string {
-  const binary = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
-  return ungzip(binary, { toText: true });
-}
-
-function buildChecker(extraWords: readonly string[]): SpellChecker {
-  const aff = decodeGzipBase64(HUNSPELL_AFF_GZ_BASE64);
-  const dic = decodeGzipBase64(HUNSPELL_DIC_GZ_BASE64);
+function buildChecker(): SpellChecker {
+  const { aff, dic } = getHunspellDictionary();
   const spell = nspell(aff, dic);
-  for (const word of extraWords) {
+  for (const word of getAllSpellExtraWords()) {
     spell.add(word.toLowerCase());
   }
   return spell;
 }
 
-function extraWordsKey(extraWords: readonly string[]): string {
-  return extraWords.map((w) => w.toLowerCase()).join("\u0000");
+function currentSignature(): string {
+  const stats = getHunspellDictionaryLoadStats();
+  const dict = getHunspellDictionary();
+  const extra = getAllSpellExtraWords();
+  return `${stats.fromRemote ? "remote" : "bundled"}:${dict.entryCount}:${extra.join("\u0000")}`;
 }
 
 /** Ленивая инициализация Hunspell (≈1–2 с при первом запуске). */
 export async function ensureSpellCheckerReady(): Promise<SpellChecker> {
-  const extraWords = getAllSpellExtraWords();
-  const signature = extraWordsKey(extraWords);
+  const nextSignature = currentSignature();
 
-  if (checker && signature === extraWordsSignature) {
+  if (checker && signature === nextSignature) {
     return checker;
   }
 
-  if (initPromise && signature === extraWordsSignature) {
+  if (initPromise && signature === nextSignature) {
     return initPromise;
   }
 
   initPromise = Promise.resolve().then(() => {
     const started = Date.now();
-    checker = buildChecker(extraWords);
-    extraWordsSignature = signature;
-    console.log(`[text-autofix] Hunspell ready (${HUNSPELL_SOURCE}) in ${Date.now() - started} ms`);
+    checker = buildChecker();
+    signature = nextSignature;
+    const stats = getHunspellDictionaryLoadStats();
+    const source = stats.fromRemote ? "GitHub spell-dictionary" : HUNSPELL_SOURCE;
+    console.log(
+      `[text-autofix] Hunspell ready (${source}, ${stats.entryCount} entries) in ${Date.now() - started} ms`,
+    );
     return checker;
   });
 
@@ -65,7 +64,7 @@ export function getSpellChecker(): SpellChecker | null {
 export function resetSpellCheckerCache(): void {
   checker = null;
   initPromise = null;
-  extraWordsSignature = "";
+  signature = "";
 }
 
 export function isKnownWord(spell: SpellChecker, word: string): boolean {

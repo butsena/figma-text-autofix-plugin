@@ -9,6 +9,7 @@
 | [figma-text-autofix-plugin](https://github.com/butsena/figma-text-autofix-plugin) (private) | Код плагина, bundled CSV как fallback |
 | [figma-text-autofix-lexicon](https://github.com/butsena/figma-text-autofix-lexicon) (public) | Словарь замен `text-replacements.csv` |
 | [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) (public) | Исключения для правила про точку: `boundary-exceptions.txt` |
+| [figma-text-autofix-spell-dictionary](https://github.com/butsena/figma-text-autofix-spell-dictionary) (public) | Hunspell `ru_RU.aff` / `ru_RU.dic`, `spell-supplement.txt`, `spell-whitelist.txt` |
 
 Raw URL для плагина:  
 `https://raw.githubusercontent.com/butsena/figma-text-autofix-lexicon/main/text-replacements.csv`  

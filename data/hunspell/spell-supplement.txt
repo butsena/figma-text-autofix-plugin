@@ -1,5 +1,5 @@
 # Дополнительные слова для орфографии (домен UI / недвижимость).
-# Подгружается с GitHub (см. spell-supplement-remote-url.ts); bundled — fallback.
+# Подгружается с GitHub (figma-text-autofix-spell-dictionary); bundled — fallback.
 
 автоподбор
 ипотека

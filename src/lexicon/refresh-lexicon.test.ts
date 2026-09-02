@@ -3,10 +3,11 @@ import { mergeLexiconLoadStatus } from "./refresh-lexicon";
 import type {
   RefreshBoundaryExceptionsResult,
   RefreshLexiconReplacementsResult,
+  RefreshSpellDictionaryResult,
 } from "./refresh-from-remote";
 
 describe("mergeLexiconLoadStatus", () => {
-  it("собирает вложенный статус замен и исключений границ", () => {
+  it("собирает вложенный статус замен, исключений и орфографии", () => {
     const replacements: RefreshLexiconReplacementsResult = {
       ok: true,
       ruleCount: 10,
@@ -17,6 +18,12 @@ describe("mergeLexiconLoadStatus", () => {
       phraseCount: 11,
       fromRemote: true,
       fetchUrl: "https://example.com/boundary-exceptions.txt",
+    };
+    const spellDictionary: RefreshSpellDictionaryResult = {
+      ok: true,
+      entryCount: 146269,
+      fromRemote: true,
+      fetchUrl: "https://example.com/ru_RU.dic",
     };
     const spellSupplement = {
       ok: true,
@@ -30,7 +37,15 @@ describe("mergeLexiconLoadStatus", () => {
       fetchUrl: "https://example.com/spell-whitelist.txt",
     };
 
-    expect(mergeLexiconLoadStatus(replacements, boundary, spellSupplement, spellWhitelist)).toEqual({
+    expect(
+      mergeLexiconLoadStatus(
+        replacements,
+        boundary,
+        spellDictionary,
+        spellSupplement,
+        spellWhitelist,
+      ),
+    ).toEqual({
       replacements: {
         ok: true,
         count: 10,
@@ -41,6 +56,12 @@ describe("mergeLexiconLoadStatus", () => {
         count: 11,
         fromRemote: true,
         fetchUrl: "https://example.com/boundary-exceptions.txt",
+      },
+      spellDictionary: {
+        ok: true,
+        count: 146269,
+        fromRemote: true,
+        fetchUrl: "https://example.com/ru_RU.dic",
       },
       spellSupplement: {
         ok: true,
