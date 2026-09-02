@@ -8,13 +8,15 @@
 |---|---|
 | [figma-text-autofix-plugin](https://github.com/butsena/figma-text-autofix-plugin) (private) | Код плагина, bundled CSV как fallback |
 | [figma-text-autofix-lexicon](https://github.com/butsena/figma-text-autofix-lexicon) (public) | Словарь замен `text-replacements.csv` |
-| [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) (public) | Исключения для правила про точку: `boundary-exceptions.txt` |
+| [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) (public) | Когда не нужна точка: `boundary-exceptions.txt` |
+| [figma-text-autofix-ambiguous-form-choices](https://github.com/butsena/figma-text-autofix-ambiguous-form-choices) (public) | Формы сложных слов: `ambiguous-form-choices.txt` |
 
 Raw URL для плагина:  
 `https://raw.githubusercontent.com/butsena/figma-text-autofix-lexicon/main/text-replacements.csv`  
-`https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt`
+`https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt`  
+`https://raw.githubusercontent.com/butsena/figma-text-autofix-ambiguous-form-choices/main/ambiguous-form-choices.txt`
 
-Подробнее про второй репозиторий: [boundary-exceptions-github.md](./boundary-exceptions-github.md).
+Подробнее: [boundary-exceptions-github.md](./boundary-exceptions-github.md), [ambiguous-form-choices-github.md](./ambiguous-form-choices-github.md).
 
 ## Шаги
 
@@ -38,11 +40,19 @@ Raw URL для плагина:
 
 ## Синхронизация remote → bundled fallback (для разработчиков)
 
-После merge PR в lexicon-репо:
+После merge PR в lexicon-репо (замены):
 
 ```bash
 curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-lexicon/main/text-replacements.csv" \
   -o data/text-replacements.csv
+npm run build
+```
+
+После merge PR в репозиторий форм сложных слов:
+
+```bash
+curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-ambiguous-form-choices/main/ambiguous-form-choices.txt" \
+  -o data/ambiguous-form-choices.txt
 npm run build
 ```
 

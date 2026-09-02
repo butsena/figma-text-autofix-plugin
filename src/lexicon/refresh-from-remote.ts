@@ -15,6 +15,11 @@ import {
   getBoundaryExceptionsLoadStats,
   resetBoundaryExceptionsToBundled,
 } from "./boundary-exceptions-store";
+import {
+  applyAmbiguousFormChoicesFromRaw,
+  getAmbiguousFormChoicesLoadStats,
+  resetAmbiguousFormChoicesToBundled,
+} from "../rules/choice/ambiguous-form-choices-store";
 
 export type RefreshLexiconReplacementsResult = {
   ok: boolean;
@@ -30,6 +35,14 @@ export type RefreshSheetRulesResult = RefreshLexiconReplacementsResult;
 export type RefreshBoundaryExceptionsResult = {
   ok: boolean;
   phraseCount: number;
+  fromRemote: boolean;
+  errorMessage?: string;
+  fetchUrl?: string;
+};
+
+export type RefreshAmbiguousFormChoicesResult = {
+  ok: boolean;
+  choiceCount: number;
   fromRemote: boolean;
   errorMessage?: string;
   fetchUrl?: string;
@@ -80,6 +93,10 @@ function replacementLoadCounts(): Pick<RefreshLexiconReplacementsResult, "ruleCo
 
 function boundaryLoadCounts(): Pick<RefreshBoundaryExceptionsResult, "phraseCount"> {
   return { phraseCount: getBoundaryExceptionsLoadStats().count };
+}
+
+function ambiguousFormChoicesLoadCounts(): Pick<RefreshAmbiguousFormChoicesResult, "choiceCount"> {
+  return { choiceCount: getAmbiguousFormChoicesLoadStats().count };
 }
 
 function applyDownloadedCsv(text: string, fetchUrl: string): RefreshLexiconReplacementsResult {
@@ -141,6 +158,37 @@ function applyDownloadedBoundaryExceptions(
   };
 }
 
+function applyDownloadedAmbiguousFormChoices(
+  text: string,
+  fetchUrl: string,
+): RefreshAmbiguousFormChoicesResult {
+  if (looksLikeHtmlResponse(text)) {
+    return {
+      ok: false,
+      fromRemote: false,
+      ...ambiguousFormChoicesLoadCounts(),
+      errorMessage: "Ответ не текстовый список (возможно HTML-страница ошибки).",
+      fetchUrl,
+    };
+  }
+  if (!applyAmbiguousFormChoicesFromRaw(text)) {
+    return {
+      ok: false,
+      fromRemote: false,
+      ...ambiguousFormChoicesLoadCounts(),
+      errorMessage: `Файл получен, но пары не распознаны. Начало: ${previewResponseText(text)}`,
+      fetchUrl,
+    };
+  }
+  invalidateAutofixRulesCache();
+  return {
+    ok: true,
+    fromRemote: true,
+    ...ambiguousFormChoicesLoadCounts(),
+    fetchUrl,
+  };
+}
+
 /** Подтянуть CSV словаря замен по URL; при ошибке — fallback на bundled. */
 export async function refreshTextReplacementsFromRemote(
   csvUrl: string,
@@ -173,6 +221,25 @@ export async function refreshBoundaryExceptionsFromRemote(
       ok: false,
       fromRemote: false,
       ...boundaryLoadCounts(),
+      errorMessage: formatFetchError(e),
+      fetchUrl,
+    }),
+  });
+}
+
+/** Подтянуть пары выборочных форм по URL; при ошибке — fallback на bundled. */
+export async function refreshAmbiguousFormChoicesFromRemote(
+  txtUrl: string,
+  fetchText: (fetchUrl: string) => Promise<string>,
+): Promise<RefreshAmbiguousFormChoicesResult> {
+  return runRemoteRefresh(txtUrl, "ambiguous form choices", fetchText, {
+    resetBundled: resetAmbiguousFormChoicesToBundled,
+    buildEmptyUrlResult: () => ({ ok: true, fromRemote: false, ...ambiguousFormChoicesLoadCounts() }),
+    processDownload: applyDownloadedAmbiguousFormChoices,
+    buildNetworkErrorResult: (fetchUrl, e) => ({
+      ok: false,
+      fromRemote: false,
+      ...ambiguousFormChoicesLoadCounts(),
       errorMessage: formatFetchError(e),
       fetchUrl,
     }),

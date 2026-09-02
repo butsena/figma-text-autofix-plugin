@@ -7,7 +7,8 @@
 | Репозиторий | Что внутри | Зачем |
 |---|---|---|
 | [figma-text-autofix-lexicon](https://github.com/butsena/figma-text-autofix-lexicon) | `text-replacements.csv` — пары замен | Редакционные замены слов |
-| [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) | `boundary-exceptions.txt` — одна фраза на строку | Исключения для правила про точку |
+| [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) | `boundary-exceptions.txt` — одна фраза на строку | Когда не нужна точка |
+| [figma-text-autofix-ambiguous-form-choices](https://github.com/butsena/figma-text-autofix-ambiguous-form-choices) | `ambiguous-form-choices.txt` — пары форм | Формы сложных слов |
 
 **Не смешиваем** замены и исключения в одном репозитории: разные задачи, разные редакторы, разный формат.
 

@@ -2,22 +2,15 @@ import type { AutofixRule } from "../../core/autofix-engine";
 import { APPLY_POLICY_CHOICE } from "../../core/apply-policy";
 import { rule, rules } from "../../core/rule-def";
 import { CYRILLIC_LETTERS, escapeRegex } from "../regex";
-import ambiguousFormChoicesRaw from "../../../data/ambiguous-form-choices.txt?raw";
+import type { AmbiguousFormChoice } from "./ambiguous-form-choices-parse";
 import {
-  parseAmbiguousFormChoices,
-  type AmbiguousFormChoice,
-} from "./ambiguous-form-choices-parse";
+  getAmbiguousFormChoice,
+  getAmbiguousFormChoices,
+} from "./ambiguous-form-choices-store";
 
 export type { AmbiguousFormChoice };
 
-export const AMBIGUOUS_FORM_CHOICES: AmbiguousFormChoice[] =
-  parseAmbiguousFormChoices(ambiguousFormChoicesRaw);
-
-const CHOICE_BY_ID = new Map(AMBIGUOUS_FORM_CHOICES.map((choice) => [choice.id, choice]));
-
-export function getAmbiguousFormChoice(ruleId: string): AmbiguousFormChoice | undefined {
-  return CHOICE_BY_ID.get(ruleId);
-}
+export { getAmbiguousFormChoice };
 
 export function isChoiceRuleWithoutSkip(ruleId: string): boolean {
   const choice = getAmbiguousFormChoice(ruleId);
@@ -36,7 +29,7 @@ function choiceAlternation(options: string[]): string {
 }
 
 export function buildAmbiguousFormChoiceRules(
-  choices: AmbiguousFormChoice[] = AMBIGUOUS_FORM_CHOICES,
+  choices: readonly AmbiguousFormChoice[] = getAmbiguousFormChoices(),
 ): AutofixRule[] {
   return rules(
     choices.map(({ id, options, message, hint, hintHtml }) =>

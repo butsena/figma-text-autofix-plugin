@@ -272,13 +272,24 @@ function renderTechDetailsHtml(): string {
 
     const boundary = lex.boundaryExceptions;
     if (boundary.fromRemote && boundary.ok) {
-      bodyHtml += `<div class="sheetStatus ok">Исключения границ с GitHub: <b>${boundary.count}</b> фраз</div>`;
+      bodyHtml += `<div class="sheetStatus ok">Когда не нужна точка с GitHub: <b>${boundary.count}</b> фраз</div>`;
     } else if (!boundary.ok) {
-      bodyHtml += `<div class="sheetStatus err">Исключения границ — встроенный список (${boundary.count} фраз). ${escapeHtml(
+      bodyHtml += `<div class="sheetStatus err">Когда не нужна точка — встроенный список (${boundary.count} фраз). ${escapeHtml(
         displayText(boundary.errorMessage),
       )}</div>`;
     } else {
-      bodyHtml += `<div class="sheetStatus ok">Встроенный список исключений: <b>${boundary.count}</b> фраз</div>`;
+      bodyHtml += `<div class="sheetStatus ok">Встроенный список «когда не нужна точка»: <b>${boundary.count}</b> фраз</div>`;
+    }
+
+    const choices = lex.ambiguousFormChoices;
+    if (choices.fromRemote && choices.ok) {
+      bodyHtml += `<div class="sheetStatus ok">Формы сложных слов с GitHub: <b>${choices.count}</b> пар</div>`;
+    } else if (!choices.ok) {
+      bodyHtml += `<div class="sheetStatus err">Формы сложных слов — встроенный список (${choices.count} пар). ${escapeHtml(
+        displayText(choices.errorMessage),
+      )}</div>`;
+    } else {
+      bodyHtml += `<div class="sheetStatus ok">Встроенный список форм сложных слов: <b>${choices.count}</b> пар</div>`;
     }
   }
 
