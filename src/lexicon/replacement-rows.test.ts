@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyAllRules } from "../test/helpers";
-import {
-  buildRulesFromMergedRows,
-  mergeSheetReplacementRows,
-  parseSheetReplacementRows,
-  rowsToAutofixRules,
-} from "./replacement-rows";
+import { parseSheetReplacementRows, rowsToAutofixRules } from "./replacement-rows";
 
 describe("parseSheetReplacementRows", () => {
   it("парсит CSV с заголовками", () => {
@@ -33,41 +28,13 @@ describe("rowsToAutofixRules", () => {
     );
     expect(applyAllRules("хотим приобрести квартиру", rules)).toBe("хотим купить квартиру");
   });
-});
 
-describe("mergeSheetReplacementRows", () => {
-  it("remote перекрывает bundled по вариантам", () => {
-    const bundled = [{ variants: ["foo"], replace: "a", message: "", category: "", priority: 1 }];
-    const remote = [{ variants: ["foo"], replace: "b", message: "", category: "", priority: 1 }];
-    const { rows, remoteCount, bundledOnlyCount } = mergeSheetReplacementRows(bundled, remote);
-    expect(remoteCount).toBe(1);
-    expect(bundledOnlyCount).toBe(0);
-    expect(rows).toHaveLength(1);
-    expect(rows[0].replace).toBe("b");
-  });
-
-  it("bundled-only остаётся, если варианта нет в remote", () => {
-    const bundled = [
-      { variants: ["foo"], replace: "a", message: "", category: "", priority: 1 },
-      { variants: ["bar"], replace: "c", message: "", category: "", priority: 1 },
-    ];
-    const remote = [{ variants: ["foo"], replace: "b", message: "", category: "", priority: 1 }];
-    const { rows, bundledOnlyCount } = mergeSheetReplacementRows(bundled, remote);
-    expect(bundledOnlyCount).toBe(1);
-    expect(rows).toHaveLength(2);
-    expect(rows.find((r) => r.variants.includes("bar"))?.replace).toBe("c");
-  });
-});
-
-describe("buildRulesFromMergedRows", () => {
-  it("собирает правила и статистику", () => {
-    const { rules, stats } = buildRulesFromMergedRows(
+  it("собирает правила из строк", () => {
+    const rules = rowsToAutofixRules(
       [{ variants: ["old"], replace: "new", message: "", category: "", priority: 1 }],
-      [],
+      "sheet-text",
     );
     expect(rules).toHaveLength(1);
-    expect(stats.totalCount).toBe(1);
-    expect(stats.bundledOnlyCount).toBe(1);
     expect(applyAllRules("это old текст", rules)).toBe("это new текст");
   });
 });

@@ -3,13 +3,6 @@ import { cyrillicWholeWordPattern, escapeRegex } from "../rules/regex";
 import { headerColIndex, isEnabledCell, parseCsvRows } from "./csv";
 import { resolveLexiconMessage } from "./lexicon-messages";
 
-export type SheetRulesMergeStats = {
-  totalCount: number;
-  remoteCount: number;
-  /** Правила только из локального CSV (варианты не перекрыты таблицей). */
-  bundledOnlyCount: number;
-};
-
 export type SheetReplacementRow = {
   variants: string[];
   replace: string;
@@ -17,10 +10,6 @@ export type SheetReplacementRow = {
   category: string;
   priority: number;
 };
-
-function normVariantKey(variant: string): string {
-  return variant.trim().toLowerCase();
-}
 
 function splitVariantList(cell: string): string[] {
   return cell
@@ -113,45 +102,4 @@ export function rowsToAutofixRules(rows: SheetReplacementRow[], idPrefix: string
     if (rule) rules.push(rule);
   }
   return rules;
-}
-
-/**
- * Сначала правила из таблицы; из локального CSV — только строки, чьих вариантов нет в таблице.
- */
-export function mergeSheetReplacementRows(
-  bundledRows: SheetReplacementRow[],
-  remoteRows: SheetReplacementRow[],
-): { rows: SheetReplacementRow[]; remoteCount: number; bundledOnlyCount: number } {
-  const remoteVariantKeys = new Set<string>();
-  for (const row of remoteRows) {
-    for (const v of row.variants) {
-      remoteVariantKeys.add(normVariantKey(v));
-    }
-  }
-
-  const bundledOnly = bundledRows.filter((row) =>
-    row.variants.every((v) => !remoteVariantKeys.has(normVariantKey(v))),
-  );
-
-  return {
-    rows: [...remoteRows, ...bundledOnly],
-    remoteCount: remoteRows.length,
-    bundledOnlyCount: bundledOnly.length,
-  };
-}
-
-export function buildRulesFromMergedRows(
-  bundledRows: SheetReplacementRow[],
-  remoteRows: SheetReplacementRow[],
-): { rules: AutofixRule[]; stats: SheetRulesMergeStats } {
-  const { rows, remoteCount, bundledOnlyCount } = mergeSheetReplacementRows(bundledRows, remoteRows);
-  const rules = rowsToAutofixRules(rows, "sheet-text");
-  return {
-    rules,
-    stats: {
-      totalCount: rules.length,
-      remoteCount,
-      bundledOnlyCount,
-    },
-  };
 }

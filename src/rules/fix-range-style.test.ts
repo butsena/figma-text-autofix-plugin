@@ -56,7 +56,7 @@ describe("диапазон замены не захватывает неизме
   it("служебное слово: меняется только пробел после «в»", () => {
     const nbsp = "\u00a0";
     const fixes = fixesFor("зайдите в дом", buildServiceWordNbspRules());
-    const nbspFix = fixes.find((f) => f.ruleId === "cian-095-nbsp-after-short-words-strict");
+    const nbspFix = fixes.find((f) => f.ruleId === "cian-095-nbsp-в");
     expect(nbspFix).toMatchObject({ before: " ", after: nbsp, from: 9, to: 10 });
   });
 

@@ -6,7 +6,7 @@ import type { AmbiguousFormChoice } from "./ambiguous-form-choices-parse";
 import {
   getAmbiguousFormChoice,
   getAmbiguousFormChoices,
-} from "./ambiguous-form-choices-store";
+} from "../../lexicon/ambiguous-form-choices-store";
 
 export type { AmbiguousFormChoice };
 

@@ -1,10 +1,10 @@
-import bundledRaw from "../../../data/ambiguous-form-choices.txt?raw";
-import { createRemoteBackedStore } from "../../lexicon/remote-backed-store";
-import { stripUtf8Bom } from "../../shared/text-normalize";
+import bundledRaw from "../../data/ambiguous-form-choices.txt?raw";
+import { createRemoteBackedStore } from "./remote-backed-store";
+import { stripUtf8Bom } from "../shared/text-normalize";
 import {
   parseAmbiguousFormChoices,
   type AmbiguousFormChoice,
-} from "./ambiguous-form-choices-parse";
+} from "../rules/choice/ambiguous-form-choices-parse";
 
 export type AmbiguousFormChoicesLoadStats = {
   count: number;

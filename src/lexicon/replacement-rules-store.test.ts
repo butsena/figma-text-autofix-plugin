@@ -1,33 +1,33 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
-  applySheetRulesFromCsv,
-  getSheetRulesLoadStats,
-  resetSheetRulesToBundled,
+  applyLexiconReplacementsFromCsv,
+  getLexiconRulesLoadStats,
+  resetLexiconReplacementsToBundled,
 } from "./replacement-rules-store";
 
 describe("replacement-rules-store", () => {
   beforeEach(() => {
-    resetSheetRulesToBundled();
+    resetLexiconReplacementsToBundled();
   });
 
   it("подставляет remote CSV целиком без merge с bundled", () => {
     const remoteCsv = `исходные варианты,верный текст
 тестовое,замена`;
 
-    const ok = applySheetRulesFromCsv(remoteCsv);
+    const ok = applyLexiconReplacementsFromCsv(remoteCsv);
     expect(ok).toBe(true);
 
-    const stats = getSheetRulesLoadStats();
+    const stats = getLexiconRulesLoadStats();
     expect(stats.fromRemote).toBe(true);
     expect(stats.totalCount).toBe(1);
   });
 
   it("при сбросе возвращает bundled", () => {
-    applySheetRulesFromCsv(`исходные варианты,верный текст
+    applyLexiconReplacementsFromCsv(`исходные варианты,верный текст
 тестовое,замена`);
-    resetSheetRulesToBundled();
+    resetLexiconReplacementsToBundled();
 
-    const stats = getSheetRulesLoadStats();
+    const stats = getLexiconRulesLoadStats();
     expect(stats.fromRemote).toBe(false);
     expect(stats.totalCount).toBeGreaterThan(1);
   });

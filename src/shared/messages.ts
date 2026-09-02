@@ -110,9 +110,6 @@ export type LexiconLoadStatusDto = {
   ambiguousFormChoices: LexiconResourceLoadStatus;
 };
 
-/** @deprecated Используйте LexiconLoadStatusDto. */
-export type SheetLoadStatusDto = LexiconLoadStatusDto;
-
 export type UiToPluginMessage =
   | { type: "ui:ready" }
   | { type: "ui:focusLayer"; nodeId: string }

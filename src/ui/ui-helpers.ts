@@ -1,6 +1,7 @@
 import { getAmbiguousFormChoice, isChoiceRuleWithoutSkip } from "../rules/choice/ambiguous-form-rules";
 import { capitalizeLike } from "../shared/case";
 import { formatCharacterCountLabel } from "../shared/text-char-count";
+import type { LexiconResourceLoadStatus } from "../shared/messages";
 
 export { capitalizeLike };
 
@@ -100,4 +101,23 @@ export function formatFixCategoryLabel(category: string, ruleId?: string): strin
   if (category === "cian_editorial") return "Редполитика";
   if (category === "form_choice") return "Выбор формы";
   return category;
+}
+
+export function formatLexiconResourceStatusHtml(
+  resource: LexiconResourceLoadStatus,
+  labels: {
+    remoteOk: (count: number) => string;
+    remoteErr: (count: number) => string;
+    bundledOk: (count: number) => string;
+  },
+): string {
+  if (resource.fromRemote && resource.ok) {
+    return `<div class="sheetStatus ok">${labels.remoteOk(resource.count)}</div>`;
+  }
+  if (!resource.ok) {
+    return `<div class="sheetStatus err">${labels.remoteErr(resource.count)} ${escapeHtml(
+      displayText(resource.errorMessage),
+    )}</div>`;
+  }
+  return `<div class="sheetStatus ok">${labels.bundledOk(resource.count)}</div>`;
 }

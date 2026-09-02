@@ -17,16 +17,10 @@ export function getLexiconReplacementRules(): AutofixRule[] {
   return store.get();
 }
 
-/** @deprecated Используйте getLexiconReplacementRules. */
-export const getSheetReplacementRules = getLexiconReplacementRules;
-
 export function getLexiconRulesLoadStats(): LexiconRulesLoadStats {
   const stats = store.getLoadStats();
   return { totalCount: stats.count, fromRemote: stats.fromRemote };
 }
-
-/** @deprecated Используйте getLexiconRulesLoadStats. */
-export const getSheetRulesLoadStats = getLexiconRulesLoadStats;
 
 /** Загрузить CSV словаря; пустой/битый → false, активный набор не меняется. */
 export function applyLexiconReplacementsFromCsv(raw: string): boolean {
@@ -35,12 +29,6 @@ export function applyLexiconReplacementsFromCsv(raw: string): boolean {
   return store.apply(rowsToAutofixRules(rows, "sheet-text"));
 }
 
-/** @deprecated Используйте applyLexiconReplacementsFromCsv. */
-export const applySheetRulesFromCsv = applyLexiconReplacementsFromCsv;
-
 export function resetLexiconReplacementsToBundled(): void {
   store.resetToBundled();
 }
-
-/** @deprecated Используйте resetLexiconReplacementsToBundled. */
-export const resetSheetRulesToBundled = resetLexiconReplacementsToBundled;

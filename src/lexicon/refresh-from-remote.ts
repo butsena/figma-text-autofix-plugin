@@ -19,7 +19,7 @@ import {
   applyAmbiguousFormChoicesFromRaw,
   getAmbiguousFormChoicesLoadStats,
   resetAmbiguousFormChoicesToBundled,
-} from "../rules/choice/ambiguous-form-choices-store";
+} from "./ambiguous-form-choices-store";
 
 export type RefreshLexiconReplacementsResult = {
   ok: boolean;
@@ -28,9 +28,6 @@ export type RefreshLexiconReplacementsResult = {
   errorMessage?: string;
   fetchUrl?: string;
 };
-
-/** @deprecated Используйте RefreshLexiconReplacementsResult. */
-export type RefreshSheetRulesResult = RefreshLexiconReplacementsResult;
 
 export type RefreshBoundaryExceptionsResult = {
   ok: boolean;
@@ -53,6 +50,13 @@ type RemoteRefreshHandlers<TResult extends { ok: boolean; fromRemote: boolean }>
   buildEmptyUrlResult: () => TResult;
   processDownload: (text: string, fetchUrl: string) => TResult;
   buildNetworkErrorResult: (fetchUrl: string, error: unknown) => TResult;
+};
+
+type DownloadResourceConfig<TCounts extends Record<string, number>> = {
+  invalidFormatMessage: string;
+  unrecognizedMessage: string;
+  getCounts: () => TCounts;
+  apply: (text: string) => boolean;
 };
 
 async function runRemoteRefresh<TResult extends { ok: boolean; fromRemote: boolean }>(
@@ -87,106 +91,110 @@ async function runRemoteRefresh<TResult extends { ok: boolean; fromRemote: boole
   }
 }
 
-function replacementLoadCounts(): Pick<RefreshLexiconReplacementsResult, "ruleCount"> {
-  return { ruleCount: getLexiconRulesLoadStats().totalCount };
-}
+function applyDownloadedResource<TCounts extends Record<string, number>, TResult>(
+  text: string,
+  fetchUrl: string,
+  config: DownloadResourceConfig<TCounts>,
+  buildFailure: (counts: TCounts, errorMessage: string, fetchUrl: string) => TResult,
+  buildSuccess: (counts: TCounts, fetchUrl: string) => TResult,
+): TResult {
+  if (looksLikeHtmlResponse(text)) {
+    return buildFailure(config.getCounts(), config.invalidFormatMessage, fetchUrl);
+  }
+  if (!config.apply(text)) {
+    return buildFailure(
+      config.getCounts(),
+      `${config.unrecognizedMessage}: ${previewResponseText(text)}`,
+      fetchUrl,
+    );
+  }
 
-function boundaryLoadCounts(): Pick<RefreshBoundaryExceptionsResult, "phraseCount"> {
-  return { phraseCount: getBoundaryExceptionsLoadStats().count };
-}
-
-function ambiguousFormChoicesLoadCounts(): Pick<RefreshAmbiguousFormChoicesResult, "choiceCount"> {
-  return { choiceCount: getAmbiguousFormChoicesLoadStats().count };
+  invalidateAutofixRulesCache();
+  return buildSuccess(config.getCounts(), fetchUrl);
 }
 
 function applyDownloadedCsv(text: string, fetchUrl: string): RefreshLexiconReplacementsResult {
-  if (looksLikeHtmlResponse(text)) {
-    return {
-      ok: false,
-      fromRemote: false,
-      ...replacementLoadCounts(),
-      errorMessage: "Ответ не CSV (возможно HTML-страница ошибки).",
-      fetchUrl,
-    };
-  }
-  if (!applyLexiconReplacementsFromCsv(text)) {
-    return {
-      ok: false,
-      fromRemote: false,
-      ...replacementLoadCounts(),
-      errorMessage: `CSV получен, но правила не распознаны. Начало: ${previewResponseText(text)}`,
-      fetchUrl,
-    };
-  }
-  invalidateAutofixRulesCache();
-  return {
-    ok: true,
-    fromRemote: true,
-    ...replacementLoadCounts(),
+  return applyDownloadedResource(
+    text,
     fetchUrl,
-  };
+    {
+      invalidFormatMessage: "Ответ не CSV (возможно HTML-страница ошибки).",
+      unrecognizedMessage: "CSV получен, но правила не распознаны. Начало",
+      getCounts: () => ({ ruleCount: getLexiconRulesLoadStats().totalCount }),
+      apply: applyLexiconReplacementsFromCsv,
+    },
+    (counts, errorMessage, url) => ({
+      ok: false,
+      fromRemote: false,
+      ...counts,
+      errorMessage,
+      fetchUrl: url,
+    }),
+    (counts, url) => ({
+      ok: true,
+      fromRemote: true,
+      ...counts,
+      fetchUrl: url,
+    }),
+  );
 }
 
 function applyDownloadedBoundaryExceptions(
   text: string,
   fetchUrl: string,
 ): RefreshBoundaryExceptionsResult {
-  if (looksLikeHtmlResponse(text)) {
-    return {
-      ok: false,
-      fromRemote: false,
-      ...boundaryLoadCounts(),
-      errorMessage: "Ответ не текстовый список (возможно HTML-страница ошибки).",
-      fetchUrl,
-    };
-  }
-  if (!applyBoundaryExceptionsFromRaw(text)) {
-    return {
-      ok: false,
-      fromRemote: false,
-      ...boundaryLoadCounts(),
-      errorMessage: `Файл получен, но фразы не распознаны. Начало: ${previewResponseText(text)}`,
-      fetchUrl,
-    };
-  }
-  invalidateAutofixRulesCache();
-  return {
-    ok: true,
-    fromRemote: true,
-    ...boundaryLoadCounts(),
+  return applyDownloadedResource(
+    text,
     fetchUrl,
-  };
+    {
+      invalidFormatMessage: "Ответ не текстовый список (возможно HTML-страница ошибки).",
+      unrecognizedMessage: "Файл получен, но фразы не распознаны. Начало",
+      getCounts: () => ({ phraseCount: getBoundaryExceptionsLoadStats().count }),
+      apply: applyBoundaryExceptionsFromRaw,
+    },
+    (counts, errorMessage, url) => ({
+      ok: false,
+      fromRemote: false,
+      ...counts,
+      errorMessage,
+      fetchUrl: url,
+    }),
+    (counts, url) => ({
+      ok: true,
+      fromRemote: true,
+      ...counts,
+      fetchUrl: url,
+    }),
+  );
 }
 
 function applyDownloadedAmbiguousFormChoices(
   text: string,
   fetchUrl: string,
 ): RefreshAmbiguousFormChoicesResult {
-  if (looksLikeHtmlResponse(text)) {
-    return {
-      ok: false,
-      fromRemote: false,
-      ...ambiguousFormChoicesLoadCounts(),
-      errorMessage: "Ответ не текстовый список (возможно HTML-страница ошибки).",
-      fetchUrl,
-    };
-  }
-  if (!applyAmbiguousFormChoicesFromRaw(text)) {
-    return {
-      ok: false,
-      fromRemote: false,
-      ...ambiguousFormChoicesLoadCounts(),
-      errorMessage: `Файл получен, но пары не распознаны. Начало: ${previewResponseText(text)}`,
-      fetchUrl,
-    };
-  }
-  invalidateAutofixRulesCache();
-  return {
-    ok: true,
-    fromRemote: true,
-    ...ambiguousFormChoicesLoadCounts(),
+  return applyDownloadedResource(
+    text,
     fetchUrl,
-  };
+    {
+      invalidFormatMessage: "Ответ не текстовый список (возможно HTML-страница ошибки).",
+      unrecognizedMessage: "Файл получен, но пары не распознаны. Начало",
+      getCounts: () => ({ choiceCount: getAmbiguousFormChoicesLoadStats().count }),
+      apply: applyAmbiguousFormChoicesFromRaw,
+    },
+    (counts, errorMessage, url) => ({
+      ok: false,
+      fromRemote: false,
+      ...counts,
+      errorMessage,
+      fetchUrl: url,
+    }),
+    (counts, url) => ({
+      ok: true,
+      fromRemote: true,
+      ...counts,
+      fetchUrl: url,
+    }),
+  );
 }
 
 /** Подтянуть CSV словаря замен по URL; при ошибке — fallback на bundled. */
@@ -196,12 +204,16 @@ export async function refreshTextReplacementsFromRemote(
 ): Promise<RefreshLexiconReplacementsResult> {
   return runRemoteRefresh(csvUrl, "CSV", fetchText, {
     resetBundled: resetLexiconReplacementsToBundled,
-    buildEmptyUrlResult: () => ({ ok: true, fromRemote: false, ...replacementLoadCounts() }),
+    buildEmptyUrlResult: () => ({
+      ok: true,
+      fromRemote: false,
+      ruleCount: getLexiconRulesLoadStats().totalCount,
+    }),
     processDownload: applyDownloadedCsv,
     buildNetworkErrorResult: (fetchUrl, e) => ({
       ok: false,
       fromRemote: false,
-      ...replacementLoadCounts(),
+      ruleCount: getLexiconRulesLoadStats().totalCount,
       errorMessage: formatFetchError(e),
       fetchUrl,
     }),
@@ -215,12 +227,16 @@ export async function refreshBoundaryExceptionsFromRemote(
 ): Promise<RefreshBoundaryExceptionsResult> {
   return runRemoteRefresh(txtUrl, "boundary exceptions", fetchText, {
     resetBundled: resetBoundaryExceptionsToBundled,
-    buildEmptyUrlResult: () => ({ ok: true, fromRemote: false, ...boundaryLoadCounts() }),
+    buildEmptyUrlResult: () => ({
+      ok: true,
+      fromRemote: false,
+      phraseCount: getBoundaryExceptionsLoadStats().count,
+    }),
     processDownload: applyDownloadedBoundaryExceptions,
     buildNetworkErrorResult: (fetchUrl, e) => ({
       ok: false,
       fromRemote: false,
-      ...boundaryLoadCounts(),
+      phraseCount: getBoundaryExceptionsLoadStats().count,
       errorMessage: formatFetchError(e),
       fetchUrl,
     }),
@@ -234,12 +250,16 @@ export async function refreshAmbiguousFormChoicesFromRemote(
 ): Promise<RefreshAmbiguousFormChoicesResult> {
   return runRemoteRefresh(txtUrl, "ambiguous form choices", fetchText, {
     resetBundled: resetAmbiguousFormChoicesToBundled,
-    buildEmptyUrlResult: () => ({ ok: true, fromRemote: false, ...ambiguousFormChoicesLoadCounts() }),
+    buildEmptyUrlResult: () => ({
+      ok: true,
+      fromRemote: false,
+      choiceCount: getAmbiguousFormChoicesLoadStats().count,
+    }),
     processDownload: applyDownloadedAmbiguousFormChoices,
     buildNetworkErrorResult: (fetchUrl, e) => ({
       ok: false,
       fromRemote: false,
-      ...ambiguousFormChoicesLoadCounts(),
+      choiceCount: getAmbiguousFormChoicesLoadStats().count,
       errorMessage: formatFetchError(e),
       fetchUrl,
     }),

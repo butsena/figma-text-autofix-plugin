@@ -72,6 +72,3 @@ export async function applyManualFixAndRefresh(
   setLastAutoApplyReport(report);
   postCheckResultToUi(selection, finalScan);
 }
-
-/** @deprecated Используйте applyManualFixAndRefresh. */
-export const applyConfirmFixAndRefresh = applyManualFixAndRefresh;

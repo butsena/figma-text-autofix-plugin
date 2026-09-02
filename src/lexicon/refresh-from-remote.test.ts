@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { resetAmbiguousFormChoicesToBundled } from "../rules/choice/ambiguous-form-choices-store";
+import { resetAmbiguousFormChoicesToBundled } from "./ambiguous-form-choices-store";
 import { resetBoundaryExceptionsToBundled } from "./boundary-exceptions-store";
-import { resetSheetRulesToBundled } from "./replacement-rules-store";
+import { resetLexiconReplacementsToBundled } from "./replacement-rules-store";
 import {
   refreshAmbiguousFormChoicesFromRemote,
   refreshBoundaryExceptionsFromRemote,
@@ -10,7 +10,7 @@ import {
 
 describe("refresh-from-remote", () => {
   beforeEach(() => {
-    resetSheetRulesToBundled();
+    resetLexiconReplacementsToBundled();
     resetBoundaryExceptionsToBundled();
     resetAmbiguousFormChoicesToBundled();
   });

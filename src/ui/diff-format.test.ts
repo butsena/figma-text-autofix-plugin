@@ -33,7 +33,7 @@ describe("formatFixDiffHtml", () => {
   it("показывает контекст для NBSP после служебного слова", () => {
     const html = formatFixDiffHtml(
       {
-        ruleId: "cian-095-nbsp-after-short-words-strict",
+        ruleId: "cian-095-nbsp-и",
         from: 10,
         to: 11,
         before: " ",

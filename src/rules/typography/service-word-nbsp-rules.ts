@@ -1,58 +1,63 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { rule, rules } from "../../core/rule-def";
+import { escapeRegex, LATIN_CYRILLIC_WORD_LOOKBEHIND } from "../regex";
 import { MSG_TYPO_NBSP_AFTER_SERVICE_WORD } from "../rule-messages";
 import { HORIZONTAL_SPACE, LINE_BREAK, NBSP } from "./constants";
-import { serviceWordPattern } from "./ru-service-words";
+import { RU_SERVICE_WORDS, serviceWordPattern } from "./ru-service-words";
 
-export function buildServiceWordNbspRules(): AutofixRule[] {
-  return rules([
+function wordNbspPattern(word: string, suffix: string): RegExp {
+  return new RegExp(`${LATIN_CYRILLIC_WORD_LOOKBEHIND}(${escapeRegex(word)})${suffix}`, "gim");
+}
+
+function serviceWordRuleId(word: string, acrossLineBreak = false): string {
+  return acrossLineBreak ? `cian-095b-nbsp-${word}-linebreak` : `cian-095-nbsp-${word}`;
+}
+
+function buildPerWordNbspRules(): AutofixRule[] {
+  return RU_SERVICE_WORDS.flatMap((word) => [
     rule({
-      id: "cian-095-nbsp-after-short-words-strict",
+      id: serviceWordRuleId(word),
       category: "typography",
-      pattern: serviceWordPattern(`(?:${HORIZONTAL_SPACE}+)(?=\\S)`),
-      replacement: (_match, prefix, word) => `${prefix}${word}${NBSP}`,
+      pattern: wordNbspPattern(word, `${HORIZONTAL_SPACE}+(?=\\S)`),
+      replacement: (_match, matchedWord: string) => `${matchedWord}${NBSP}`,
       message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
       priority: 52,
     }),
     rule({
+      id: serviceWordRuleId(word, true),
+      category: "typography",
+      pattern: wordNbspPattern(
+        word,
+        `(?:${HORIZONTAL_SPACE}*${LINE_BREAK}${HORIZONTAL_SPACE}*)(?=\\S)`,
+      ),
+      replacement: (_match, matchedWord: string) => `${matchedWord}${NBSP}`,
+      message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
+      priority: 52,
+    }),
+  ]);
+}
+
+export function buildServiceWordNbspRules(): AutofixRule[] {
+  return rules([
+    ...buildPerWordNbspRules(),
+    rule({
       id: "cian-097-nbsp-after-service-words-before-line-end",
       category: "typography",
       pattern: serviceWordPattern(`(?:${HORIZONTAL_SPACE}{2,})(?=(?:${LINE_BREAK}|$))`),
-      replacement: (_match, prefix, word) => `${prefix}${word}${NBSP}`,
+      replacement: (_match, prefix, matchedWord) => `${prefix}${matchedWord}${NBSP}`,
       message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
       priority: 53,
-    }),
-    rule({
-      id: "cian-098-nbsp-after-service-words-newlines-before-text",
-      category: "typography",
-      pattern: serviceWordPattern(`((?:${LINE_BREAK})+)(?=\\S)`),
-      replacement: (_match, prefix, word, newlines) => `${prefix}${word}${NBSP}${newlines}`,
-      message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
-      priority: 55,
     }),
     rule({
       id: "cian-099-nbsp-after-service-words-trailing-newlines-at-eof",
       category: "typography",
       pattern: serviceWordPattern(`((?:(?:${HORIZONTAL_SPACE}*${LINE_BREAK})+(?:${HORIZONTAL_SPACE}*)?)+)$`, "gi"),
-      replacement: (_match, prefix, word, tail) => {
+      replacement: (_match, prefix, matchedWord, tail) => {
         const keepFinalNl = /(?:\r?\n)\s*$/.test(tail);
-        return keepFinalNl ? `${prefix}${word}${NBSP}\n` : `${prefix}${word}${NBSP}`;
+        return keepFinalNl ? `${prefix}${matchedWord}${NBSP}\n` : `${prefix}${matchedWord}${NBSP}`;
       },
       message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
       priority: 55,
-    }),
-    rule({
-      id: "cian-101-nbsp-after-service-words-mixed-ws-before-text",
-      category: "typography",
-      pattern: serviceWordPattern(
-        `((?:(?:${HORIZONTAL_SPACE}+${LINE_BREAK})+|(?:${LINE_BREAK}${HORIZONTAL_SPACE}+)+))(?=\\S)`,
-      ),
-      replacement: (_match, prefix, word, tail) => {
-        const keepNl = /\r|\n/.test(tail) ? "\n" : "";
-        return `${prefix}${word}${NBSP}${keepNl}`;
-      },
-      message: MSG_TYPO_NBSP_AFTER_SERVICE_WORD,
-      priority: 54,
     }),
   ]);
 }

@@ -22,13 +22,13 @@ describe("build-auto-apply-report", () => {
           characterCount: 14,
           fixes: [
             {
-              fixId: "1:1:cian-095:9:10",
+              fixId: "1:1:cian-095-nbsp-и:9:10",
               from: 9,
               to: 10,
               before: " ",
               after: "\u00a0",
               rule: {
-                id: "cian-095-nbsp-after-short-words-strict",
+                id: "cian-095-nbsp-и",
                 category: "typography",
                 message: "NBSP после служебных слов",
                 priority: 52,
@@ -49,7 +49,7 @@ describe("build-auto-apply-report", () => {
             to: 10,
             before: " ",
             after: "\u00a0",
-            ruleId: "cian-095-nbsp-after-short-words-strict",
+            ruleId: "cian-095-nbsp-и",
             category: "typography",
             message: "NBSP после служебных слов",
             priority: 52,
@@ -64,7 +64,7 @@ describe("build-auto-apply-report", () => {
       from: 9,
       to: 10,
       sourceText: "квартира и дом",
-      ruleId: "cian-095-nbsp-after-short-words-strict",
+      ruleId: "cian-095-nbsp-и",
     });
     expect(report.layers[0].characterCount).toBe(14);
   });
