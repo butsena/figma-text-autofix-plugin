@@ -10,6 +10,7 @@ import {
   formatLayerTitleHtml,
   formatTextLayersBlockHtml,
   isChoiceRuleWithoutSkip,
+  renderTechDetailsBodyHtml,
 } from "./ui-helpers";
 import {
   PLUGIN_UI_MAX_HEIGHT,
@@ -254,77 +255,9 @@ function renderTextLayersHtml(): string {
 
 function renderTechDetailsHtml(): string {
   const lex = state.lexiconLoad;
-  let bodyHtml = "";
-
-  if (!lex) {
-    bodyHtml = '<div class="empty" style="padding:4px 0">Статус загрузки словаря ещё не получен.</div>';
-  } else {
-    const rep = lex.replacements;
-    if (rep.fromRemote && rep.ok) {
-      bodyHtml = `<div class="sheetStatus ok">Словарь замен с GitHub: <b>${rep.count}</b> правил</div>`;
-    } else if (!rep.ok) {
-      bodyHtml = `<div class="sheetStatus err">GitHub недоступен — встроенный CSV (${rep.count} правил). ${escapeHtml(
-        displayText(rep.errorMessage),
-      )}</div>`;
-    } else {
-      bodyHtml = `<div class="sheetStatus ok">Встроенный CSV: <b>${rep.count}</b> правил</div>`;
-    }
-
-    const boundary = lex.boundaryExceptions;
-    if (boundary.fromRemote && boundary.ok) {
-      bodyHtml += `<div class="sheetStatus ok">Исключения границ с GitHub: <b>${boundary.count}</b> фраз</div>`;
-    } else if (!boundary.ok) {
-      bodyHtml += `<div class="sheetStatus err">Исключения границ — встроенный список (${boundary.count} фраз). ${escapeHtml(
-        displayText(boundary.errorMessage),
-      )}</div>`;
-    } else {
-      bodyHtml += `<div class="sheetStatus ok">Встроенный список исключений: <b>${boundary.count}</b> фраз</div>`;
-    }
-
-    const formChoices = lex.formChoices;
-    if (formChoices.fromRemote && formChoices.ok) {
-      bodyHtml += `<div class="sheetStatus ok">Choice-пары с GitHub: <b>${formChoices.count}</b></div>`;
-    } else if (!formChoices.ok) {
-      bodyHtml += `<div class="sheetStatus err">Choice-пары — встроенный список (${formChoices.count}). ${escapeHtml(
-        displayText(formChoices.errorMessage),
-      )}</div>`;
-    } else {
-      bodyHtml += `<div class="sheetStatus ok">Встроенный список choice-пар: <b>${formChoices.count}</b></div>`;
-    }
-
-    const spellDictionary = lex.spellDictionary;
-    if (spellDictionary.fromRemote && spellDictionary.ok) {
-      bodyHtml += `<div class="sheetStatus ok">Hunspell ru_RU с GitHub: <b>${spellDictionary.count}</b> лемм</div>`;
-    } else if (!spellDictionary.ok) {
-      bodyHtml += `<div class="sheetStatus err">Hunspell — встроенный словарь (${spellDictionary.count} лемм). ${escapeHtml(
-        displayText(spellDictionary.errorMessage),
-      )}</div>`;
-    } else {
-      bodyHtml += `<div class="sheetStatus ok">Встроенный Hunspell ru_RU: <b>${spellDictionary.count}</b> лемм</div>`;
-    }
-
-    const supplement = lex.spellSupplement;
-    if (supplement.fromRemote && supplement.ok) {
-      bodyHtml += `<div class="sheetStatus ok">Доп. слова орфографии с GitHub: <b>${supplement.count}</b></div>`;
-    } else if (!supplement.ok) {
-      bodyHtml += `<div class="sheetStatus err">Доп. слова орфографии — встроенный список (${supplement.count}). ${escapeHtml(
-        displayText(supplement.errorMessage),
-      )}</div>`;
-    } else {
-      bodyHtml += `<div class="sheetStatus ok">Встроенный доп. словарь орфографии: <b>${supplement.count}</b> слов</div>`;
-    }
-
-    const whitelist = lex.spellWhitelist;
-    if (whitelist.fromRemote && whitelist.ok) {
-      bodyHtml += `<div class="sheetStatus ok">Whitelist орфографии с GitHub: <b>${whitelist.count}</b> слов</div>`;
-    } else if (!whitelist.ok) {
-      bodyHtml += `<div class="sheetStatus err">Whitelist орфографии — встроенный список (${whitelist.count}). ${escapeHtml(
-        displayText(whitelist.errorMessage),
-      )}</div>`;
-    } else {
-      bodyHtml += `<div class="sheetStatus ok">Встроенный whitelist орфографии: <b>${whitelist.count}</b> слов</div>`;
-    }
-  }
+  const bodyHtml = lex
+    ? renderTechDetailsBodyHtml(lex)
+    : '<div class="empty" style="padding:4px 0">Статус загрузки словаря ещё не получен.</div>';
 
   return `
     <div class="techBlock">

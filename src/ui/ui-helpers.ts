@@ -1,3 +1,4 @@
+import type { LexiconLoadStatusDto, LexiconResourceLoadStatus } from "../shared/messages";
 import { getAmbiguousFormChoice, isChoiceRuleWithoutSkip } from "../rules/choice/ambiguous-form-rules";
 import { capitalizeLike } from "../shared/case";
 import { formatCharacterCountLabel } from "../shared/text-char-count";
@@ -86,6 +87,75 @@ export function formatTextLayersBlockHtml(
       </details>
     </div>
   `;
+}
+
+type LexiconResourceStatusLabels = {
+  remoteOkPrefix: string;
+  bundledOkPrefix: string;
+  errorPrefix: string;
+  countLabel: string;
+};
+
+export function renderLexiconResourceStatusHtml(
+  status: LexiconResourceLoadStatus | undefined,
+  labels: LexiconResourceStatusLabels,
+): string {
+  if (!status) {
+    return `<div class="sheetStatus err">${escapeHtml(labels.errorPrefix)}: статус не получен.</div>`;
+  }
+
+  const countHtml = `<b>${status.count}</b> ${labels.countLabel}`;
+  if (status.fromRemote && status.ok) {
+    return `<div class="sheetStatus ok">${escapeHtml(labels.remoteOkPrefix)}: ${countHtml}</div>`;
+  }
+  if (!status.ok) {
+    return `<div class="sheetStatus err">${escapeHtml(labels.errorPrefix)} (${status.count} ${labels.countLabel}). ${escapeHtml(
+      displayText(status.errorMessage),
+    )}</div>`;
+  }
+  return `<div class="sheetStatus ok">${escapeHtml(labels.bundledOkPrefix)}: ${countHtml}</div>`;
+}
+
+/** HTML статусов подгрузки словарей для блока «Техническая хрень». */
+export function renderTechDetailsBodyHtml(lex: LexiconLoadStatusDto): string {
+  return [
+    renderLexiconResourceStatusHtml(lex.replacements, {
+      remoteOkPrefix: "Словарь замен (lexicon) с GitHub",
+      bundledOkPrefix: "Встроенный CSV замен",
+      errorPrefix: "Словарь замен — встроенный CSV",
+      countLabel: "правил",
+    }),
+    renderLexiconResourceStatusHtml(lex.boundaryExceptions, {
+      remoteOkPrefix: "Исключения границ (boundary-exceptions) с GitHub",
+      bundledOkPrefix: "Встроенный список исключений границ",
+      errorPrefix: "Исключения границ — встроенный список",
+      countLabel: "фраз",
+    }),
+    renderLexiconResourceStatusHtml(lex.formChoices, {
+      remoteOkPrefix: "Выбор формы (form-choices) с GitHub",
+      bundledOkPrefix: "Встроенный список выбора формы",
+      errorPrefix: "Выбор формы — встроенный список",
+      countLabel: "пар",
+    }),
+    renderLexiconResourceStatusHtml(lex.spellDictionary, {
+      remoteOkPrefix: "Hunspell ru_RU (spell-dictionary) с GitHub",
+      bundledOkPrefix: "Встроенный Hunspell ru_RU",
+      errorPrefix: "Hunspell — встроенный словарь",
+      countLabel: "лемм",
+    }),
+    renderLexiconResourceStatusHtml(lex.spellSupplement, {
+      remoteOkPrefix: "Доп. слова орфографии (spell-dictionary) с GitHub",
+      bundledOkPrefix: "Встроенный доп. словарь орфографии",
+      errorPrefix: "Доп. слова орфографии — встроенный список",
+      countLabel: "слов",
+    }),
+    renderLexiconResourceStatusHtml(lex.spellWhitelist, {
+      remoteOkPrefix: "Whitelist орфографии (spell-dictionary) с GitHub",
+      bundledOkPrefix: "Встроенный whitelist орфографии",
+      errorPrefix: "Whitelist орфографии — встроенный список",
+      countLabel: "слов",
+    }),
+  ].join("");
 }
 
 const SENTENCE_PERIOD_RULE_IDS: Record<string, true> = {

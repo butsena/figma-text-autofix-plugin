@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { formatChoiceHintHtml, formatFixCategoryLabel, formatLayerTitleHtml, formatTextLayersBlockHtml, isChoiceRuleWithoutSkip } from "./ui-helpers";
+import {
+  formatChoiceHintHtml,
+  formatFixCategoryLabel,
+  formatLayerTitleHtml,
+  formatTextLayersBlockHtml,
+  isChoiceRuleWithoutSkip,
+  renderTechDetailsBodyHtml,
+} from "./ui-helpers";
+import type { LexiconLoadStatusDto } from "../shared/messages";
 
 describe("formatFixCategoryLabel", () => {
   it("показывает Редполитику для правил про точки", () => {
@@ -80,5 +88,39 @@ describe("formatFixCategoryLabel", () => {
     expect(html).toContain("Заголовок");
     expect(html).toContain("10 символов");
     expect(html).not.toContain('details class="textLayersDetails" open');
+  });
+});
+
+describe("renderTechDetailsBodyHtml", () => {
+  const baseLexiconLoad = (): LexiconLoadStatusDto => ({
+    replacements: { ok: true, count: 1, fromRemote: false },
+    boundaryExceptions: { ok: true, count: 1, fromRemote: false },
+    formChoices: { ok: true, count: 2, fromRemote: false },
+    spellDictionary: { ok: true, count: 146269, fromRemote: false },
+    spellSupplement: { ok: true, count: 3, fromRemote: false },
+    spellWhitelist: { ok: true, count: 4, fromRemote: false },
+  });
+
+  it("показывает form-choices при успешной подгрузке с GitHub", () => {
+    const html = renderTechDetailsBodyHtml({
+      ...baseLexiconLoad(),
+      formChoices: { ok: true, count: 2, fromRemote: true },
+    });
+    expect(html).toContain("Выбор формы (form-choices) с GitHub");
+    expect(html).toContain("<b>2</b> пар");
+  });
+
+  it("показывает fallback form-choices при ошибке remote", () => {
+    const html = renderTechDetailsBodyHtml({
+      ...baseLexiconLoad(),
+      formChoices: {
+        ok: false,
+        count: 2,
+        fromRemote: false,
+        errorMessage: "HTTP 404",
+      },
+    });
+    expect(html).toContain("Выбор формы — встроенный список");
+    expect(html).toContain("HTTP 404");
   });
 });
