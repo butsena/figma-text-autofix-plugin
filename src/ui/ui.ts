@@ -280,6 +280,28 @@ function renderTechDetailsHtml(): string {
     } else {
       bodyHtml += `<div class="sheetStatus ok">Встроенный список исключений: <b>${boundary.count}</b> фраз</div>`;
     }
+
+    const supplement = lex.spellSupplement;
+    if (supplement.fromRemote && supplement.ok) {
+      bodyHtml += `<div class="sheetStatus ok">Доп. слова орфографии с GitHub: <b>${supplement.count}</b></div>`;
+    } else if (!supplement.ok) {
+      bodyHtml += `<div class="sheetStatus err">Доп. слова орфографии — встроенный список (${supplement.count}). ${escapeHtml(
+        displayText(supplement.errorMessage),
+      )}</div>`;
+    } else {
+      bodyHtml += `<div class="sheetStatus ok">Встроенный доп. словарь орфографии: <b>${supplement.count}</b> слов</div>`;
+    }
+
+    const whitelist = lex.spellWhitelist;
+    if (whitelist.fromRemote && whitelist.ok) {
+      bodyHtml += `<div class="sheetStatus ok">Whitelist орфографии с GitHub: <b>${whitelist.count}</b> слов</div>`;
+    } else if (!whitelist.ok) {
+      bodyHtml += `<div class="sheetStatus err">Whitelist орфографии — встроенный список (${whitelist.count}). ${escapeHtml(
+        displayText(whitelist.errorMessage),
+      )}</div>`;
+    } else {
+      bodyHtml += `<div class="sheetStatus ok">Встроенный whitelist орфографии: <b>${whitelist.count}</b> слов</div>`;
+    }
   }
 
   return `

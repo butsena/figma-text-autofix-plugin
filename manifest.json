@@ -8,6 +8,6 @@
   "permissions": [],
   "networkAccess": {
     "allowedDomains": ["https://raw.githubusercontent.com"],
-    "reasoning": "Словари с GitHub: замены (lexicon) и исключения границы предложения (отдельный репозиторий)."
+    "reasoning": "Словари с GitHub: замены, исключения границы предложения, доп. слова и whitelist орфографии."
   }
 }

@@ -1,22 +1,34 @@
 import type { LexiconLoadStatusDto, LexiconResourceLoadStatus } from "../shared/messages";
 import { BOUNDARY_EXCEPTIONS_TXT_URL } from "../config/boundary-exceptions-remote-url";
+import {
+  SPELL_SUPPLEMENT_TXT_URL,
+  SPELL_WHITELIST_TXT_URL,
+} from "../config/spell-supplement-remote-url";
 import { TEXT_REPLACEMENTS_CSV_URL } from "../config/text-replacements-remote-url";
 import {
   fetchRemoteTextViaHttp,
   refreshBoundaryExceptionsFromRemote,
+  refreshSpellSupplementFromRemote,
+  refreshSpellWhitelistFromRemote,
   refreshTextReplacementsFromRemote,
   type RefreshBoundaryExceptionsResult,
   type RefreshLexiconReplacementsResult,
+  type RefreshSpellWordListResult,
 } from "./refresh-from-remote";
 
 let cachedLexiconStatus: LexiconLoadStatusDto | null = null;
 
 function toResourceStatus(
-  result: RefreshLexiconReplacementsResult | RefreshBoundaryExceptionsResult,
+  result: RefreshLexiconReplacementsResult | RefreshBoundaryExceptionsResult | RefreshSpellWordListResult,
 ): LexiconResourceLoadStatus {
   return {
     ok: result.ok,
-    count: "ruleCount" in result ? result.ruleCount : result.phraseCount,
+    count:
+      "ruleCount" in result
+        ? result.ruleCount
+        : "phraseCount" in result
+          ? result.phraseCount
+          : result.wordCount,
     fromRemote: result.fromRemote,
     ...(result.errorMessage ? { errorMessage: result.errorMessage } : {}),
     ...(result.fetchUrl ? { fetchUrl: result.fetchUrl } : {}),
@@ -26,10 +38,14 @@ function toResourceStatus(
 export function mergeLexiconLoadStatus(
   replacements: RefreshLexiconReplacementsResult,
   boundaryExceptions: RefreshBoundaryExceptionsResult,
+  spellSupplement: RefreshSpellWordListResult,
+  spellWhitelist: RefreshSpellWordListResult,
 ): LexiconLoadStatusDto {
   return {
     replacements: toResourceStatus(replacements),
     boundaryExceptions: toResourceStatus(boundaryExceptions),
+    spellSupplement: toResourceStatus(spellSupplement),
+    spellWhitelist: toResourceStatus(spellWhitelist),
   };
 }
 
@@ -37,7 +53,7 @@ export function resetLexiconLoadCache(): void {
   cachedLexiconStatus = null;
 }
 
-/** Подтянуть CSV замен и список исключений границы с GitHub (параллельно). */
+/** Подтянуть CSV замен, исключения границы и списки орфографии с GitHub (параллельно). */
 export async function refreshLexiconFromRemote(
   options?: { force?: boolean },
 ): Promise<LexiconLoadStatusDto> {
@@ -45,9 +61,11 @@ export async function refreshLexiconFromRemote(
     return cachedLexiconStatus;
   }
 
-  const [replacements, boundaryExceptions] = await Promise.all([
+  const [replacements, boundaryExceptions, spellSupplement, spellWhitelist] = await Promise.all([
     refreshTextReplacementsFromRemote(TEXT_REPLACEMENTS_CSV_URL, fetchRemoteTextViaHttp),
     refreshBoundaryExceptionsFromRemote(BOUNDARY_EXCEPTIONS_TXT_URL, fetchRemoteTextViaHttp),
+    refreshSpellSupplementFromRemote(SPELL_SUPPLEMENT_TXT_URL, fetchRemoteTextViaHttp),
+    refreshSpellWhitelistFromRemote(SPELL_WHITELIST_TXT_URL, fetchRemoteTextViaHttp),
   ]);
 
   if (!replacements.ok) {
@@ -59,7 +77,18 @@ export async function refreshLexiconFromRemote(
       boundaryExceptions,
     );
   }
+  if (!spellSupplement.ok) {
+    console.warn("[text-autofix] spell supplement load failed, using bundled list", spellSupplement);
+  }
+  if (!spellWhitelist.ok) {
+    console.warn("[text-autofix] spell whitelist load failed, using bundled list", spellWhitelist);
+  }
 
-  cachedLexiconStatus = mergeLexiconLoadStatus(replacements, boundaryExceptions);
+  cachedLexiconStatus = mergeLexiconLoadStatus(
+    replacements,
+    boundaryExceptions,
+    spellSupplement,
+    spellWhitelist,
+  );
   return cachedLexiconStatus;
 }

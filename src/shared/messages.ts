@@ -107,6 +107,8 @@ export type LexiconResourceLoadStatus = {
 export type LexiconLoadStatusDto = {
   replacements: LexiconResourceLoadStatus;
   boundaryExceptions: LexiconResourceLoadStatus;
+  spellSupplement: LexiconResourceLoadStatus;
+  spellWhitelist: LexiconResourceLoadStatus;
 };
 
 /** @deprecated Используйте LexiconLoadStatusDto. */

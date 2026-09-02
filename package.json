@@ -5,12 +5,19 @@
   "scripts": {
     "dev": "vite",
     "build:yo-curated": "node scripts/build-yo-curated.mjs",
-    "build": "npm run build:yo-curated && node scripts/build-ui-html.mjs && vite build",
-    "test": "npm run build:yo-curated && vitest run",
-    "test:watch": "npm run build:yo-curated && vitest"
+    "build:hunspell": "node scripts/build-hunspell-bundled.mjs",
+    "build": "npm run build:yo-curated && npm run build:hunspell && node scripts/build-ui-html.mjs && vite build",
+    "test": "npm run build:yo-curated && npm run build:hunspell && vitest run",
+    "test:watch": "npm run build:yo-curated && npm run build:hunspell && vitest"
+  },
+  "dependencies": {
+    "nspell": "^2.1.5",
+    "pako": "^3.0.1"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.125.0",
+    "@types/pako": "^2.0.4",
+    "dictionary-ru": "^3.0.0",
     "esbuild": "^0.24.2",
     "typescript": "^5.6.3",
     "vite": "^5.4.1",

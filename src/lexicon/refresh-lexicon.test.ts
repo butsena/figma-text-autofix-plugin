@@ -18,8 +18,19 @@ describe("mergeLexiconLoadStatus", () => {
       fromRemote: true,
       fetchUrl: "https://example.com/boundary-exceptions.txt",
     };
+    const spellSupplement = {
+      ok: true,
+      wordCount: 12,
+      fromRemote: false,
+    };
+    const spellWhitelist = {
+      ok: true,
+      wordCount: 13,
+      fromRemote: true,
+      fetchUrl: "https://example.com/spell-whitelist.txt",
+    };
 
-    expect(mergeLexiconLoadStatus(replacements, boundary)).toEqual({
+    expect(mergeLexiconLoadStatus(replacements, boundary, spellSupplement, spellWhitelist)).toEqual({
       replacements: {
         ok: true,
         count: 10,
@@ -30,6 +41,17 @@ describe("mergeLexiconLoadStatus", () => {
         count: 11,
         fromRemote: true,
         fetchUrl: "https://example.com/boundary-exceptions.txt",
+      },
+      spellSupplement: {
+        ok: true,
+        count: 12,
+        fromRemote: false,
+      },
+      spellWhitelist: {
+        ok: true,
+        count: 13,
+        fromRemote: true,
+        fetchUrl: "https://example.com/spell-whitelist.txt",
       },
     });
   });
