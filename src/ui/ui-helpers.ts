@@ -42,11 +42,7 @@ export function formatChoiceHintHtml(ruleId: string, fallbackHint?: string): str
   const hint = choice?.hint ?? fallbackHint;
   if (!hint) return "";
 
-  if (ruleId === "cian-choice-vse-vsyo") {
-    return `<div class="reportHint"><span class="reportHintTitle">Подсказка:</span> ${escapeHtml(hint)}</div>`;
-  }
-
-  return `<div class="reportHint">${escapeHtml(hint)}</div>`;
+  return `<div class="reportHint"><span class="reportHintTitle">Подсказка:</span> ${escapeHtml(hint)}</div>`;
 }
 
 export function detailsOpenAttr(isOpen: boolean): string {
