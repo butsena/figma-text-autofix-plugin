@@ -6,9 +6,9 @@
 
 | Репозиторий | Что внутри | Зачем |
 |---|---|---|
-| [figma-text-autofix-lexicon](https://github.com/butsena/figma-text-autofix-lexicon) | `text-replacements.csv` — пары замен | Редакционные замены слов |
-| [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) | `boundary-exceptions.txt` — одна фраза на строку | Когда не нужна точка |
-| [figma-text-autofix-ambiguous-form-choices](https://github.com/butsena/figma-text-autofix-ambiguous-form-choices) | `ambiguous-form-choices.txt` — пары форм | Формы сложных слов |
+| [text-autofix-replacements](https://github.com/butsena/text-autofix-replacements) | `text-replacements.csv` — пары замен | Редакционные замены слов |
+| [text-autofix-no-period](https://github.com/butsena/text-autofix-no-period) | `boundary-exceptions.txt` — одна фраза на строку | Когда не нужна точка |
+| [text-autofix-word-forms](https://github.com/butsena/text-autofix-word-forms) | `ambiguous-form-choices.txt` — пары форм | Формы сложных слов |
 
 **Не смешиваем** замены и исключения в одном репозитории: разные задачи, разные редакторы, разный формат.
 
@@ -17,7 +17,7 @@
 ## Raw URL для плагина
 
 ```
-https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt
+https://raw.githubusercontent.com/butsena/text-autofix-no-period/main/boundary-exceptions.txt
 ```
 
 При старте плагин подтягивает файл с GitHub; при ошибке — `data/boundary-exceptions.txt` из бандла.
@@ -36,7 +36,7 @@ Google Pay
 После merge PR в репозиторий исключений:
 
 ```bash
-curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt" \
+curl -sL "https://raw.githubusercontent.com/butsena/text-autofix-no-period/main/boundary-exceptions.txt" \
   -o data/boundary-exceptions.txt
 npm run build
 ```
@@ -45,7 +45,7 @@ npm run build
 
 ## Создание репозитория
 
-1. Public repo: `figma-text-autofix-boundary-exceptions`
+1. Public repo: `text-autofix-no-period`
 2. Скопировать `data/boundary-exceptions.txt` из плагина в корень как `boundary-exceptions.txt`
 3. Короткий README: что это за список и как добавлять строки
 

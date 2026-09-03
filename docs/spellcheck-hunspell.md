@@ -4,7 +4,7 @@
 
 ## Отдельный public-репозиторий
 
-Все файлы орфографии — в [figma-text-autofix-spell-dictionary](https://github.com/butsena/figma-text-autofix-spell-dictionary):
+Все файлы орфографии — в [text-autofix-spelling](https://github.com/butsena/text-autofix-spelling):
 
 | Файл | Назначение |
 |---|---|

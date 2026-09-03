@@ -1,6 +1,6 @@
 /**
  * Синхронизирует bundled fallback орфографического словаря в data/hunspell/
- * для офлайн-запуска и публикации в figma-text-autofix-spell-dictionary.
+ * для офлайн-запуска и публикации в text-autofix-spelling.
  */
 import fs from "node:fs";
 import path from "node:path";

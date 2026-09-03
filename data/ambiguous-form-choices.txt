@@ -1,5 +1,5 @@
 # Пары равноправных форм: плагин просит выбрать, а не «исправить».
-# Remote-источник: github.com/butsena/figma-text-autofix-ambiguous-form-choices
+# Remote-источник: github.com/butsena/text-autofix-word-forms
 # Формат строки: форма1 - форма2 - подсказка
 # Несколько пунктов подсказки разделяйте «;», в пункте «вопрос | пример».
 # Строка перед парой (опционально): # id: cian-choice-...

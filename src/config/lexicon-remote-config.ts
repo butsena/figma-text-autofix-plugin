@@ -1,30 +1,42 @@
 /** Центральный конфиг public-репозиториев и raw URL словарей плагина. */
 export const LEXICON_REMOTE = {
   replacements: {
-    repo: "https://github.com/butsena/figma-text-autofix-lexicon",
-    url: "https://raw.githubusercontent.com/butsena/figma-text-autofix-lexicon/main/text-replacements.csv",
+    /** Словарь замен */
+    title: "Словарь замен",
+    repo: "https://github.com/butsena/text-autofix-replacements",
+    url: "https://raw.githubusercontent.com/butsena/text-autofix-replacements/main/text-replacements.csv",
   },
   boundaryExceptions: {
-    repo: "https://github.com/butsena/figma-text-autofix-boundary-exceptions",
-    url: "https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt",
+    /** Когда не нужна точка */
+    title: "Когда не нужна точка",
+    repo: "https://github.com/butsena/text-autofix-no-period",
+    url: "https://raw.githubusercontent.com/butsena/text-autofix-no-period/main/boundary-exceptions.txt",
   },
   ambiguousFormChoices: {
-    repo: "https://github.com/butsena/figma-text-autofix-ambiguous-form-choices",
-    url: "https://raw.githubusercontent.com/butsena/figma-text-autofix-ambiguous-form-choices/main/ambiguous-form-choices.txt",
+    /** Формы сложных слов */
+    title: "Формы сложных слов",
+    repo: "https://github.com/butsena/text-autofix-word-forms",
+    url: "https://raw.githubusercontent.com/butsena/text-autofix-word-forms/main/ambiguous-form-choices.txt",
   },
   spellDictionary: {
-    repo: "https://github.com/butsena/figma-text-autofix-spell-dictionary",
+    /** Орфографический словарь */
+    title: "Орфографический словарь",
+    repo: "https://github.com/butsena/text-autofix-spelling",
     affUrl:
-      "https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/ru_RU.aff",
+      "https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/ru_RU.aff",
     dicUrl:
-      "https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/ru_RU.dic",
+      "https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/ru_RU.dic",
   },
   spellSupplement: {
-    repo: "https://github.com/butsena/figma-text-autofix-spell-dictionary",
-    url: "https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/spell-supplement.txt",
+    /** Дополнительные слова орфографии */
+    title: "Дополнительные слова",
+    repo: "https://github.com/butsena/text-autofix-spelling",
+    url: "https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/spell-supplement.txt",
   },
   spellWhitelist: {
-    repo: "https://github.com/butsena/figma-text-autofix-spell-dictionary",
-    url: "https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/spell-whitelist.txt",
+    /** Слова, которые не считать ошибкой */
+    title: "Не считать ошибкой",
+    repo: "https://github.com/butsena/text-autofix-spelling",
+    url: "https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/spell-whitelist.txt",
   },
 } as const;

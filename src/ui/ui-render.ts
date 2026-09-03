@@ -122,33 +122,33 @@ function renderTechDetailsHtml(): string {
     bodyHtml = [
       formatLexiconResourceStatusHtml(lex.replacements, {
         remoteOk: (count) => `Словарь замен с GitHub: <b>${count}</b> правил`,
-        remoteErr: (count) => `GitHub недоступен — встроенный CSV (${count} правил).`,
-        bundledOk: (count) => `Встроенный CSV: <b>${count}</b> правил`,
+        remoteErr: (count) => `Словарь замен — встроенный список (${count} правил).`,
+        bundledOk: (count) => `Словарь замен (встроенный): <b>${count}</b> правил`,
       }),
       formatLexiconResourceStatusHtml(lex.boundaryExceptions, {
         remoteOk: (count) => `Когда не нужна точка с GitHub: <b>${count}</b> фраз`,
         remoteErr: (count) => `Когда не нужна точка — встроенный список (${count} фраз).`,
-        bundledOk: (count) => `Встроенный список «когда не нужна точка»: <b>${count}</b> фраз`,
+        bundledOk: (count) => `Когда не нужна точка (встроенный): <b>${count}</b> фраз`,
       }),
       formatLexiconResourceStatusHtml(lex.ambiguousFormChoices, {
         remoteOk: (count) => `Формы сложных слов с GitHub: <b>${count}</b> пар`,
         remoteErr: (count) => `Формы сложных слов — встроенный список (${count} пар).`,
-        bundledOk: (count) => `Встроенный список форм сложных слов: <b>${count}</b> пар`,
+        bundledOk: (count) => `Формы сложных слов (встроенный): <b>${count}</b> пар`,
       }),
       formatLexiconResourceStatusHtml(lex.spellDictionary, {
-        remoteOk: (count) => `Hunspell ru_RU с GitHub: <b>${count}</b> лемм`,
-        remoteErr: (count) => `Hunspell — встроенный словарь (${count} лемм).`,
-        bundledOk: (count) => `Встроенный Hunspell ru_RU: <b>${count}</b> лемм`,
+        remoteOk: (count) => `Орфографический словарь с GitHub: <b>${count}</b> слов`,
+        remoteErr: (count) => `Орфографический словарь — встроенный (${count} слов).`,
+        bundledOk: (count) => `Орфографический словарь (встроенный): <b>${count}</b> слов`,
       }),
       formatLexiconResourceStatusHtml(lex.spellSupplement, {
-        remoteOk: (count) => `Доп. слова орфографии с GitHub: <b>${count}</b> слов`,
-        remoteErr: (count) => `Доп. слова орфографии — встроенный список (${count} слов).`,
-        bundledOk: (count) => `Встроенный доп. словарь орфографии: <b>${count}</b> слов`,
+        remoteOk: (count) => `Дополнительные слова с GitHub: <b>${count}</b>`,
+        remoteErr: (count) => `Дополнительные слова — встроенный список (${count}).`,
+        bundledOk: (count) => `Дополнительные слова (встроенный): <b>${count}</b>`,
       }),
       formatLexiconResourceStatusHtml(lex.spellWhitelist, {
-        remoteOk: (count) => `Whitelist орфографии с GitHub: <b>${count}</b> слов`,
-        remoteErr: (count) => `Whitelist орфографии — встроенный список (${count} слов).`,
-        bundledOk: (count) => `Встроенный whitelist орфографии: <b>${count}</b> слов`,
+        remoteOk: (count) => `Не считать ошибкой с GitHub: <b>${count}</b> слов`,
+        remoteErr: (count) => `Не считать ошибкой — встроенный список (${count} слов).`,
+        bundledOk: (count) => `Не считать ошибкой (встроенный): <b>${count}</b> слов`,
       }),
     ].join("");
   }

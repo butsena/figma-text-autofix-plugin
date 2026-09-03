@@ -1,5 +1,13 @@
-import { capitalizeLike, countConfirmFixes, isChoiceRuleWithoutSkip } from "./ui-helpers";
 import type { TextFixDto } from "../shared/messages";
+import { capitalizeLike, countConfirmFixes } from "./ui-helpers";
+import { sendToPlugin } from "./ui-plugin-bridge";
+import { render } from "./ui-render";
+import { schedulePluginResize } from "./ui-resize";
+import {
+  choiceSelectionKey,
+  state,
+  syncAccordionStateFromElement,
+} from "./ui-state";
 
 function parseKey(key: string | null, parts: number): number[] | null {
   if (!key) return null;

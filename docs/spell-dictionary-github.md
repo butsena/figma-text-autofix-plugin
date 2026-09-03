@@ -6,9 +6,9 @@ Hunspell-словарь русского языка и дополнительн�
 
 | Репозиторий | Что внутри | Зачем |
 |---|---|---|
-| [figma-text-autofix-lexicon](https://github.com/butsena/figma-text-autofix-lexicon) | `text-replacements.csv` | Редакционные замены |
-| [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) | `boundary-exceptions.txt` | Исключения для правила про точку |
-| [figma-text-autofix-spell-dictionary](https://github.com/butsena/figma-text-autofix-spell-dictionary) | Hunspell `ru_RU.aff` / `ru_RU.dic` + доп. списки | Полная орфография |
+| [text-autofix-replacements](https://github.com/butsena/text-autofix-replacements) | `text-replacements.csv` | Редакционные замены |
+| [text-autofix-no-period](https://github.com/butsena/text-autofix-no-period) | `boundary-exceptions.txt` | Исключения для правила про точку |
+| [text-autofix-spelling](https://github.com/butsena/text-autofix-spelling) | Hunspell `ru_RU.aff` / `ru_RU.dic` + доп. списки | Полная орфография |
 
 **Не смешиваем** с lexicon: другой формат, другой объём (~3 MB), другие редакторы.
 
@@ -26,10 +26,10 @@ Hunspell-словарь русского языка и дополнительн�
 ## Raw URL для плагина
 
 ```
-https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/ru_RU.aff
-https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/ru_RU.dic
-https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/spell-supplement.txt
-https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/spell-whitelist.txt
+https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/ru_RU.aff
+https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/ru_RU.dic
+https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/spell-supplement.txt
+https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/spell-whitelist.txt
 ```
 
 При старте плагин подтягивает все четыре файла с GitHub; при ошибке — bundled-копии из `data/hunspell/`.
@@ -49,6 +49,6 @@ npm run build
 
 ## Создание репозитория
 
-1. Public repo: `figma-text-autofix-spell-dictionary`
+1. Public repo: `text-autofix-spelling`
 2. Скопировать содержимое `data/hunspell/` из плагина
 3. README: лицензия BSD-3-Clause (LibreOffice dictionaries), как добавлять слова в supplement/whitelist

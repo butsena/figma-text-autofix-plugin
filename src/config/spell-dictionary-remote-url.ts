@@ -1,6 +1,6 @@
 import { LEXICON_REMOTE } from "./lexicon-remote-config";
 
-/** Public-репозиторий орфографического словаря (Hunspell + доп. списки). */
+/** Public-репозиторий орфографии (словарь + доп. слова + исключения). */
 export const SPELL_DICTIONARY_REPO = LEXICON_REMOTE.spellDictionary.repo;
 
 /** GitHub raw URL Hunspell ru_RU (ветка main). */

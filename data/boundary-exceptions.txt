@@ -1,5 +1,5 @@
 # Исключения для неявной границы предложения (регистронезависимо).
-# Remote-источник: github.com/butsena/figma-text-autofix-boundary-exceptions
+# Remote-источник: github.com/butsena/text-autofix-no-period
 # Одна фраза на строку; многословные — целиком.
 Knight Frank
 Goldman Sachs

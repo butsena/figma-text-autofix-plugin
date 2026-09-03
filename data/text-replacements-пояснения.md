@@ -11,7 +11,7 @@
 ## Рабочий поток
 
 1. **Редакторам:** правки словаря — PR в public-репозиторий  
-   https://github.com/butsena/figma-text-autofix-lexicon  
+   https://github.com/butsena/text-autofix-replacements  
    Файл: `text-replacements.csv`.
 
 2. **После merge в lexicon:** плагин подхватит словарь при следующем запуске (без пересборки).  

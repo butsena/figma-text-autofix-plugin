@@ -7,19 +7,19 @@
 | Репозиторий | Назначение |
 |---|---|
 | [figma-text-autofix-plugin](https://github.com/butsena/figma-text-autofix-plugin) (private) | Код плагина, bundled CSV как fallback |
-| [figma-text-autofix-lexicon](https://github.com/butsena/figma-text-autofix-lexicon) (public) | Словарь замен `text-replacements.csv` |
-| [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) (public) | Когда не нужна точка: `boundary-exceptions.txt` |
-| [figma-text-autofix-ambiguous-form-choices](https://github.com/butsena/figma-text-autofix-ambiguous-form-choices) (public) | Формы сложных слов: `ambiguous-form-choices.txt` |
-| [figma-text-autofix-spell-dictionary](https://github.com/butsena/figma-text-autofix-spell-dictionary) (public) | Hunspell `ru_RU.aff` / `ru_RU.dic`, `spell-supplement.txt`, `spell-whitelist.txt` |
+| [text-autofix-replacements](https://github.com/butsena/text-autofix-replacements) (public) | Словарь замен `text-replacements.csv` |
+| [text-autofix-no-period](https://github.com/butsena/text-autofix-no-period) (public) | Когда не нужна точка: `boundary-exceptions.txt` |
+| [text-autofix-word-forms](https://github.com/butsena/text-autofix-word-forms) (public) | Формы сложных слов: `ambiguous-form-choices.txt` |
+| [text-autofix-spelling](https://github.com/butsena/text-autofix-spelling) (public) | Орфография: `ru_RU.aff` / `ru_RU.dic`, `spell-supplement.txt`, `spell-whitelist.txt` |
 
 Raw URL для плагина:  
-`https://raw.githubusercontent.com/butsena/figma-text-autofix-lexicon/main/text-replacements.csv`  
-`https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt`  
-`https://raw.githubusercontent.com/butsena/figma-text-autofix-ambiguous-form-choices/main/ambiguous-form-choices.txt`  
-`https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/ru_RU.aff`  
-`https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/ru_RU.dic`  
-`https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/spell-supplement.txt`  
-`https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/spell-whitelist.txt`
+`https://raw.githubusercontent.com/butsena/text-autofix-replacements/main/text-replacements.csv`  
+`https://raw.githubusercontent.com/butsena/text-autofix-no-period/main/boundary-exceptions.txt`  
+`https://raw.githubusercontent.com/butsena/text-autofix-word-forms/main/ambiguous-form-choices.txt`  
+`https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/ru_RU.aff`  
+`https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/ru_RU.dic`  
+`https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/spell-supplement.txt`  
+`https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/spell-whitelist.txt`
 
 Подробнее: [boundary-exceptions-github.md](./boundary-exceptions-github.md), [ambiguous-form-choices-github.md](./ambiguous-form-choices-github.md), [spell-dictionary-github.md](./spell-dictionary-github.md).
 
@@ -29,7 +29,7 @@ Raw URL для плагина:
 
 2. **Переключить плагин на fetch raw CSV с GitHub, fallback bundled.**
 
-3. **Public-репозиторий словаря** — PR редакторов в `figma-text-autofix-lexicon`.
+3. **Public-репозиторий словаря** — PR редакторов в `text-autofix-replacements`.
 
 4. **Удалить Google-код** (JSONP, merge, `networkAccess` для Sheets).
 
@@ -39,7 +39,7 @@ Raw URL для плагина:
 
 - [x] Шаг 1 — sync + bundled CSV (181 строк)
 - [x] Шаг 2 — fetch GitHub, fallback bundled
-- [x] Шаг 3 — public `figma-text-autofix-lexicon`
+- [x] Шаг 3 — public `text-autofix-replacements`
 - [x] Шаг 4 — Google-код удалён
 - [ ] Шаг 5
 
@@ -48,7 +48,7 @@ Raw URL для плагина:
 После merge PR в lexicon-репо (замены):
 
 ```bash
-curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-lexicon/main/text-replacements.csv" \
+curl -sL "https://raw.githubusercontent.com/butsena/text-autofix-replacements/main/text-replacements.csv" \
   -o data/text-replacements.csv
 npm run build
 ```
@@ -56,7 +56,7 @@ npm run build
 После merge PR в репозиторий форм сложных слов:
 
 ```bash
-curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-ambiguous-form-choices/main/ambiguous-form-choices.txt" \
+curl -sL "https://raw.githubusercontent.com/butsena/text-autofix-word-forms/main/ambiguous-form-choices.txt" \
   -o data/ambiguous-form-choices.txt
 npm run build
 ```
@@ -64,7 +64,7 @@ npm run build
 После merge PR в репозиторий исключений:
 
 ```bash
-curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt" \
+curl -sL "https://raw.githubusercontent.com/butsena/text-autofix-no-period/main/boundary-exceptions.txt" \
   -o data/boundary-exceptions.txt
 npm run build
 ```
