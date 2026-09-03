@@ -1,0 +1,20 @@
+---
+description: Never clone this repo into itself; update via pull/fetch instead
+alwaysApply: true
+---
+
+# Не клонировать плагин внутрь себя
+
+Рабочая копия уже лежит в `~/Desktop/figma-text-autofix-plugin` (или в текущем корне workspace).
+
+**Запрещено:**
+- `git clone …/figma-text-autofix-plugin.git` изнутри этой папки
+- создавать вложенный каталог `figma-text-autofix-plugin/figma-text-autofix-plugin/`
+- подсказывать пользователю clone «поверх» существующего клона
+
+**Вместо этого:**
+- обновить код: `git fetch origin` + `git pull` / `git switch main` / `git merge`
+- подтянуть другую ветку: `git fetch` и `git checkout <branch>` (или `git switch`)
+- новая копия нужна на другом Mac/в другой папке: clone **рядом** на Desktop, не внутрь текущего репо
+
+Если видите неотслеживаемую вложенную `figma-text-autofix-plugin/` — предупредите и предложите удалить, не работать из неё.
