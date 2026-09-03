@@ -1,4 +1,5 @@
 import { formatFixDiffHtml } from "./diff-format";
+import { SPELLCHECK_ENABLED } from "../config/feature-flags";
 import {
   countConfirmFixes,
   detailsOpenAttr,
@@ -135,21 +136,28 @@ function renderTechDetailsHtml(): string {
         remoteErr: (count) => `Формы сложных слов — встроенный список (${count} пар).`,
         bundledOk: (count) => `Формы сложных слов (встроенный): <b>${count}</b> пар`,
       }),
-      formatLexiconResourceStatusHtml(lex.spellDictionary, {
-        remoteOk: (count) => `Орфографический словарь с GitHub: <b>${count}</b> слов`,
-        remoteErr: (count) => `Орфографический словарь — встроенный (${count} слов).`,
-        bundledOk: (count) => `Орфографический словарь (встроенный): <b>${count}</b> слов`,
-      }),
-      formatLexiconResourceStatusHtml(lex.spellSupplement, {
-        remoteOk: (count) => `Дополнительные слова с GitHub: <b>${count}</b>`,
-        remoteErr: (count) => `Дополнительные слова — встроенный список (${count}).`,
-        bundledOk: (count) => `Дополнительные слова (встроенный): <b>${count}</b>`,
-      }),
-      formatLexiconResourceStatusHtml(lex.spellWhitelist, {
-        remoteOk: (count) => `Не считать ошибкой с GitHub: <b>${count}</b> слов`,
-        remoteErr: (count) => `Не считать ошибкой — встроенный список (${count} слов).`,
-        bundledOk: (count) => `Не считать ошибкой (встроенный): <b>${count}</b> слов`,
-      }),
+      ...(SPELLCHECK_ENABLED
+        ? [
+            formatLexiconResourceStatusHtml(lex.spellDictionary, {
+              remoteOk: (count) => `Орфографический словарь с GitHub: <b>${count}</b> слов`,
+              remoteErr: (count) =>
+                count > 0
+                  ? `Орфографический словарь — ошибка загрузки (сейчас ${count} слов).`
+                  : "Орфографический словарь недоступен (нужен GitHub).",
+              bundledOk: (_count) => "Орфографический словарь не загружен (нужен GitHub).",
+            }),
+            formatLexiconResourceStatusHtml(lex.spellSupplement, {
+              remoteOk: (count) => `Дополнительные слова с GitHub: <b>${count}</b>`,
+              remoteErr: (count) => `Дополнительные слова — встроенный список (${count}).`,
+              bundledOk: (count) => `Дополнительные слова (встроенный): <b>${count}</b>`,
+            }),
+            formatLexiconResourceStatusHtml(lex.spellWhitelist, {
+              remoteOk: (count) => `Не считать ошибкой с GitHub: <b>${count}</b> слов`,
+              remoteErr: (count) => `Не считать ошибкой — встроенный список (${count} слов).`,
+              bundledOk: (count) => `Не считать ошибкой (встроенный): <b>${count}</b> слов`,
+            }),
+          ]
+        : []),
     ].join("");
   }
 
@@ -245,7 +253,7 @@ function renderConfirmHtml(): string {
     <div class="confirmBlock">
       <details class="confirmDetails"${detailsOpenAttr(state.ui.confirmDetailsOpen)}>
         <summary class="confirmDetailsSummary">
-          <span class="confirmDetailsTitle">Требуют подтверждения</span>
+          <span class="confirmDetailsTitle">Обратите внимание</span>
         </summary>
         <div class="confirmDetailsBody">${layerBlocks}</div>
       </details>

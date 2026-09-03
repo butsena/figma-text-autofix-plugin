@@ -1,11 +1,3 @@
-import { ungzip } from "pako";
-import { createRemoteBackedStore, type RemoteBackedStore } from "../lexicon/remote-backed-store";
-import { decodeBase64ToBytes, utf8BytesToString } from "../shared/utf8-bytes-to-string";
-import {
-  HUNSPELL_AFF_GZ_BASE64,
-  HUNSPELL_DIC_GZ_BASE64,
-  HUNSPELL_SOURCE,
-} from "./hunspell-dict.generated";
 import { parseHunspellDictionary, type HunspellDictionary } from "./hunspell-dictionary-parse";
 
 export type HunspellDictionaryLoadStats = {
@@ -13,49 +5,39 @@ export type HunspellDictionaryLoadStats = {
   fromRemote: boolean;
 };
 
-export { HUNSPELL_SOURCE };
+/** Источник большого словаря — только GitHub (в бандл не вшиваем). */
+export const HUNSPELL_SOURCE = "GitHub text-autofix-spelling (LibreOffice ru_RU)";
 
-function decodeGzipBase64(base64: string): string {
-  const binary = decodeBase64ToBytes(base64);
-  const unzipped = ungzip(binary);
-  return utf8BytesToString(unzipped);
-}
+type DictionaryState = {
+  dict: HunspellDictionary | null;
+  fromRemote: boolean;
+};
 
-function loadBundledDictionary(): HunspellDictionary {
-  const aff = decodeGzipBase64(HUNSPELL_AFF_GZ_BASE64);
-  const dic = decodeGzipBase64(HUNSPELL_DIC_GZ_BASE64);
-  const parsed = parseHunspellDictionary(aff, dic);
-  if (!parsed) {
-    throw new Error("[text-autofix] bundled Hunspell dictionary is invalid");
-  }
-  return parsed;
-}
+let state: DictionaryState = { dict: null, fromRemote: false };
 
-let store: RemoteBackedStore<HunspellDictionary> | null = null;
-
-function getStore(): RemoteBackedStore<HunspellDictionary> {
-  if (!store) {
-    store = createRemoteBackedStore(loadBundledDictionary(), (dict) => dict.entryCount);
-  }
-  return store;
-}
-
-export function getHunspellDictionary(): HunspellDictionary {
-  return getStore().get();
+export function getHunspellDictionary(): HunspellDictionary | null {
+  return state.dict;
 }
 
 export function getHunspellDictionaryLoadStats(): HunspellDictionaryLoadStats {
-  const stats = getStore().getLoadStats();
-  return { entryCount: stats.count, fromRemote: stats.fromRemote };
+  return {
+    entryCount: state.dict?.entryCount ?? 0,
+    fromRemote: state.fromRemote,
+  };
 }
 
 /** Загрузить Hunspell; пустой/битый → false, активный набор не меняется. */
 export function applyHunspellDictionaryFromRaw(aff: string, dic: string): boolean {
   const parsed = parseHunspellDictionary(aff, dic);
-  if (!parsed) return false;
-  return getStore().apply(parsed);
+  if (!parsed || parsed.entryCount === 0) return false;
+  state = { dict: parsed, fromRemote: true };
+  return true;
 }
 
-export function resetHunspellDictionaryToBundled(): void {
-  getStore().resetToBundled();
+/** Сбросить словарь (нет fallback в бандле — орфография отключится). */
+export function clearHunspellDictionary(): void {
+  state = { dict: null, fromRemote: false };
 }
+
+/** @deprecated Используйте clearHunspellDictionary — bundled Hunspell удалён. */
+export const resetHunspellDictionaryToBundled = clearHunspellDictionary;

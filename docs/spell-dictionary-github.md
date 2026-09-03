@@ -32,21 +32,18 @@ https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/spell-suppl
 https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/spell-whitelist.txt
 ```
 
-При старте плагин подтягивает все четыре файла с GitHub; при ошибке — bundled-копии из `data/hunspell/`.
+При старте плагин подтягивает все четыре файла с GitHub.  
+Большой словарь **не хранится в бандле плагина** — только remote. Без сети орфография отключается.
 
 Конфиг URL: `src/config/spell-dictionary-remote-url.ts`
 
-## Синхронизация remote → bundled fallback (для разработчиков)
-
-После merge PR в spell-dictionary-репо:
+## Подготовка файлов для публикации (разработчики)
 
 ```bash
 npm run sync:spell-dictionary
-npm run build
 ```
 
-Скрипт копирует файлы из `node_modules/dictionary-ru` (LibreOffice ru_RU) и актуальные `.txt` в `data/hunspell/`.
-
+Скрипт копирует файлы из `node_modules/dictionary-ru` (LibreOffice ru_RU) в `data/hunspell/` — удобно перед пушем в `text-autofix-spelling`.
 ## Создание репозитория
 
 1. Public repo: `text-autofix-spelling`

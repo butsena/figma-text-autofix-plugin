@@ -9,7 +9,7 @@
 | **Словарь замен** | https://github.com/butsena/text-autofix-replacements | `text-replacements.csv` | «приобрести → купить» и другие замены |
 | **Когда не нужна точка** | https://github.com/butsena/text-autofix-no-period | `boundary-exceptions.txt` | Фразы, где не ставить точку между словами |
 | **Формы сложных слов** | https://github.com/butsena/text-autofix-word-forms | `ambiguous-form-choices.txt` | Выбор: ищите/ищете, все/всё |
-| **Орфография** | https://github.com/butsena/text-autofix-spelling | `ru_RU.aff`, `ru_RU.dic`, `spell-supplement.txt`, `spell-whitelist.txt` | Проверка опечаток + доп. слова + исключения |
+| **Орфография** | https://github.com/butsena/text-autofix-spelling | `ru_RU.aff`, `ru_RU.dic`, `spell-supplement.txt`, `spell-whitelist.txt` | Проверка опечаток + доп. слова + исключения. Большой словарь **только с GitHub**, не в бандле плагина |
 
 Код плагина (private): https://github.com/butsena/figma-text-autofix-plugin
 

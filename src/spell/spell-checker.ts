@@ -1,3 +1,4 @@
+import { SPELLCHECK_ENABLED } from "../config/feature-flags";
 import nspell from "nspell";
 import { getAllSpellExtraWords } from "./spell-word-list-store";
 import {
@@ -11,12 +12,13 @@ export type SpellChecker = ReturnType<typeof nspell>;
 export { HUNSPELL_SOURCE };
 
 let checker: SpellChecker | null = null;
-let initPromise: Promise<SpellChecker> | null = null;
+let initPromise: Promise<SpellChecker | null> | null = null;
 let signature = "";
 
-function buildChecker(): SpellChecker {
-  const { aff, dic } = getHunspellDictionary();
-  const spell = nspell(aff, dic);
+function buildChecker(): SpellChecker | null {
+  const dict = getHunspellDictionary();
+  if (!dict) return null;
+  const spell = nspell(dict.aff, dict.dic);
   for (const word of getAllSpellExtraWords()) {
     spell.add(word.toLowerCase());
   }
@@ -27,12 +29,29 @@ function currentSignature(): string {
   const stats = getHunspellDictionaryLoadStats();
   const dict = getHunspellDictionary();
   const extra = getAllSpellExtraWords();
-  return `${stats.fromRemote ? "remote" : "bundled"}:${dict.entryCount}:${extra.join("\u0000")}`;
+  return `${stats.fromRemote ? "remote" : "none"}:${dict?.entryCount ?? 0}:${extra.join("\u0000")}`;
 }
 
-/** Ленивая инициализация Hunspell (≈1–2 с при первом запуске). */
-export async function ensureSpellCheckerReady(): Promise<SpellChecker> {
+/**
+ * Ленивая инициализация Hunspell после загрузки словаря с GitHub.
+ * Без remote-словаря возвращает null — орфопроверка просто пропускается.
+ */
+export async function ensureSpellCheckerReady(): Promise<SpellChecker | null> {
+  if (!SPELLCHECK_ENABLED) {
+    checker = null;
+    initPromise = null;
+    signature = "";
+    return null;
+  }
+
   const nextSignature = currentSignature();
+
+  if (!getHunspellDictionary()) {
+    checker = null;
+    initPromise = null;
+    signature = nextSignature;
+    return null;
+  }
 
   if (checker && signature === nextSignature) {
     return checker;
@@ -47,10 +66,11 @@ export async function ensureSpellCheckerReady(): Promise<SpellChecker> {
     checker = buildChecker();
     signature = nextSignature;
     const stats = getHunspellDictionaryLoadStats();
-    const source = stats.fromRemote ? "GitHub spell-dictionary" : HUNSPELL_SOURCE;
-    console.log(
-      `[text-autofix] Hunspell ready (${source}, ${stats.entryCount} entries) in ${Date.now() - started} ms`,
-    );
+    if (checker) {
+      console.log(
+        `[text-autofix] Hunspell ready (${HUNSPELL_SOURCE}, ${stats.entryCount} entries) in ${Date.now() - started} ms`,
+      );
+    }
     return checker;
   });
 

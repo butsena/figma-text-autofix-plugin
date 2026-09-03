@@ -14,20 +14,21 @@
 
 Подробнее: [spell-dictionary-github.md](./spell-dictionary-github.md)
 
-При старте плагин подтягивает все четыре файла с GitHub; при ошибке — bundled fallback из `data/hunspell/` (+ gzip в бандле).
+При старте плагин подтягивает все четыре файла с GitHub.  
+Большой `ru_RU` **не вшит в бандл**: без сети орфопроверка просто отключается (остальные правила работают).
 
 ## Почему LibreOffice ru_RU, а не AOT (~380k)
 
 AOT permissive (8 MB плоского `.dic`) не инициализируется в `nspell` за разумное время (>10 мин). LibreOffice ru_RU — самый полный *практичный* открытый Hunspell: affix-правила покрывают падежи, числа, род (~1,3 млн форм).
 
-## Сборка bundled fallback
+## Подготовка файлов для GitHub (разработчики)
 
 ```bash
-npm run sync:spell-dictionary   # data/hunspell/ru_RU.* из dictionary-ru
-npm run build:hunspell          # gzip в src/spell/hunspell-dict.generated.ts
+npm run sync:spell-dictionary   # data/hunspell/ru_RU.* из dictionary-ru → публикация в text-autofix-spelling
 ```
 
 ## Поведение
 
 - Правило `orthography-spellcheck`, политика **confirm**.
-- Hunspell инициализируется один раз при запуске (~1–2 с).
+- Hunspell инициализируется один раз после загрузки словаря с GitHub (~1–2 с).
+- Без GitHub: в «Технической хрени» будет «нужен GitHub», орфография не предлагается.

@@ -22,8 +22,8 @@ import {
 } from "./ambiguous-form-choices-store";
 import {
   applyHunspellDictionaryFromRaw,
+  clearHunspellDictionary,
   getHunspellDictionaryLoadStats,
-  resetHunspellDictionaryToBundled,
 } from "../spell/hunspell-dictionary-store";
 import {
   applySpellSupplementFromRaw,
@@ -402,7 +402,7 @@ export async function refreshSpellWhitelistFromRemote(
   });
 }
 
-/** Подтянуть Hunspell ru_RU (.aff + .dic) по URL; при ошибке — fallback на bundled. */
+/** Подтянуть Hunspell ru_RU (.aff + .dic) по URL; при ошибке — орфография отключается (бандла нет). */
 export async function refreshSpellDictionaryFromRemote(
   affUrl: string,
   dicUrl: string,
@@ -412,7 +412,7 @@ export async function refreshSpellDictionaryFromRemote(
   const dicFetchUrl = dicUrl.trim();
 
   if (!affFetchUrl || !dicFetchUrl) {
-    resetHunspellDictionaryToBundled();
+    clearHunspellDictionary();
     resetSpellCheckerCache();
     return { ok: true, fromRemote: false, ...spellDictionaryLoadCounts() };
   }
@@ -426,25 +426,25 @@ export async function refreshSpellDictionaryFromRemote(
     console.log("[text-autofix] spell dictionary bytes:", aff.length, dic.length);
 
     if (looksLikeHtmlResponse(aff) || looksLikeHtmlResponse(dic)) {
-      resetHunspellDictionaryToBundled();
+      clearHunspellDictionary();
       resetSpellCheckerCache();
       return {
         ok: false,
         fromRemote: false,
         ...spellDictionaryLoadCounts(),
-        errorMessage: "Ответ не Hunspell (возможно HTML-страница ошибки).",
+        errorMessage: "Ответ не орфографический словарь (возможно HTML-страница ошибки).",
         fetchUrl: dicFetchUrl,
       };
     }
 
     if (!applyHunspellDictionaryFromRaw(aff, dic)) {
-      resetHunspellDictionaryToBundled();
+      clearHunspellDictionary();
       resetSpellCheckerCache();
       return {
         ok: false,
         fromRemote: false,
         ...spellDictionaryLoadCounts(),
-        errorMessage: `Hunspell получен, но не распознан. Начало .dic: ${previewResponseText(dic)}`,
+        errorMessage: `Словарь получен, но не распознан. Начало .dic: ${previewResponseText(dic)}`,
         fetchUrl: dicFetchUrl,
       };
     }
@@ -458,7 +458,7 @@ export async function refreshSpellDictionaryFromRemote(
     };
   } catch (e) {
     console.warn("[text-autofix] spell dictionary load failed:", e);
-    resetHunspellDictionaryToBundled();
+    clearHunspellDictionary();
     resetSpellCheckerCache();
     return {
       ok: false,

@@ -1,4 +1,5 @@
 import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
+import { SPELLCHECK_ENABLED } from "../config/feature-flags";
 import { applyFixesFromScan } from "./apply-fixes";
 import { buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport, mergeAutoApplyReports } from "./build-auto-apply-report";
 import { postCheckResultToUi, setLastAutoApplyReport } from "./check-result-session";
@@ -76,7 +77,9 @@ export async function runAutofixAutoPasses(
 export async function runAutofixPipeline(): Promise<void> {
   const selection = figma.currentPage.selection;
   const lexiconLoad = await refreshLexiconFromRemote();
-  await ensureSpellCheckerReady();
+  if (SPELLCHECK_ENABLED) {
+    await ensureSpellCheckerReady();
+  }
   await postPluginConfigToUi(lexiconLoad);
 
   const { report, finalScan } = await runAutofixAutoPasses(selection);

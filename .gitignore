@@ -4,7 +4,6 @@ node_modules/
 data/yo-map.json
 data/.google-sheet-snapshot.csv
 src/rules/yo-curated.generated.ts
-src/spell/hunspell-dict.generated.ts
 data/hunspell/ru_RU.aff
 data/hunspell/ru_RU.dic
 src/ui/ui.figma.html

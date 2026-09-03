@@ -69,10 +69,10 @@ curl -sL "https://raw.githubusercontent.com/butsena/text-autofix-no-period/main/
 npm run build
 ```
 
-После merge PR в репозиторий орфографии:
+После обновления файлов орфографии на GitHub разработчикам достаточно:
 
 ```bash
 npm run sync:spell-dictionary
 ```
 
-Так bundled fallback остаётся актуальным для офлайн-запуска.
+(готовит `data/hunspell/` для публикации; в бандл плагина большой словарь больше не входит).

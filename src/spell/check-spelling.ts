@@ -1,4 +1,5 @@
 import type { TextFix } from "../core/autofix-engine";
+import { SPELLCHECK_ENABLED } from "../config/feature-flags";
 import { capitalizeLike } from "../shared/case";
 import {
   ORTHOGRAPHY_SPELL_PRIORITY,
@@ -31,6 +32,8 @@ function overlapsExistingFix(from: number, to: number, fixes: readonly TextFix[]
 
 /** Проверка орфографии Hunspell; возвращает confirm-правки без пересечения с уже найденными. */
 export function checkSpellingFixes(text: string, existingFixes: readonly TextFix[] = []): TextFix[] {
+  if (!SPELLCHECK_ENABLED) return [];
+
   const spell = getSpellChecker();
   if (!spell) return [];
 

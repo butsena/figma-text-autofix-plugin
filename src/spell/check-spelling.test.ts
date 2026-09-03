@@ -1,10 +1,43 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+
+vi.mock("../config/feature-flags", () => ({
+  SPELLCHECK_ENABLED: true,
+}));
+
 import { checkSpellingFixes } from "./check-spelling";
+import { applyHunspellDictionaryFromRaw } from "./hunspell-dictionary-store";
 import { ensureSpellCheckerReady } from "./spell-checker";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+
+function loadTestDictionary(): void {
+  const candidates = [
+    [path.join(root, "data/hunspell/ru_RU.aff"), path.join(root, "data/hunspell/ru_RU.dic")],
+    [
+      path.join(root, "node_modules/dictionary-ru/index.aff"),
+      path.join(root, "node_modules/dictionary-ru/index.dic"),
+    ],
+  ];
+  for (const [affPath, dicPath] of candidates) {
+    if (fs.existsSync(affPath) && fs.existsSync(dicPath)) {
+      const ok = applyHunspellDictionaryFromRaw(
+        fs.readFileSync(affPath, "utf8"),
+        fs.readFileSync(dicPath, "utf8"),
+      );
+      if (ok) return;
+    }
+  }
+  throw new Error("No Hunspell dictionary for tests (data/hunspell or dictionary-ru)");
+}
 
 describe("checkSpellingFixes", () => {
   beforeAll(async () => {
-    await ensureSpellCheckerReady();
+    loadTestDictionary();
+    const spell = await ensureSpellCheckerReady();
+    expect(spell).not.toBeNull();
   }, 30_000);
 
   it("находит опечатку с предложением исправления", () => {

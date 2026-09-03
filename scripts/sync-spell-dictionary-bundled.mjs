@@ -1,6 +1,6 @@
 /**
- * Синхронизирует bundled fallback орфографического словаря в data/hunspell/
- * для офлайн-запуска и публикации в text-autofix-spelling.
+ * Готовит файлы орфографии в data/hunspell/ для публикации в text-autofix-spelling.
+ * Большой словарь в бандл плагина больше не вшивается — только remote с GitHub.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -32,3 +32,4 @@ for (const name of ["spell-supplement.txt", "spell-whitelist.txt"]) {
 
 const dicHead = fs.readFileSync(path.join(outDir, "ru_RU.dic"), "utf8").split("\n", 1)[0].trim();
 console.log(`[sync-spell-dictionary] wrote data/hunspell/ru_RU.* (${dicHead} entries)`);
+console.log("[sync-spell-dictionary] publish these files to https://github.com/butsena/text-autofix-spelling");
