@@ -122,17 +122,17 @@ function renderTechDetailsHtml(): string {
   } else {
     bodyHtml = [
       formatLexiconResourceStatusHtml(lex.replacements, {
-        remoteOk: (count) => `Словарь замен с GitHub: <b>${count}</b> правил`,
+        remoteOk: (count) => `Словарь замен — GitHub: <b>${count}</b> правил`,
         remoteErr: (count) => `Словарь замен — встроенный список (${count} правил).`,
         bundledOk: (count) => `Словарь замен (встроенный): <b>${count}</b> правил`,
       }),
       formatLexiconResourceStatusHtml(lex.boundaryExceptions, {
-        remoteOk: (count) => `Когда не нужна точка с GitHub: <b>${count}</b> фраз`,
+        remoteOk: (count) => `Когда не нужна точка — GitHub: <b>${count}</b> фраз`,
         remoteErr: (count) => `Когда не нужна точка — встроенный список (${count} фраз).`,
         bundledOk: (count) => `Когда не нужна точка (встроенный): <b>${count}</b> фраз`,
       }),
       formatLexiconResourceStatusHtml(lex.ambiguousFormChoices, {
-        remoteOk: (count) => `Формы сложных слов с GitHub: <b>${count}</b> пар`,
+        remoteOk: (count) => `Формы сложных слов — GitHub: <b>${count}</b> пар`,
         remoteErr: (count) => `Формы сложных слов — встроенный список (${count} пар).`,
         bundledOk: (count) => `Формы сложных слов (встроенный): <b>${count}</b> пар`,
       }),
