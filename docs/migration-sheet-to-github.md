@@ -10,13 +10,18 @@
 | [figma-text-autofix-lexicon](https://github.com/butsena/figma-text-autofix-lexicon) (public) | Словарь замен `text-replacements.csv` |
 | [figma-text-autofix-boundary-exceptions](https://github.com/butsena/figma-text-autofix-boundary-exceptions) (public) | Когда не нужна точка: `boundary-exceptions.txt` |
 | [figma-text-autofix-ambiguous-form-choices](https://github.com/butsena/figma-text-autofix-ambiguous-form-choices) (public) | Формы сложных слов: `ambiguous-form-choices.txt` |
+| [figma-text-autofix-spell-dictionary](https://github.com/butsena/figma-text-autofix-spell-dictionary) (public) | Hunspell `ru_RU.aff` / `ru_RU.dic`, `spell-supplement.txt`, `spell-whitelist.txt` |
 
 Raw URL для плагина:  
 `https://raw.githubusercontent.com/butsena/figma-text-autofix-lexicon/main/text-replacements.csv`  
 `https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt`  
-`https://raw.githubusercontent.com/butsena/figma-text-autofix-ambiguous-form-choices/main/ambiguous-form-choices.txt`
+`https://raw.githubusercontent.com/butsena/figma-text-autofix-ambiguous-form-choices/main/ambiguous-form-choices.txt`  
+`https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/ru_RU.aff`  
+`https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/ru_RU.dic`  
+`https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/spell-supplement.txt`  
+`https://raw.githubusercontent.com/butsena/figma-text-autofix-spell-dictionary/main/spell-whitelist.txt`
 
-Подробнее: [boundary-exceptions-github.md](./boundary-exceptions-github.md), [ambiguous-form-choices-github.md](./ambiguous-form-choices-github.md).
+Подробнее: [boundary-exceptions-github.md](./boundary-exceptions-github.md), [ambiguous-form-choices-github.md](./ambiguous-form-choices-github.md), [spell-dictionary-github.md](./spell-dictionary-github.md).
 
 ## Шаги
 
@@ -62,6 +67,12 @@ npm run build
 curl -sL "https://raw.githubusercontent.com/butsena/figma-text-autofix-boundary-exceptions/main/boundary-exceptions.txt" \
   -o data/boundary-exceptions.txt
 npm run build
+```
+
+После merge PR в репозиторий орфографии:
+
+```bash
+npm run sync:spell-dictionary
 ```
 
 Так bundled fallback остаётся актуальным для офлайн-запуска.

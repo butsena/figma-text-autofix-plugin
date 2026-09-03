@@ -135,6 +135,21 @@ function renderTechDetailsHtml(): string {
         remoteErr: (count) => `Формы сложных слов — встроенный список (${count} пар).`,
         bundledOk: (count) => `Встроенный список форм сложных слов: <b>${count}</b> пар`,
       }),
+      formatLexiconResourceStatusHtml(lex.spellDictionary, {
+        remoteOk: (count) => `Hunspell ru_RU с GitHub: <b>${count}</b> лемм`,
+        remoteErr: (count) => `Hunspell — встроенный словарь (${count} лемм).`,
+        bundledOk: (count) => `Встроенный Hunspell ru_RU: <b>${count}</b> лемм`,
+      }),
+      formatLexiconResourceStatusHtml(lex.spellSupplement, {
+        remoteOk: (count) => `Доп. слова орфографии с GitHub: <b>${count}</b> слов`,
+        remoteErr: (count) => `Доп. слова орфографии — встроенный список (${count} слов).`,
+        bundledOk: (count) => `Встроенный доп. словарь орфографии: <b>${count}</b> слов`,
+      }),
+      formatLexiconResourceStatusHtml(lex.spellWhitelist, {
+        remoteOk: (count) => `Whitelist орфографии с GitHub: <b>${count}</b> слов`,
+        remoteErr: (count) => `Whitelist орфографии — встроенный список (${count} слов).`,
+        bundledOk: (count) => `Встроенный whitelist орфографии: <b>${count}</b> слов`,
+      }),
     ].join("");
   }
 

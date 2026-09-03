@@ -3,6 +3,7 @@ import { applyFixesFromScan } from "./apply-fixes";
 import { buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport, mergeAutoApplyReports } from "./build-auto-apply-report";
 import { postCheckResultToUi, setLastAutoApplyReport } from "./check-result-session";
 import { refreshLexiconFromRemote } from "../lexicon/refresh-lexicon";
+import { ensureSpellCheckerReady } from "../spell/spell-checker";
 import type { LexiconLoadStatusDto, PluginToUiMessage } from "../shared/messages";
 import { scanSelectedTextNodes } from "./scan-selection";
 
@@ -74,7 +75,9 @@ export async function runAutofixAutoPasses(
 /** Сканирование → применение в цикле, пока есть правки; сводный отчёт в UI. */
 export async function runAutofixPipeline(): Promise<void> {
   const selection = figma.currentPage.selection;
-  await postPluginConfigToUi(await refreshLexiconFromRemote());
+  const lexiconLoad = await refreshLexiconFromRemote();
+  await ensureSpellCheckerReady();
+  await postPluginConfigToUi(lexiconLoad);
 
   const { report, finalScan } = await runAutofixAutoPasses(selection);
   setLastAutoApplyReport(report);

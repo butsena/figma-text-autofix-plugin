@@ -108,6 +108,9 @@ export type LexiconLoadStatusDto = {
   replacements: LexiconResourceLoadStatus;
   boundaryExceptions: LexiconResourceLoadStatus;
   ambiguousFormChoices: LexiconResourceLoadStatus;
+  spellDictionary: LexiconResourceLoadStatus;
+  spellSupplement: LexiconResourceLoadStatus;
+  spellWhitelist: LexiconResourceLoadStatus;
 };
 
 export type UiToPluginMessage =

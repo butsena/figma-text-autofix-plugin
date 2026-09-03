@@ -1,0 +1,18 @@
+# Слова, которые Hunspell не знает, но в UI допустимы (бренды, транслит, аббревиатуры).
+# Одно слово на строку; регистр не важен.
+
+WhatsApp
+iPhone
+iOS
+Android
+Figma
+GitHub
+Циан
+Cian
+SaaS
+API
+URL
+SMS
+Push
+email
+e-mail

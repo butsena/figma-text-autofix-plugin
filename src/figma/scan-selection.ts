@@ -1,6 +1,7 @@
 import { getAutofixRules } from "../rules/autofix-rules";
 import { applyTextFixes, checkTextForAutofixes } from "../core/autofix-engine";
 import type { TextFix } from "../core/autofix-engine";
+import { checkSpellingFixes } from "../spell/check-spelling";
 import type { ApplyPolicy } from "../core/apply-policy";
 import { resolveApplyPolicy } from "../core/apply-policy";
 import type { CheckResultDto, CheckSummary, RuleInfo, TextFixDto, TextNodeCardDto, CheckedTextLayerDto } from "../shared/messages";
@@ -22,6 +23,21 @@ function filterRulesByPolicy(policy: ScanPolicyFilter) {
   const all = getAutofixRules();
   if (policy === "all") return all;
   return all.filter((rule) => resolveApplyPolicy(rule.applyPolicy) === policy);
+}
+
+function mergeAutofixAndSpellingFixes(text: string, fixes: TextFix[]): TextFix[] {
+  const spellFixes = checkSpellingFixes(text, fixes);
+  if (!spellFixes.length) return fixes;
+  return [...fixes, ...spellFixes].sort((a, b) => {
+    if (a.from !== b.from) return a.from - b.from;
+    if (a.to !== b.to) return a.to - b.to;
+    return b.priority - a.priority;
+  });
+}
+
+function checkTextWithSpelling(text: string, rules: ReturnType<typeof filterRulesByPolicy>): TextFix[] {
+  const { fixes } = checkTextForAutofixes(text, rules);
+  return mergeAutofixAndSpellingFixes(text, fixes);
 }
 
 function toFixDto(nodeId: string, fixes: ReturnType<typeof checkTextForAutofixes>["fixes"]): TextFixDto[] {
@@ -132,7 +148,7 @@ function buildCards(
   let foundFixes = 0;
 
   for (const node of textNodes) {
-    let { fixes } = checkTextForAutofixes(node.characters, rules);
+    let fixes = checkTextWithSpelling(node.characters, rules);
     if (policy === "choice") {
       fixes = filterUnresolvedChoiceFixes(node, fixes);
     }
@@ -163,7 +179,7 @@ function scanAllPolicies(textNodes: TextNode[]): {
   let choiceFixes = 0;
 
   for (const node of textNodes) {
-    const { fixes } = checkTextForAutofixes(node.characters, rules);
+    const fixes = checkTextWithSpelling(node.characters, rules);
     const { auto, confirm, choice } = partitionFixesByPolicy(fixes);
     const resolvedChoice = filterUnresolvedChoiceFixes(node, choice);
 
