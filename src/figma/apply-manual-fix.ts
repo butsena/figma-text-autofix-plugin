@@ -68,7 +68,17 @@ export async function applyManualFixAndRefresh(
     );
   }
 
-  const { report, finalScan } = await runAutofixAutoPasses(selection, reportBase);
+  const { report } = await runAutofixAutoPasses(selection, reportBase);
+
+  // Автоправки (NBSP и т.п.) сдвигают текст — перезаписать якоря choice-resolution.
+  if (isChoicePolicy(fix.rule.applyPolicy)) {
+    const refreshed = await figma.getNodeByIdAsync(nodeId);
+    if (refreshed && refreshed.type === "TEXT") {
+      recordChoiceResolutionAfterApply(refreshed, fix);
+    }
+  }
+
   setLastAutoApplyReport(report);
-  postCheckResultToUi(selection, finalScan);
+  // Пересканировать уже с обновлёнными resolution, иначе choice всплывёт снова.
+  postCheckResultToUi(selection);
 }

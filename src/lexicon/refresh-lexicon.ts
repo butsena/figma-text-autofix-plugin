@@ -1,14 +1,6 @@
 import type { LexiconLoadStatusDto, LexiconResourceLoadStatus } from "../shared/messages";
 import { SPELLCHECK_ENABLED } from "../config/feature-flags";
-import { AMBIGUOUS_FORM_CHOICES_TXT_URL } from "../config/ambiguous-form-choices-remote-url";
-import { BOUNDARY_EXCEPTIONS_TXT_URL } from "../config/boundary-exceptions-remote-url";
-import {
-  SPELL_DICTIONARY_AFF_URL,
-  SPELL_DICTIONARY_DIC_URL,
-  SPELL_SUPPLEMENT_TXT_URL,
-  SPELL_WHITELIST_TXT_URL,
-} from "../config/spell-dictionary-remote-url";
-import { TEXT_REPLACEMENTS_CSV_URL } from "../config/text-replacements-remote-url";
+import { LEXICON_REMOTE } from "../config/lexicon-remote-config";
 import {
   fetchRemoteTextViaHttp,
   refreshAmbiguousFormChoicesFromRemote,
@@ -97,10 +89,13 @@ export async function refreshLexiconFromRemote(
   }
 
   const [replacements, boundaryExceptions, ambiguousFormChoices] = await Promise.all([
-    refreshTextReplacementsFromRemote(TEXT_REPLACEMENTS_CSV_URL, fetchRemoteTextViaHttp),
-    refreshBoundaryExceptionsFromRemote(BOUNDARY_EXCEPTIONS_TXT_URL, fetchRemoteTextViaHttp),
+    refreshTextReplacementsFromRemote(LEXICON_REMOTE.replacements.url, fetchRemoteTextViaHttp),
+    refreshBoundaryExceptionsFromRemote(
+      LEXICON_REMOTE.boundaryExceptions.url,
+      fetchRemoteTextViaHttp,
+    ),
     refreshAmbiguousFormChoicesFromRemote(
-      AMBIGUOUS_FORM_CHOICES_TXT_URL,
+      LEXICON_REMOTE.ambiguousFormChoices.url,
       fetchRemoteTextViaHttp,
     ),
   ]);
@@ -112,12 +107,15 @@ export async function refreshLexiconFromRemote(
   if (SPELLCHECK_ENABLED) {
     [spellDictionary, spellSupplement, spellWhitelist] = await Promise.all([
       refreshSpellDictionaryFromRemote(
-        SPELL_DICTIONARY_AFF_URL,
-        SPELL_DICTIONARY_DIC_URL,
+        LEXICON_REMOTE.spellDictionary.affUrl,
+        LEXICON_REMOTE.spellDictionary.dicUrl,
         fetchRemoteTextViaHttp,
       ),
-      refreshSpellSupplementFromRemote(SPELL_SUPPLEMENT_TXT_URL, fetchRemoteTextViaHttp),
-      refreshSpellWhitelistFromRemote(SPELL_WHITELIST_TXT_URL, fetchRemoteTextViaHttp),
+      refreshSpellSupplementFromRemote(
+        LEXICON_REMOTE.spellSupplement.url,
+        fetchRemoteTextViaHttp,
+      ),
+      refreshSpellWhitelistFromRemote(LEXICON_REMOTE.spellWhitelist.url, fetchRemoteTextViaHttp),
     ]);
   } else {
     clearHunspellDictionary();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatChoiceHintHtml, formatFixCategoryLabel, formatLayerTitleHtml, formatTextLayersBlockHtml, isChoiceRuleWithoutSkip } from "./ui-helpers";
+import { formatChoiceHintHtml, formatFixCategoryLabel, formatLayerTitleHtml, formatTextLayersBlockHtml } from "./ui-helpers";
 
 describe("formatFixCategoryLabel", () => {
   it("показывает Редполитику для правил про точки", () => {
@@ -39,9 +39,9 @@ describe("formatFixCategoryLabel", () => {
     expect(html).toContain("reportHintSep");
   });
 
-  it("скрывает Пропустить для ищите/ищете", () => {
-    expect(isChoiceRuleWithoutSkip("cian-choice-ishchite-ishchete")).toBe(true);
-    expect(isChoiceRuleWithoutSkip("other-rule")).toBe(false);
+  it("предпочитает hintHtml с плагина (remote-пары без UI-стора)", () => {
+    const html = formatChoiceHintHtml("cian-choice-unknown", undefined, "<div class=\"reportHint\">из DTO</div>");
+    expect(html).toBe("<div class=\"reportHint\">из DTO</div>");
   });
 
   it("форматирует подсказку для все/всё", () => {
@@ -53,11 +53,6 @@ describe("formatFixCategoryLabel", () => {
     expect(html).toContain("Подсказка:");
     expect(html).toContain("по редполитике Циана мы пишем ё там, где это требуется");
   });
-
-  it("скрывает Пропустить для все/всё", () => {
-    expect(isChoiceRuleWithoutSkip("cian-choice-vse-vsyo")).toBe(true);
-  });
-
   it("форматирует заголовок слоя со счётчиком символов", () => {
     const html = formatLayerTitleHtml("1:2", "Заголовок", 142);
     expect(html).toContain('data-node-id="1:2"');

@@ -3,13 +3,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { applyAllRules } from "../test/helpers";
-import { parseSheetReplacementRows, rowsToAutofixRules } from "./replacement-rows";
+import { parseReplacementRows, rowsToAutofixRules } from "./replacement-rows";
 
 const csvPath = join(dirname(fileURLToPath(import.meta.url)), "../../data/text-replacements.csv");
 
 function acquireRules() {
   const raw = readFileSync(csvPath, "utf8");
-  const rows = parseSheetReplacementRows(raw).filter((row) =>
+  const rows = parseReplacementRows(raw).filter((row) =>
     row.variants.some((v) => /приобр/i.test(v)),
   );
   return rowsToAutofixRules(rows, "acquire-test");

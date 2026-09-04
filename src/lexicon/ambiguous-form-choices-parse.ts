@@ -1,7 +1,7 @@
 import {
   MSG_CHOICE_ISHCHITE_ISHCHETE,
   MSG_CHOICE_VSE_VSYO,
-} from "../rule-messages";
+} from "../rules/rule-messages";
 
 function escapeHtml(str: string): string {
   return str

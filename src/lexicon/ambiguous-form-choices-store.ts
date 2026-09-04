@@ -4,7 +4,7 @@ import { stripUtf8Bom } from "../shared/text-normalize";
 import {
   parseAmbiguousFormChoices,
   type AmbiguousFormChoice,
-} from "../rules/choice/ambiguous-form-choices-parse";
+} from "./ambiguous-form-choices-parse";
 
 export type AmbiguousFormChoicesLoadStats = {
   count: number;

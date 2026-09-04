@@ -1,0 +1,88 @@
+import { formatFixDiffHtml } from "./diff-format";
+import {
+  escapeHtml,
+  formatChoiceHintHtml,
+  formatFixCategoryLabel,
+} from "./ui-helpers";
+import { choiceSelectionKey, state } from "./ui-state";
+import type { TextFixDto } from "../shared/messages";
+
+export function renderFixRow(
+  fix: {
+    ruleId: string;
+    category: string;
+    message: string;
+    hint?: string;
+    from: number;
+    to: number;
+    before: string;
+    after: string;
+    sourceText?: string;
+  },
+  sourceText: string,
+  confirmActions?: { cardIdx: number; fixIdx: number },
+): string {
+  const actionsHtml = confirmActions
+    ? `
+      <div class="confirmActions">
+        <button type="button" class="confirmApplyBtn" data-confirm-apply="${confirmActions.cardIdx}:${confirmActions.fixIdx}">
+          Исправить
+        </button>
+        <button type="button" class="confirmSkipBtn" data-confirm-skip="${confirmActions.cardIdx}:${confirmActions.fixIdx}">
+          Пропустить
+        </button>
+      </div>
+    `
+    : "";
+
+  const wrapperClass = confirmActions ? "confirmFix" : "reportFix";
+  const dataAttrs = confirmActions
+    ? ` data-confirm-card="${confirmActions.cardIdx}" data-confirm-fix="${confirmActions.fixIdx}"`
+    : "";
+
+  const hintHtml = fix.hint
+    ? `<div class="reportHint">${escapeHtml(fix.hint)}</div>`
+    : "";
+
+  return `
+    <div class="${wrapperClass}"${dataAttrs}>
+      <div class="reportWhy">${escapeHtml(fix.message)}</div>
+      ${hintHtml}
+      <div class="reportMeta">Правило: <code>${escapeHtml(fix.ruleId)}</code> · ${escapeHtml(formatFixCategoryLabel(fix.category, fix.ruleId))}</div>
+      <div class="reportDiff">${formatFixDiffHtml(fix, sourceText)}</div>
+      ${actionsHtml}
+    </div>
+  `;
+}
+
+export function renderChoiceFixRow(fix: TextFixDto, cardIdx: number, fixIdx: number): string {
+  const ruleId = fix.rule?.id ?? "";
+  const category = fix.rule?.category ?? "";
+  const message = fix.rule?.message ?? "";
+  const options = fix.rule?.choiceOptions ?? [];
+  const current = fix.before;
+  const hintHtml = formatChoiceHintHtml(ruleId, fix.rule?.hint, fix.rule?.hintHtml);
+  const selectionKey = choiceSelectionKey(cardIdx, fixIdx);
+  const selectedIdx = state.choiceSelection[selectionKey];
+  const optionsHtml = options
+    .map((option, optionIdx) => {
+      const cls =
+        selectedIdx === optionIdx ? "choiceOptionBtn choiceOptionSelected" : "choiceOptionBtn";
+      return `<button type="button" class="${cls}" data-choice-pick="${cardIdx}:${fixIdx}:${optionIdx}">${escapeHtml(option)}</button>`;
+    })
+    .join("");
+  const confirmDisabled = selectedIdx == null ? " disabled" : "";
+
+  return `
+    <div class="choiceFix" data-choice-card="${cardIdx}" data-choice-fix="${fixIdx}">
+      <div class="reportWhy">${escapeHtml(message)}</div>
+      ${hintHtml}
+      <div class="reportMeta">Правило: <code>${escapeHtml(ruleId)}</code> · ${escapeHtml(formatFixCategoryLabel(category, ruleId))}</div>
+      <div class="reportDiff"><span class="reportCtxWord">${escapeHtml(current)}</span></div>
+      <div class="choiceActions">
+        ${optionsHtml}
+        <button type="button" class="choiceConfirmBtn" data-choice-confirm="${cardIdx}:${fixIdx}"${confirmDisabled}>Подтвердить</button>
+      </div>
+    </div>
+  `;
+}

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { applyAllRules } from "../test/helpers";
-import { parseSheetReplacementRows, rowsToAutofixRules } from "./replacement-rows";
+import { parseReplacementRows, rowsToAutofixRules } from "./replacement-rows";
 
-describe("parseSheetReplacementRows", () => {
+describe("parseReplacementRows", () => {
   it("парсит CSV с заголовками", () => {
     const csv = `исходные варианты,верный текст,пояснение
 "foo, FOO",bar,тест`;
-    const rows = parseSheetReplacementRows(csv);
+    const rows = parseReplacementRows(csv);
     expect(rows).toHaveLength(1);
     expect(rows[0].variants).toEqual(["foo", "FOO"]);
     expect(rows[0].replace).toBe("bar");
@@ -16,7 +16,7 @@ describe("parseSheetReplacementRows", () => {
   it("пропускает отключённые строки", () => {
     const csv = `variants,replace,enabled
 baz,qux,no`;
-    expect(parseSheetReplacementRows(csv)).toHaveLength(0);
+    expect(parseReplacementRows(csv)).toHaveLength(0);
   });
 });
 

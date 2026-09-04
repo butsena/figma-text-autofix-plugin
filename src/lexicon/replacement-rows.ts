@@ -3,7 +3,7 @@ import { cyrillicWholeWordPattern, escapeRegex } from "../rules/regex";
 import { headerColIndex, isEnabledCell, parseCsvRows } from "./csv";
 import { resolveLexiconMessage } from "./lexicon-messages";
 
-export type SheetReplacementRow = {
+export type ReplacementRow = {
   variants: string[];
   replace: string;
   message: string;
@@ -42,7 +42,7 @@ function buildWholeWordAlternationRule(
   };
 }
 
-export function parseSheetReplacementRows(raw: string): SheetReplacementRow[] {
+export function parseReplacementRows(raw: string): ReplacementRow[] {
   const rows = parseCsvRows(raw);
   if (rows.length < 2) return [];
 
@@ -61,7 +61,7 @@ export function parseSheetReplacementRows(raw: string): SheetReplacementRow[] {
   const iPri = headerColIndex(header, ["приоритет", "priority"]);
   const iCat = headerColIndex(header, ["категория", "category"]);
 
-  const out: SheetReplacementRow[] = [];
+  const out: ReplacementRow[] = [];
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
     if (row.length < Math.max(iVar, iRep) + 1) continue;
@@ -87,7 +87,7 @@ export function parseSheetReplacementRows(raw: string): SheetReplacementRow[] {
   return out;
 }
 
-export function rowsToAutofixRules(rows: SheetReplacementRow[], idPrefix: string): AutofixRule[] {
+export function rowsToAutofixRules(rows: ReplacementRow[], idPrefix: string): AutofixRule[] {
   const rules: AutofixRule[] = [];
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];

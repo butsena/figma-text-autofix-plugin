@@ -1,9 +1,9 @@
+import { LATIN_CYRILLIC_LETTERS } from "../shared/letters";
+
 /** Кириллица для границ «слова» без \\b. */
 export const CYRILLIC_LETTERS = String.raw`А-Яа-яЁё`;
 
-/** Латиница + кириллица (служебные слова в смешанном тексте). */
-export const LATIN_CYRILLIC_LETTERS = String.raw`A-Za-zА-Яа-яЁё`;
-
+export { LATIN_CYRILLIC_LETTERS };
 export const CYRILLIC_WORD_EDGE = String.raw`(^|[^${CYRILLIC_LETTERS}])`;
 export const CYRILLIC_WORD_EDGE_END = String.raw`(?=[^${CYRILLIC_LETTERS}]|$)`;
 

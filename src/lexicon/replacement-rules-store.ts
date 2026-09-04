@@ -2,14 +2,14 @@ import type { AutofixRule } from "../core/autofix-engine";
 import bundledCsv from "../../data/text-replacements.csv?raw";
 import { stripUtf8Bom } from "../shared/text-normalize";
 import { createRemoteBackedStore } from "./remote-backed-store";
-import { parseSheetReplacementRows, rowsToAutofixRules } from "./replacement-rows";
+import { parseReplacementRows, rowsToAutofixRules } from "./replacement-rows";
 
 export type LexiconRulesLoadStats = {
   totalCount: number;
   fromRemote: boolean;
 };
 
-const bundledSheetRows = parseSheetReplacementRows(bundledCsv);
+const bundledSheetRows = parseReplacementRows(bundledCsv);
 const bundledLexiconRules = rowsToAutofixRules(bundledSheetRows, "sheet-bundled");
 const store = createRemoteBackedStore(bundledLexiconRules, (rules) => rules.length);
 
@@ -24,7 +24,7 @@ export function getLexiconRulesLoadStats(): LexiconRulesLoadStats {
 
 /** Загрузить CSV словаря; пустой/битый → false, активный набор не меняется. */
 export function applyLexiconReplacementsFromCsv(raw: string): boolean {
-  const rows = parseSheetReplacementRows(stripUtf8Bom(raw));
+  const rows = parseReplacementRows(stripUtf8Bom(raw));
   if (rows.length === 0) return false;
   return store.apply(rowsToAutofixRules(rows, "sheet-text"));
 }

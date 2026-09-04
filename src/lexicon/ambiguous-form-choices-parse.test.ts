@@ -47,4 +47,25 @@ describe("parseAmbiguousFormChoices", () => {
   it("бросает на неверной строке", () => {
     expect(() => parseAmbiguousFormChoices("без разделителей")).toThrow(/Неверная строка/);
   });
+
+  it("парсит пишите/пишете и ждите/ждёте с hintHtml", () => {
+    const choices = parseAmbiguousFormChoices(`
+# id: cian-choice-pishite-pishete
+пишите - пишете - что делайте? | пишите письма; что делаете? | пишете правильно
+# id: cian-choice-zhdite-zhdyote
+ждите - ждёте - что делайте? | ждите; что делаете? | ждёте
+`);
+    expect(choices).toHaveLength(2);
+    expect(choices[0]).toMatchObject({
+      id: "cian-choice-pishite-pishete",
+      options: ["пишите", "пишете"],
+      allowSkip: false,
+    });
+    expect(choices[0]?.hintHtml).toContain("пишите письма");
+    expect(choices[1]).toMatchObject({
+      id: "cian-choice-zhdite-zhdyote",
+      options: ["ждите", "ждёте"],
+    });
+    expect(choices[1]?.hintHtml).toContain("ждёте");
+  });
 });

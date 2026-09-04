@@ -118,6 +118,54 @@ describe("choice-resolution", () => {
     expect(pruned).toHaveLength(0);
   });
 
+  it("переякоривает resolution после автоправки NBSP вокруг слова", () => {
+    const resolution = createChoiceResolution(text, RULE_ID, from, to, "ищите", "ищите");
+    const afterNbsp = "скорее\u00a0ищите квартиру";
+    const pruned = pruneStaleResolutions(afterNbsp, [resolution]);
+    expect(pruned).toHaveLength(1);
+    expect(pruned[0]?.chosen).toBe("ищите");
+    expect(
+      shouldSuppressChoiceFix(
+        afterNbsp,
+        {
+          ruleId: RULE_ID,
+          from: afterNbsp.indexOf("ищите"),
+          to: afterNbsp.indexOf("ищите") + "ищите".length,
+          before: "ищите",
+        },
+        pruned,
+      ),
+    ).toBe(true);
+  });
+
+  it("переякоривает все/всё после NBSP", () => {
+    const src = "проверьте все варианты";
+    const wordFrom = src.indexOf("все");
+    const resolution = createChoiceResolution(
+      src,
+      "cian-choice-vse-vsyo",
+      wordFrom,
+      wordFrom + "все".length,
+      "все",
+      "все",
+    );
+    const afterNbsp = "проверьте\u00a0все варианты";
+    const pruned = pruneStaleResolutions(afterNbsp, [resolution]);
+    expect(pruned).toHaveLength(1);
+    expect(
+      shouldSuppressChoiceFix(
+        afterNbsp,
+        {
+          ruleId: "cian-choice-vse-vsyo",
+          from: afterNbsp.indexOf("все"),
+          to: afterNbsp.indexOf("все") + "все".length,
+          before: "все",
+        },
+        pruned,
+      ),
+    ).toBe(true);
+  });
+
   it("обновляет запись для того же слота", () => {
     const first = createChoiceResolution(text, RULE_ID, from, to, "ищите", "ищите");
     const second = createChoiceResolution(text, RULE_ID, from, to, "ищите", "ищете");

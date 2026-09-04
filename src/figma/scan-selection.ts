@@ -1,143 +1,24 @@
 import { getAutofixRules } from "../rules/autofix-rules";
-import { applyTextFixes, checkTextForAutofixes } from "../core/autofix-engine";
-import type { TextFix } from "../core/autofix-engine";
-import { checkSpellingFixes } from "../spell/check-spelling";
-import type { ApplyPolicy } from "../core/apply-policy";
-import { resolveApplyPolicy } from "../core/apply-policy";
-import type { CheckResultDto, CheckSummary, RuleInfo, TextFixDto, TextNodeCardDto, CheckedTextLayerDto } from "../shared/messages";
-import { makeFixId } from "../shared/fix-id";
-import { countTextCharacters } from "../shared/text-char-count";
+import type { CheckResultDto, TextNodeCardDto } from "../shared/messages";
 import { collectTextNodesFromSelection } from "./collect-text-nodes";
 import {
-  shouldSuppressChoiceFix,
-  syncChoiceResolutionsAfterScan,
-} from "./choice-resolution";
+  buildCardForNode,
+  buildCheckSummary,
+  buildCheckedTextLayers,
+  filterUnresolvedChoiceFixes,
+  partitionFixesByPolicy,
+} from "./scan-fix-dto";
+import {
+  checkTextWithSpelling,
+  filterRulesByPolicy,
+  type ScanPolicyFilter,
+} from "./scan-text-check";
 
-export type ScanPolicyFilter = ApplyPolicy | "all";
+export type { ScanPolicyFilter } from "./scan-text-check";
 
 export type ScanSelectionOptions = {
   policy?: ScanPolicyFilter;
 };
-
-function filterRulesByPolicy(policy: ScanPolicyFilter) {
-  const all = getAutofixRules();
-  if (policy === "all") return all;
-  return all.filter((rule) => resolveApplyPolicy(rule.applyPolicy) === policy);
-}
-
-function mergeAutofixAndSpellingFixes(text: string, fixes: TextFix[]): TextFix[] {
-  const spellFixes = checkSpellingFixes(text, fixes);
-  if (!spellFixes.length) return fixes;
-  return [...fixes, ...spellFixes].sort((a, b) => {
-    if (a.from !== b.from) return a.from - b.from;
-    if (a.to !== b.to) return a.to - b.to;
-    return b.priority - a.priority;
-  });
-}
-
-function checkTextWithSpelling(text: string, rules: ReturnType<typeof filterRulesByPolicy>): TextFix[] {
-  const { fixes } = checkTextForAutofixes(text, rules);
-  return mergeAutofixAndSpellingFixes(text, fixes);
-}
-
-function toFixDto(nodeId: string, fixes: ReturnType<typeof checkTextForAutofixes>["fixes"]): TextFixDto[] {
-  return fixes.map((f) => {
-    const rule: RuleInfo = {
-      id: f.ruleId,
-      category: f.category,
-      message: f.message,
-      ...(f.hint ? { hint: f.hint } : {}),
-      ...(f.choiceOptions?.length ? { choiceOptions: f.choiceOptions } : {}),
-      priority: f.priority,
-      applyPolicy: f.applyPolicy,
-    };
-    return {
-      fixId: makeFixId(nodeId, f.ruleId, f.from, f.to),
-      from: f.from,
-      to: f.to,
-      before: f.before,
-      after: f.after,
-      rule,
-    };
-  });
-}
-
-function filterUnresolvedChoiceFixes(node: TextNode, fixes: TextFix[]): TextFix[] {
-  const text = node.characters;
-  const fixPositions = fixes.map((fix) => ({
-    ruleId: fix.ruleId,
-    from: fix.from,
-    to: fix.to,
-    before: fix.before,
-  }));
-  const resolutions = syncChoiceResolutionsAfterScan(node, fixPositions);
-  return fixes.filter(
-    (fix) =>
-      !shouldSuppressChoiceFix(
-        text,
-        { ruleId: fix.ruleId, from: fix.from, to: fix.to, before: fix.before },
-        resolutions,
-      ),
-  );
-}
-
-function partitionFixesByPolicy(fixes: TextFix[]): {
-  auto: TextFix[];
-  confirm: TextFix[];
-  choice: TextFix[];
-} {
-  const auto: TextFix[] = [];
-  const confirm: TextFix[] = [];
-  const choice: TextFix[] = [];
-
-  for (const fix of fixes) {
-    const policy = resolveApplyPolicy(fix.applyPolicy);
-    if (policy === "confirm") confirm.push(fix);
-    else if (policy === "choice") choice.push(fix);
-    else auto.push(fix);
-  }
-
-  return { auto, confirm, choice };
-}
-
-function buildCheckedTextLayers(textNodes: TextNode[]): CheckedTextLayerDto[] {
-  return textNodes.map((node) => ({
-    nodeId: node.id,
-    nodeName: node.name,
-    characterCount: countTextCharacters(node.characters),
-  }));
-}
-
-function buildCheckSummary(
-  textNodes: TextNode[],
-  partial: Omit<CheckSummary, "checkedLayers">,
-): CheckSummary {
-  return {
-    checkedLayers: textNodes.length,
-    ...partial,
-  };
-}
-
-function buildCardForNode(
-  node: TextNode,
-  fixes: TextFix[],
-  previewMode: "auto" | "manual",
-): TextNodeCardDto | null {
-  if (!fixes.length) return null;
-
-  const originalText = node.characters;
-  const previewText =
-    previewMode === "manual" ? originalText : applyTextFixes(originalText, fixes);
-
-  return {
-    nodeId: node.id,
-    nodeName: node.name,
-    originalText,
-    previewText,
-    characterCount: countTextCharacters(originalText),
-    fixes: toFixDto(node.id, fixes),
-  };
-}
 
 function buildCards(
   textNodes: TextNode[],

@@ -11,6 +11,7 @@ export function textFixDtoToEngineFix(fix: TextFixDto): TextFix {
     category: fix.rule.category,
     message: fix.rule.message,
     ...(fix.rule.hint ? { hint: fix.rule.hint } : {}),
+    ...(fix.rule.hintHtml ? { hintHtml: fix.rule.hintHtml } : {}),
     ...(fix.rule.choiceOptions?.length ? { choiceOptions: fix.rule.choiceOptions } : {}),
     priority: fix.rule.priority,
     applyPolicy: fix.rule.applyPolicy,

@@ -1,11 +1,9 @@
-import { getAmbiguousFormChoice, isChoiceRuleWithoutSkip } from "../rules/choice/ambiguous-form-rules";
+import { getAmbiguousFormChoice } from "../lexicon/ambiguous-form-choices-store";
 import { capitalizeLike } from "../shared/case";
 import { formatCharacterCountLabel } from "../shared/text-char-count";
 import type { LexiconResourceLoadStatus } from "../shared/messages";
 
 export { capitalizeLike };
-
-export { isChoiceRuleWithoutSkip };
 
 export function escapeHtml(str: unknown): string {
   return String(str)
@@ -36,7 +34,13 @@ export function countConfirmFixes(
   return confirmCards.reduce((n, card) => n + (card.fixes ? card.fixes.length : 0), 0);
 }
 
-export function formatChoiceHintHtml(ruleId: string, fallbackHint?: string): string {
+export function formatChoiceHintHtml(
+  ruleId: string,
+  fallbackHint?: string,
+  hintHtmlFromFix?: string,
+): string {
+  if (hintHtmlFromFix) return hintHtmlFromFix;
+
   const choice = getAmbiguousFormChoice(ruleId);
   if (choice?.hintHtml) return choice.hintHtml;
 

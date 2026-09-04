@@ -12,6 +12,8 @@ export type AutofixRule = {
   message: string;
   /** Доп. подсказка в UI (например, мнемоника для confirm/choice-правок). */
   hint?: string;
+  /** Готовый HTML подсказки (для choice со списком примеров). */
+  hintHtml?: string;
   /** Равноправные варианты выбора (policy choice): кнопки в UI вместо «Исправить». */
   choiceOptions?: string[];
   priority: number;
@@ -32,6 +34,8 @@ export type TextFix = {
   category: string;
   message: string;
   hint?: string;
+  /** HTML-подсказка для choice (список «вопрос | пример»). */
+  hintHtml?: string;
   choiceOptions?: string[];
   priority: number;
   applyPolicy: ApplyPolicy;
@@ -106,6 +110,7 @@ export function checkTextForAutofixes(text: string, rules: AutofixRule[]): TextC
           category: rule.category,
           message: rule.message,
           ...(rule.hint ? { hint: rule.hint } : {}),
+          ...(rule.hintHtml ? { hintHtml: rule.hintHtml } : {}),
           choiceOptions: rule.choiceOptions,
           priority: rule.priority,
           applyPolicy: resolveApplyPolicy(rule.applyPolicy),
@@ -126,6 +131,7 @@ export function checkTextForAutofixes(text: string, rules: AutofixRule[]): TextC
         category: rule.category,
         message: rule.message,
         ...(rule.hint ? { hint: rule.hint } : {}),
+        ...(rule.hintHtml ? { hintHtml: rule.hintHtml } : {}),
         priority: rule.priority,
         applyPolicy: resolveApplyPolicy(rule.applyPolicy),
       });

@@ -51,4 +51,15 @@ describe("textFixDtoToEngineFix", () => {
     expect(minimal).not.toHaveProperty("choiceOptions");
     expect(minimal.applyPolicy).toBe("auto");
   });
+
+  it("прокидывает hintHtml", () => {
+    const withHtml = textFixDtoToEngineFix({
+      ...dto,
+      rule: {
+        ...dto.rule,
+        hintHtml: "<div class=\"reportHint\">hint</div>",
+      },
+    });
+    expect(withHtml.hintHtml).toBe("<div class=\"reportHint\">hint</div>");
+  });
 });

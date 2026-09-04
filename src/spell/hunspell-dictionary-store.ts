@@ -38,6 +38,3 @@ export function applyHunspellDictionaryFromRaw(aff: string, dic: string): boolea
 export function clearHunspellDictionary(): void {
   state = { dict: null, fromRemote: false };
 }
-
-/** @deprecated Используйте clearHunspellDictionary — bundled Hunspell удалён. */
-export const resetHunspellDictionaryToBundled = clearHunspellDictionary;

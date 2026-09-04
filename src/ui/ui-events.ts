@@ -31,20 +31,6 @@ function skipConfirmFix(cardIdx: number, fixIdx: number): void {
   render();
 }
 
-function skipChoiceFix(cardIdx: number, fixIdx: number): void {
-  const card = state.choiceCards[cardIdx];
-  if (!card || !card.fixes[fixIdx]) return;
-  delete state.choiceSelection[choiceSelectionKey(cardIdx, fixIdx)];
-  card.fixes.splice(fixIdx, 1);
-  if (card.fixes.length === 0) {
-    state.choiceCards.splice(cardIdx, 1);
-  }
-  if (state.summary) {
-    state.summary.choiceFixes = countConfirmFixes(state.choiceCards);
-  }
-  render();
-}
-
 function selectChoiceOption(cardIdx: number, fixIdx: number, optionIdx: number): void {
   state.choiceSelection[choiceSelectionKey(cardIdx, fixIdx)] = optionIdx;
   state.ui.choiceDetailsOpen = true;
@@ -128,15 +114,6 @@ function handleAppClick(event: Event): void {
     const parts = parseKey(choiceConfirm.getAttribute("data-choice-confirm"), 2);
     if (!parts) return;
     confirmChoiceSelection(parts[0], parts[1]);
-    return;
-  }
-
-  const choiceSkip = target.closest("[data-choice-skip]");
-  if (choiceSkip instanceof HTMLElement) {
-    event.stopPropagation();
-    const parts = parseKey(choiceSkip.getAttribute("data-choice-skip"), 2);
-    if (!parts) return;
-    skipChoiceFix(parts[0], parts[1]);
     return;
   }
 

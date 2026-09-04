@@ -35,7 +35,7 @@ https://raw.githubusercontent.com/butsena/text-autofix-spelling/main/spell-white
 При старте плагин подтягивает все четыре файла с GitHub.  
 Большой словарь **не хранится в бандле плагина** — только remote. Без сети орфография отключается.
 
-Конфиг URL: `src/config/spell-dictionary-remote-url.ts`
+Конфиг URL: `src/config/lexicon-remote-config.ts` (`LEXICON_REMOTE.spellDictionary` / `spellSupplement` / `spellWhitelist`)
 
 ## Подготовка файлов для публикации (разработчики)
 

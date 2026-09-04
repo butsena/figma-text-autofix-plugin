@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { resolveLexiconMessage } from "./lexicon-messages";
-import { parseSheetReplacementRows } from "./replacement-rows";
+import { parseReplacementRows } from "./replacement-rows";
 
 const csvPath = join(dirname(fileURLToPath(import.meta.url)), "../../data/text-replacements.csv");
 
@@ -34,7 +34,7 @@ describe("resolveLexiconMessage", () => {
 describe("bundled lexicon CSV", () => {
   it("все строки попадают в известные группы", () => {
     const raw = readFileSync(csvPath, "utf8");
-    const rows = parseSheetReplacementRows(raw);
+    const rows = parseReplacementRows(raw);
     const unique = new Set(rows.map((r) => r.message));
     expect(rows.length).toBeGreaterThan(0);
     expect(unique.size).toBe(11);

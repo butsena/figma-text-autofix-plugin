@@ -2,20 +2,13 @@ import type { AutofixRule } from "../../core/autofix-engine";
 import { APPLY_POLICY_CHOICE } from "../../core/apply-policy";
 import { rule, rules } from "../../core/rule-def";
 import { CYRILLIC_LETTERS, escapeRegex } from "../regex";
-import type { AmbiguousFormChoice } from "./ambiguous-form-choices-parse";
+import type { AmbiguousFormChoice } from "../../lexicon/ambiguous-form-choices-parse";
 import {
   getAmbiguousFormChoice,
   getAmbiguousFormChoices,
 } from "../../lexicon/ambiguous-form-choices-store";
 
 export type { AmbiguousFormChoice };
-
-export { getAmbiguousFormChoice };
-
-export function isChoiceRuleWithoutSkip(ruleId: string): boolean {
-  const choice = getAmbiguousFormChoice(ruleId);
-  return choice != null && choice.allowSkip === false;
-}
 
 function wordCaseVariants(word: string): string[] {
   const lower = word.toLowerCase();

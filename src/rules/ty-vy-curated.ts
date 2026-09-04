@@ -1,5 +1,5 @@
 import { parseCsvRows } from "../lexicon/csv";
-import type { SheetReplacementRow } from "../lexicon/replacement-rows";
+import type { ReplacementRow } from "../lexicon/replacement-rows";
 import { MSG_RED_POLICY_TY_VY_VERB } from "./rule-messages";
 
 function splitVariantList(cell: string): string[] {
@@ -10,9 +10,9 @@ function splitVariantList(cell: string): string[] {
 }
 
 /** Строки `ty-vy-curated.txt`: исходная_форма,верная_форма (или "a, b",цель). */
-export function parseTyVyCuratedRows(raw: string): SheetReplacementRow[] {
+export function parseTyVyCuratedRows(raw: string): ReplacementRow[] {
   const rows = parseCsvRows(raw);
-  const out: SheetReplacementRow[] = [];
+  const out: ReplacementRow[] = [];
 
   for (const row of rows) {
     if (row.length < 2) continue;

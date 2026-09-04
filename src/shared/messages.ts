@@ -15,6 +15,7 @@ export type RuleInfo = {
   category: string;
   message: string;
   hint?: string;
+  hintHtml?: string;
   choiceOptions?: string[];
   priority: number;
   applyPolicy: ApplyPolicy;

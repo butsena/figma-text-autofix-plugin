@@ -49,4 +49,4 @@ npm run build
 2. Скопировать `data/boundary-exceptions.txt` из плагина в корень как `boundary-exceptions.txt`
 3. Короткий README: что это за список и как добавлять строки
 
-Конфиг URL: `src/config/boundary-exceptions-remote-url.ts`
+Конфиг URL: `src/config/lexicon-remote-config.ts` (`LEXICON_REMOTE.boundaryExceptions`)
