@@ -6,7 +6,7 @@
 
 | Как называется | Ссылка | Файл | Зачем |
 |---|---|---|---|
-| **Словарь замен** | https://github.com/butsena/text-autofix-replacements | `text-replacements.csv` | «приобрести → купить» и другие замены |
+| **Словарь замен** | https://github.com/butsena/text-autofix-replacements | `text-replacements.csv` | Курируемые правила (`spell` / `join` / `lemma` / …), напр. «приобрести → купить» |
 | **Когда не нужна точка** | https://github.com/butsena/text-autofix-no-period | `boundary-exceptions.txt` | Фразы, где не ставить точку между словами |
 | **Формы сложных слов** | https://github.com/butsena/text-autofix-word-forms | `ambiguous-form-choices.txt` | Выбор: ищите/ищете, все/всё |
 | **Орфография** | https://github.com/butsena/text-autofix-spelling | `ru_RU.aff`, `ru_RU.dic`, `spell-supplement.txt`, `spell-whitelist.txt` | Проверка опечаток + доп. слова + исключения. Большой словарь **только с GitHub**, не в бандле плагина |

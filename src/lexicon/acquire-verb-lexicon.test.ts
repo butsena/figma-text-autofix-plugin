@@ -9,14 +9,18 @@ const csvPath = join(dirname(fileURLToPath(import.meta.url)), "../../data/text-r
 
 function acquireRules() {
   const raw = readFileSync(csvPath, "utf8");
-  const rows = parseReplacementRows(raw).filter((row) =>
-    row.variants.some((v) => /приобр/i.test(v)),
+  const rows = parseReplacementRows(raw).filter(
+    (row) => row.kind === "lemma" && row.replace === "купить",
   );
   return rowsToAutofixRules(rows, "acquire-test");
 }
 
 describe("приобрести → купить (лексикон)", () => {
   const rules = acquireRules();
+
+  it("собирается в одно правило на лемму", () => {
+    expect(rules).toHaveLength(1);
+  });
 
   it("покрывает все основные грамматические формы", () => {
     const pairs: Array<[string, string]> = [
@@ -46,9 +50,5 @@ describe("приобрести → купить (лексикон)", () => {
     for (const [input, expected] of pairs) {
       expect(applyAllRules(input, rules), input).toBe(expected);
     }
-  });
-
-  it("содержит 84 правила для семейства «приобрести»", () => {
-    expect(rules).toHaveLength(84);
   });
 });

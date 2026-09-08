@@ -9,14 +9,18 @@ const csvPath = join(dirname(fileURLToPath(import.meta.url)), "../../data/text-r
 
 function downPaymentRules() {
   const raw = readFileSync(csvPath, "utf8");
-  const rows = parseReplacementRows(raw).filter((row) =>
-    row.variants.some((v) => /первоначальн/i.test(v) && /взнос/i.test(v)),
+  const rows = parseReplacementRows(raw).filter(
+    (row) => row.kind === "phrase" && /взнос/i.test(row.replace),
   );
   return rowsToAutofixRules(rows, "down-payment-test");
 }
 
 describe("первоначальный взнос → первый взнос (лексикон)", () => {
   const rules = downPaymentRules();
+
+  it("собирается в одно правило на фразу", () => {
+    expect(rules).toHaveLength(1);
+  });
 
   it("покрывает единственное и множественное число", () => {
     const pairs: Array<[string, string]> = [
@@ -31,14 +35,11 @@ describe("первоначальный взнос → первый взнос (�
       ["к первоначальным взносам", "к первым взносам"],
       ["первоначальными взносами", "первыми взносами"],
       ["в первоначальных взносах", "в первых взносах"],
+      ["Первоначальный взнос", "Первый взнос"],
     ];
 
     for (const [input, expected] of pairs) {
       expect(applyAllRules(input, rules), input).toBe(expected);
     }
-  });
-
-  it("содержит 20 правил для семейства «первоначальный взнос»", () => {
-    expect(rules).toHaveLength(20);
   });
 });
