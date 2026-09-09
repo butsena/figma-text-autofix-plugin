@@ -40,4 +40,22 @@ describe("affixStemPattern + affixReplacement", () => {
     expect(m).not.toBeNull();
     expect(repl(m![0], m![1], m![2], m![3])).toBe(`${m![1]}Кешбэка`);
   });
+
+  it("join-основа с ASCII-дефисом ловит типографские дефисы и NBSP", () => {
+    const stems = ["он-лайн", "он лайн"];
+    const pattern = affixStemPattern(stems)!;
+    const repl = affixReplacement("онлайн", stems);
+    for (const dash of ["-", "\u2010", "\u2011", "\u2013", "\u2014"]) {
+      pattern.lastIndex = 0;
+      const text = `он${dash}лайн`;
+      const m = pattern.exec(text);
+      expect(m, text).not.toBeNull();
+      expect(repl(m![0], m![1], m![2], m![3])).toBe(`${m![1]}онлайн`);
+    }
+    pattern.lastIndex = 0;
+    const nbsp = `он\u00A0лайн`;
+    const m = pattern.exec(nbsp);
+    expect(m).not.toBeNull();
+    expect(repl(m![0], m![1], m![2], m![3])).toBe(`${m![1]}онлайн`);
+  });
 });

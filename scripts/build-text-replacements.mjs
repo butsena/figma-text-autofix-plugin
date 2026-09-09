@@ -75,7 +75,7 @@ function main() {
   const iForms = header.findIndex((h) => ["формы", "forms"].includes(h.trim().toLowerCase()));
 
   if (iKind < 0 || iFind < 0 || iRep < 0) {
-    console.error("Ожидается новый формат: тип,найти,заменить[,формы]");
+    console.error("Ожидается формат: тип,исходные варианты,верный текст[,формы] (алиасы: найти/заменить)");
     process.exit(1);
   }
 

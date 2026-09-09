@@ -1,6 +1,12 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { applyAllRules } from "../test/helpers";
+import { headerColIndex, parseCsvRows } from "./csv";
 import { parseFormsCell, parseReplacementRows, rowsToAutofixRules } from "./replacement-rows";
+
+const bundledCsvPath = join(dirname(fileURLToPath(import.meta.url)), "../../data/text-replacements.csv");
 
 describe("parseFormsCell", () => {
   it("парсит пары с альтернативами", () => {
@@ -39,6 +45,33 @@ lemma,приобрести,купить,приобрела=купила,`;
     const csv = `variants,replace,enabled
 baz,qux,no`;
     expect(parseReplacementRows(csv)).toHaveLength(0);
+  });
+
+  it("bundled CSV использует имена колонок, которые знает старый плагин", () => {
+    const header = parseCsvRows(readFileSync(bundledCsvPath, "utf8"))[0];
+    const iVar = headerColIndex(header, ["исходные варианты", "variants", "find", "from"]);
+    const iRep = headerColIndex(header, ["верный текст", "replacement", "replace", "to"]);
+    expect(iVar).toBeGreaterThanOrEqual(0);
+    expect(iRep).toBeGreaterThanOrEqual(0);
+    expect(iVar).not.toBe(headerColIndex(header, ["тип", "kind", "type"]));
+
+    const rows = parseCsvRows(readFileSync(bundledCsvPath, "utf8"));
+    const variants = rows
+      .slice(1)
+      .flatMap((row) => row[iVar].split(",").map((s) => s.trim()))
+      .filter(Boolean);
+    expect(variants).toContain("он-лайн");
+    expect(rows.slice(1).map((row) => row[iRep].trim())).toContain("онлайн");
+  });
+
+  it("парсит заголовки «исходные варианты»/«верный текст» вместе с типом", () => {
+    const csv = `тип,исходные варианты,верный текст,формы
+join,"он-лайн, он лайн",онлайн,`;
+    const rows = parseReplacementRows(csv);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].kind).toBe("join");
+    expect(rows[0].variants).toEqual(["он-лайн", "он лайн"]);
+    expect(rows[0].replace).toBe("онлайн");
   });
 });
 
