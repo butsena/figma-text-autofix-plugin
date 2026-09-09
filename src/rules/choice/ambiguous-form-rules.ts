@@ -1,6 +1,7 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { APPLY_POLICY_CHOICE } from "../../core/apply-policy";
 import { rule, rules } from "../../core/rule-def";
+import { foldYoToYe } from "../../shared/case";
 import { CYRILLIC_LETTERS, escapeRegex } from "../regex";
 import type { AmbiguousFormChoice } from "../../lexicon/ambiguous-form-choices-parse";
 import {
@@ -17,8 +18,17 @@ function wordCaseVariants(word: string): string[] {
   return [...new Set([lower, title, upper])];
 }
 
+/** Варианты кнопок плюс е-написание слов с ё («ждёте» → ещё «ждете»). */
 function choiceAlternation(options: string[]): string {
-  return options.flatMap(wordCaseVariants).map(escapeRegex).join("|");
+  const variants = new Set<string>();
+  for (const option of options) {
+    for (const word of wordCaseVariants(option)) {
+      variants.add(word);
+      const ye = foldYoToYe(word);
+      if (ye !== word) variants.add(ye);
+    }
+  }
+  return [...variants].map(escapeRegex).join("|");
 }
 
 export function buildAmbiguousFormChoiceRules(

@@ -4,7 +4,7 @@ import {
   formatChoiceHintHtml,
   formatFixCategoryLabel,
 } from "./ui-helpers";
-import { choiceSelectionKey, state } from "./ui-state";
+import { selectedChoiceOptionIndex } from "./choice-selection";
 import type { TextFixDto } from "../shared/messages";
 
 export function renderFixRow(
@@ -62,8 +62,7 @@ export function renderChoiceFixRow(fix: TextFixDto, cardIdx: number, fixIdx: num
   const options = fix.rule?.choiceOptions ?? [];
   const current = fix.before;
   const hintHtml = formatChoiceHintHtml(ruleId, fix.rule?.hint, fix.rule?.hintHtml);
-  const selectionKey = choiceSelectionKey(cardIdx, fixIdx);
-  const selectedIdx = state.choiceSelection[selectionKey];
+  const selectedIdx = selectedChoiceOptionIndex(cardIdx, fixIdx, current, options);
   const optionsHtml = options
     .map((option, optionIdx) => {
       const cls =

@@ -9,3 +9,8 @@ export function capitalizeLike(source: string, target: string): string {
   }
   return target;
 }
+
+/** Заменить «ё/Ё» на «е/Е», не трогая остальные буквы. */
+export function foldYoToYe(word: string): string {
+  return word.replace(/ё/g, "е").replace(/Ё/g, "Е");
+}
