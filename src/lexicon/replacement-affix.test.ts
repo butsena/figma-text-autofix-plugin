@@ -58,4 +58,18 @@ describe("affixStemPattern + affixReplacement", () => {
     expect(m).not.toBeNull();
     expect(repl(m![0], m![1], m![2], m![3])).toBe(`${m![1]}онлайн`);
   });
+
+  it("латинское online — целое слово, не подстрока", () => {
+    const stems = ["он-лайн", "он лайн", "online"];
+    const pattern = affixStemPattern(stems)!;
+    const repl = affixReplacement("онлайн", stems);
+
+    pattern.lastIndex = 0;
+    const hit = pattern.exec("смотрите online квартиру");
+    expect(hit).not.toBeNull();
+    expect(repl(hit![0], hit![1], hit![2], hit![3])).toBe(`${hit![1]}онлайн`);
+
+    pattern.lastIndex = 0;
+    expect(pattern.exec("onlinebooking")).toBeNull();
+  });
 });

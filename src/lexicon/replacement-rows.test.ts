@@ -61,6 +61,7 @@ baz,qux,no`;
       .flatMap((row) => row[iVar].split(",").map((s) => s.trim()))
       .filter(Boolean);
     expect(variants).toContain("он-лайн");
+    expect(variants).toContain("online");
     expect(rows.slice(1).map((row) => row[iRep].trim())).toContain("онлайн");
   });
 

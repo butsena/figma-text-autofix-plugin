@@ -69,4 +69,37 @@ describe("buildAmbiguousFormChoiceRules", () => {
     const [fix] = fixesFor("Все варианты", rules);
     expect(fix?.before).toBe("Все");
   });
+
+  it("предлагает выбор для ждёте и е-написания ждете", () => {
+    const yo = fixesFor("вы ждёте ключи", rules);
+    expect(yo).toMatchObject([
+      {
+        applyPolicy: "choice",
+        before: "ждёте",
+        choiceOptions: ["ждите", "ждёте"],
+        ruleId: "cian-choice-zhdite-zhdyote",
+      },
+    ]);
+
+    const ye = fixesFor("вы ждете ключи", rules);
+    expect(ye).toMatchObject([
+      {
+        applyPolicy: "choice",
+        before: "ждете",
+        choiceOptions: ["ждите", "ждёте"],
+        ruleId: "cian-choice-zhdite-zhdyote",
+      },
+    ]);
+  });
+
+  it("находит все choice-формы в смешанной фразе, включая е вместо ё", () => {
+    const text =
+      "Привяжите номер телефона, онлайн не всё потерять доступ пишете квартиру ждете online ₽ Риэлтору";
+    const choiceFixes = fixesFor(text, allRules).filter((fix) => fix.applyPolicy === "choice");
+    expect(choiceFixes.map((fix) => [fix.ruleId, fix.before])).toEqual([
+      ["cian-choice-vse-vsyo", "всё"],
+      ["cian-choice-pishite-pishete", "пишете"],
+      ["cian-choice-zhdite-zhdyote", "ждете"],
+    ]);
+  });
 });

@@ -3,6 +3,7 @@ import { capitalizeLike, countConfirmFixes } from "./ui-helpers";
 import { sendToPlugin } from "./ui-plugin-bridge";
 import { render } from "./ui-render";
 import { schedulePluginResize } from "./ui-resize";
+import { selectedChoiceOptionIndex } from "./choice-selection";
 import {
   choiceSelectionKey,
   state,
@@ -44,8 +45,9 @@ function confirmChoiceSelection(cardIdx: number, fixIdx: number): void {
   if (!fix) return;
 
   const selectionKey = choiceSelectionKey(cardIdx, fixIdx);
-  const optionIdx = state.choiceSelection[selectionKey];
-  const option = optionIdx != null ? fix.rule?.choiceOptions?.[optionIdx] : undefined;
+  const options = fix.rule?.choiceOptions ?? [];
+  const optionIdx = selectedChoiceOptionIndex(cardIdx, fixIdx, fix.before, options);
+  const option = optionIdx != null ? options[optionIdx] : undefined;
   if (!option) return;
 
   delete state.choiceSelection[selectionKey];

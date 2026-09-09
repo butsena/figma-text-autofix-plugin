@@ -1,5 +1,12 @@
 import { capitalizeLike } from "../shared/case";
-import { CYRILLIC_LETTERS, CYRILLIC_WORD_EDGE, CYRILLIC_WORD_EDGE_END, escapeRegex } from "../rules/regex";
+import {
+  CYRILLIC_LETTERS,
+  CYRILLIC_WORD_EDGE,
+  CYRILLIC_WORD_EDGE_END,
+  LATIN_CYRILLIC_WORD_EDGE,
+  LATIN_CYRILLIC_WORD_EDGE_END,
+  escapeRegex,
+} from "../rules/regex";
 
 /** В макетах вместо ASCII '-' часто стоят типографские дефисы/тире. */
 const JOIN_DASH_CLASS = String.raw`[\-\u00AD\u2010\u2011\u2012\u2013\u2014\u2212\uFE63\uFF0D]`;
@@ -49,14 +56,23 @@ export function longestStemMatch(word: string, stems: string[]): string | null {
   return best;
 }
 
+function wordEdgesForStems(stems: string[]): { edge: string; edgeEnd: string } {
+  const hasLatin = stems.some((stem) => /[A-Za-z]/.test(stem));
+  if (hasLatin) {
+    return { edge: LATIN_CYRILLIC_WORD_EDGE, edgeEnd: LATIN_CYRILLIC_WORD_EDGE_END };
+  }
+  return { edge: CYRILLIC_WORD_EDGE, edgeEnd: CYRILLIC_WORD_EDGE_END };
+}
+
 /** Паттерн: граница + (основа1|основа2)(окончание*) — без учёта регистра. */
 export function affixStemPattern(stems: string[]): RegExp | null {
   const uniq = [...new Set(stems.map((s) => s.trim()).filter(Boolean))];
   if (uniq.length === 0) return null;
   const sorted = [...uniq].sort((a, b) => b.length - a.length);
   const alt = sorted.map(stemToRegex).join("|");
+  const { edge, edgeEnd } = wordEdgesForStems(sorted);
   return new RegExp(
-    `${CYRILLIC_WORD_EDGE}((?:${alt})([${CYRILLIC_LETTERS}]*))${CYRILLIC_WORD_EDGE_END}`,
+    `${edge}((?:${alt})([${CYRILLIC_LETTERS}]*))${edgeEnd}`,
     "giu",
   );
 }

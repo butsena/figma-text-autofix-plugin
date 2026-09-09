@@ -159,12 +159,13 @@ describe("покрытие старого словаря замен", () => {
     }
   });
 
-  it("полный набор правил плагина тоже правит он-лайн / промо-код / далее", () => {
+  it("полный набор правил плагина тоже правит он-лайн / online / промо-код / далее", () => {
     invalidateAutofixRulesCache();
     const all = getAutofixRules();
-    const out = applyAllRules("Смотрите он-лайн и промо-кодов. Далее", all);
+    const out = applyAllRules("Смотрите он-лайн и online и промо-кодов. Далее", all);
     expect(out).toContain("онлайн");
     expect(out).not.toMatch(/он[\s\u00A0\u2010-\u2014-]+лайн/i);
+    expect(out).not.toMatch(/\bonline\b/i);
     expect(out).toContain("промокодов");
     expect(out).toContain("Дальше");
   });
