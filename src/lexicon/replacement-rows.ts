@@ -177,8 +177,11 @@ export function parseReplacementRows(raw: string): ReplacementRow[] {
 
   const header = rows[0].map((c) => c.trim());
   const iKind = headerColIndex(header, ["тип", "kind", "type"]);
-  let iVar = headerColIndex(header, ["найти", "исходные варианты", "variants", "find", "from"]);
-  let iRep = headerColIndex(header, ["заменить", "верный текст", "replacement", "replace", "to"]);
+  // «исходные варианты» / «верный текст» — имена старого двуколоночного CSV.
+  // Их нельзя убирать: опубликованный плагин до typed-словаря не знает «найти»/«заменить»
+  // и иначе читает col0=тип, col1=найти (тогда «он-лайн» не находится).
+  let iVar = headerColIndex(header, ["исходные варианты", "найти", "variants", "find", "from"]);
+  let iRep = headerColIndex(header, ["верный текст", "заменить", "replacement", "replace", "to"]);
 
   if (iVar < 0 && iRep < 0 && header.length >= 2) {
     // Старый формат без заголовков-алиасов: col0/col1, либо заголовок «исходные варианты,верный текст»

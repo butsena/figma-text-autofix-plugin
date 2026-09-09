@@ -24,6 +24,8 @@ describe("курируемый словарь замен", () => {
     expect(applyAllRules("промо-кодов много", rules)).toBe("промокодов много");
     expect(applyAllRules("Кешбека нет", rules)).toBe("Кешбэка нет");
     expect(applyAllRules("он-лайн показ", rules)).toBe("онлайн показ");
+    expect(applyAllRules("он-лайн", rules)).toBe("онлайн");
+    expect(applyAllRules("Он-лайн", rules)).toBe("Онлайн");
   });
 
   it("exact и special учитывают регистр", () => {
