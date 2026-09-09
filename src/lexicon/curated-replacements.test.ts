@@ -26,6 +26,10 @@ describe("курируемый словарь замен", () => {
     expect(applyAllRules("он-лайн показ", rules)).toBe("онлайн показ");
     expect(applyAllRules("он-лайн", rules)).toBe("онлайн");
     expect(applyAllRules("Он-лайн", rules)).toBe("Онлайн");
+    expect(applyAllRules("смотрите online квартиру", rules)).toBe("смотрите онлайн квартиру");
+    expect(applyAllRules("Online показ", rules)).toBe("Онлайн показ");
+    expect(applyAllRules("ONLINE", rules)).toBe("ОНЛАЙН");
+    expect(applyAllRules("onlinebooking", rules)).toBe("onlinebooking");
   });
 
   it("exact и special учитывают регистр", () => {
