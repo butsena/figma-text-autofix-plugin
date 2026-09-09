@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "npm run build:yo-curated && node scripts/build-ui-html.mjs && vite build --watch",
     "build:yo-curated": "node scripts/build-yo-curated.mjs",
+    "build:replacements": "node scripts/build-text-replacements.mjs",
     "sync:spell-dictionary": "node scripts/sync-spell-dictionary-bundled.mjs",
     "build": "npm run build:yo-curated && node scripts/build-ui-html.mjs && vite build",
     "test": "npm run build:yo-curated && vitest run",

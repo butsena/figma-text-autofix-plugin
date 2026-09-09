@@ -1,6 +1,6 @@
-import { parseCsvRows } from "../lexicon/csv";
 import type { ReplacementRow } from "../lexicon/replacement-rows";
 import { MSG_RED_POLICY_TY_VY_VERB } from "./rule-messages";
+import { parseCsvRows } from "../lexicon/csv";
 
 function splitVariantList(cell: string): string[] {
   return cell
@@ -22,8 +22,10 @@ export function parseTyVyCuratedRows(raw: string): ReplacementRow[] {
     if (variants.length === 0 || !replace) continue;
 
     out.push({
+      kind: "exact",
       variants,
       replace,
+      forms: [],
       message: MSG_RED_POLICY_TY_VY_VERB,
       category: "cian_editorial",
       priority: 59,

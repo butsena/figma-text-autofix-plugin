@@ -37,7 +37,7 @@ Raw URL для плагина:
 
 ## Статус
 
-- [x] Шаг 1 — sync + bundled CSV (181 строк)
+- [x] Шаг 1 — sync + bundled CSV (курируемый формат с типами правил)
 - [x] Шаг 2 — fetch GitHub, fallback bundled
 - [x] Шаг 3 — public `text-autofix-replacements`
 - [x] Шаг 4 — Google-код удалён
