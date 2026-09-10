@@ -2,15 +2,7 @@ import {
   MSG_CHOICE_ISHCHITE_ISHCHETE,
   MSG_CHOICE_VSE_VSYO,
 } from "../rules/rule-messages";
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+import { escapeHtml } from "../shared/escape-html";
 
 export type AmbiguousFormChoice = {
   id: string;

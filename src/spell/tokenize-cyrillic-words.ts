@@ -1,5 +1,7 @@
 import { CYRILLIC_LETTERS } from "../rules/regex";
 
+export { rangesOverlap } from "../shared/ranges-overlap";
+
 export type CyrillicWordToken = {
   word: string;
   from: number;
@@ -31,8 +33,4 @@ export function shouldSkipSpellToken(word: string): boolean {
     return true;
   }
   return false;
-}
-
-export function rangesOverlap(from: number, to: number, otherFrom: number, otherTo: number): boolean {
-  return from < otherTo && to > otherFrom;
 }

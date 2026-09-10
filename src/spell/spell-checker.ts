@@ -14,6 +14,7 @@ export { HUNSPELL_SOURCE };
 let checker: SpellChecker | null = null;
 let initPromise: Promise<SpellChecker | null> | null = null;
 let signature = "";
+let buildingSignature = "";
 
 function buildChecker(): SpellChecker | null {
   const dict = getHunspellDictionary();
@@ -41,6 +42,7 @@ export async function ensureSpellCheckerReady(): Promise<SpellChecker | null> {
     checker = null;
     initPromise = null;
     signature = "";
+    buildingSignature = "";
     return null;
   }
 
@@ -50,6 +52,7 @@ export async function ensureSpellCheckerReady(): Promise<SpellChecker | null> {
     checker = null;
     initPromise = null;
     signature = nextSignature;
+    buildingSignature = "";
     return null;
   }
 
@@ -57,14 +60,16 @@ export async function ensureSpellCheckerReady(): Promise<SpellChecker | null> {
     return checker;
   }
 
-  if (initPromise && signature === nextSignature) {
+  if (initPromise && buildingSignature === nextSignature) {
     return initPromise;
   }
 
+  buildingSignature = nextSignature;
   initPromise = Promise.resolve().then(() => {
     const started = Date.now();
     checker = buildChecker();
     signature = nextSignature;
+    buildingSignature = "";
     const stats = getHunspellDictionaryLoadStats();
     if (checker) {
       console.log(
@@ -85,6 +90,7 @@ export function resetSpellCheckerCache(): void {
   checker = null;
   initPromise = null;
   signature = "";
+  buildingSignature = "";
 }
 
 export function isKnownWord(spell: SpellChecker, word: string): boolean {

@@ -1,14 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
+  applySkipToResolutions,
+  beginPluginRun,
   createChoiceResolution,
   findResolutionPositions,
+  MAX_SPELL_SKIP_COUNT,
   pruneStaleResolutions,
+  readChoiceResolutionsFromPluginData,
   shouldSuppressChoiceFix,
   stripInvalidatedResolutionsForFixes,
   upsertChoiceResolution,
 } from "./choice-resolution";
 
 const RULE_ID = "cian-choice-ishchite-ishchete";
+const SPELL_RULE_ID = "orthography-spellcheck";
 
 describe("choice-resolution", () => {
   const text = "скорее ищите квартиру";
@@ -172,5 +177,91 @@ describe("choice-resolution", () => {
     const merged = upsertChoiceResolution([first], second);
     expect(merged).toHaveLength(1);
     expect(merged[0]?.chosen).toBe("ищете");
+  });
+
+  it("readChoiceResolutionsFromPluginData фильтрует битый JSON", () => {
+    expect(readChoiceResolutionsFromPluginData("")).toEqual([]);
+    expect(readChoiceResolutionsFromPluginData("{")).toEqual([]);
+    expect(readChoiceResolutionsFromPluginData("[]")).toEqual([]);
+    const valid = createChoiceResolution(text, RULE_ID, from, to, "ищите", "ищите");
+    expect(readChoiceResolutionsFromPluginData(JSON.stringify([valid, { ruleId: 1 }])))
+      .toHaveLength(1);
+  });
+});
+
+describe("spell skip resolution", () => {
+  const text = "Кватира в центре";
+  const from = text.indexOf("Кватира");
+  const to = from + "Кватира".length;
+  const fix = {
+    ruleId: SPELL_RULE_ID,
+    from,
+    to,
+    before: "Кватира",
+  };
+
+  beforeEach(() => {
+    beginPluginRun(); // новая «сессия» плагина
+  });
+
+  it("после skip в том же запуске скрывает, повторный клик не плюсует", () => {
+    let resolutions = applySkipToResolutions(text, fix, []);
+    expect(resolutions[0]?.skipCount).toBe(1);
+    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(true);
+
+    const same = applySkipToResolutions(text, fix, resolutions);
+    expect(same[0]?.skipCount).toBe(1);
+    expect(shouldSuppressChoiceFix(text, fix, same)).toBe(true);
+  });
+
+  it("в следующем запуске снова показывает при skipCount < MAX", () => {
+    let resolutions = applySkipToResolutions(text, fix, []);
+    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(true);
+
+    beginPluginRun(); // закрыли и открыли плагин заново
+    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(false);
+
+    resolutions = applySkipToResolutions(text, fix, resolutions);
+    expect(resolutions[0]?.skipCount).toBe(2);
+    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(true);
+  });
+
+  it(`после ${MAX_SPELL_SKIP_COUNT} запусков с skip больше не показывает`, () => {
+    let resolutions: ReturnType<typeof applySkipToResolutions> = [];
+    for (let i = 0; i < MAX_SPELL_SKIP_COUNT; i++) {
+      if (i > 0) beginPluginRun();
+      resolutions = applySkipToResolutions(text, fix, resolutions);
+    }
+    expect(resolutions[0]?.skipCount).toBe(MAX_SPELL_SKIP_COUNT);
+    expect(resolutions[0]?.chosen).toBe("Кватира");
+    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(true);
+
+    beginPluginRun();
+    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(true);
+  });
+
+  it("после исправления не показывает повторно", () => {
+    const fixed = "Квартира в центре";
+    const fixedFrom = fixed.indexOf("Квартира");
+    const resolution = createChoiceResolution(
+      fixed,
+      SPELL_RULE_ID,
+      fixedFrom,
+      fixedFrom + "Квартира".length,
+      "Кватира",
+      "Квартира",
+    );
+    expect(
+      shouldSuppressChoiceFix(
+        fixed,
+        {
+          ruleId: SPELL_RULE_ID,
+          from: fixedFrom,
+          to: fixedFrom + "Квартира".length,
+          before: "Квартира",
+        },
+        [resolution],
+      ),
+    ).toBe(true);
   });
 });

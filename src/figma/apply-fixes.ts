@@ -1,7 +1,9 @@
 import type { TextFix } from "../core/autofix-engine";
 import { isManualPolicy } from "../core/apply-policy";
 import type { CheckResultDto } from "../shared/messages";
+import { orderFixesForApply } from "../shared/fix-sort";
 import { textFixDtoToEngineFix } from "../shared/text-fix-mapping";
+import { isCaseOnlyChange } from "./apply-fixes-helpers";
 import { applyCharStyleAt, captureRangeStyles, restoreRangeStyles } from "./text-style-snapshot";
 
 async function loadFontName(font: FontName): Promise<void> {
@@ -47,24 +49,6 @@ async function loadFontsForRange(textNode: TextNode, from: number, to: number): 
     seen.add(key);
     await figma.loadFontAsync(fontName);
   }
-}
-
-function orderFixesForApply(fixes: TextFix[]): TextFix[] {
-  return [...fixes].sort((a, b) => {
-    if (a.from !== b.from) return b.from - a.from;
-    if (a.to !== b.to) return b.to - a.to;
-    return b.priority - a.priority;
-  });
-}
-
-/** Меняется только регистр (с → С, Вас → вас). */
-function isCaseOnlyChange(before: string, after: string): boolean {
-  return (
-    before.length > 0 &&
-    before.length === after.length &&
-    before !== after &&
-    before.toLowerCase() === after.toLowerCase()
-  );
 }
 
 export type ApplyFixesBatchResult = {

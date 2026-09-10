@@ -1,5 +1,8 @@
 import { getAutofixRules } from "../rules/autofix-rules";
+import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
 import type { CheckResultDto, TextNodeCardDto } from "../shared/messages";
+import { compareFixesByPosition } from "../shared/fix-sort";
+import type { TextFix } from "../core/autofix-engine";
 import { collectTextNodesFromSelection } from "./collect-text-nodes";
 import {
   buildCardForNode,
@@ -9,6 +12,7 @@ import {
   partitionFixesByPolicy,
 } from "./scan-fix-dto";
 import {
+  checkTextForAutofixesOnly,
   checkTextWithSpelling,
   filterRulesByPolicy,
   type ScanPolicyFilter,
@@ -18,20 +22,49 @@ export type { ScanPolicyFilter } from "./scan-text-check";
 
 export type ScanSelectionOptions = {
   policy?: ScanPolicyFilter;
+  /**
+   * Орфопроверка Hunspell. Для цикла auto-apply — false (сильно ускоряет).
+   * Для финального UI — true (по умолчанию).
+   */
+  includeSpelling?: boolean;
 };
+
+function isOrthographySpellFix(ruleId: string): boolean {
+  return ruleId === ORTHOGRAPHY_SPELL_RULE_ID;
+}
+
+function resolveConfirmFixes(node: TextNode, confirm: TextFix[]) {
+  const spellConfirm = confirm.filter((f) => isOrthographySpellFix(f.ruleId));
+  const otherConfirm = confirm.filter((f) => !isOrthographySpellFix(f.ruleId));
+  return [
+    ...filterUnresolvedChoiceFixes(node, spellConfirm),
+    ...otherConfirm,
+  ].sort(compareFixesByPosition);
+}
+
+function gatherFixes(
+  text: string,
+  rules: ReturnType<typeof filterRulesByPolicy>,
+  includeSpelling: boolean,
+): TextFix[] {
+  return includeSpelling ? checkTextWithSpelling(text, rules) : checkTextForAutofixesOnly(text, rules);
+}
 
 function buildCards(
   textNodes: TextNode[],
   policy: ScanPolicyFilter,
+  includeSpelling: boolean,
 ): { cards: TextNodeCardDto[]; foundFixes: number } {
   const rules = filterRulesByPolicy(policy);
   const cards: TextNodeCardDto[] = [];
   let foundFixes = 0;
 
   for (const node of textNodes) {
-    let fixes = checkTextWithSpelling(node.characters, rules);
+    let fixes = gatherFixes(node.characters, rules, includeSpelling);
     if (policy === "choice") {
       fixes = filterUnresolvedChoiceFixes(node, fixes);
+    } else if (policy === "confirm") {
+      fixes = resolveConfirmFixes(node, fixes);
     }
     const card = buildCardForNode(node, fixes, policy === "auto" ? "auto" : "manual");
     if (!card) continue;
@@ -43,7 +76,10 @@ function buildCards(
   return { cards, foundFixes };
 }
 
-function scanAllPolicies(textNodes: TextNode[]): {
+function scanAllPolicies(
+  textNodes: TextNode[],
+  includeSpelling: boolean,
+): {
   cards: TextNodeCardDto[];
   confirmCards: TextNodeCardDto[];
   choiceCards: TextNodeCardDto[];
@@ -60,9 +96,10 @@ function scanAllPolicies(textNodes: TextNode[]): {
   let choiceFixes = 0;
 
   for (const node of textNodes) {
-    const fixes = checkTextWithSpelling(node.characters, rules);
+    const fixes = gatherFixes(node.characters, rules, includeSpelling);
     const { auto, confirm, choice } = partitionFixesByPolicy(fixes);
     const resolvedChoice = filterUnresolvedChoiceFixes(node, choice);
+    const resolvedConfirm = resolveConfirmFixes(node, confirm);
 
     const autoCard = buildCardForNode(node, auto, "auto");
     if (autoCard) {
@@ -70,9 +107,9 @@ function scanAllPolicies(textNodes: TextNode[]): {
       cards.push(autoCard);
     }
 
-    const confirmCard = buildCardForNode(node, confirm, "manual");
+    const confirmCard = buildCardForNode(node, resolvedConfirm, "manual");
     if (confirmCard) {
-      confirmFixes += confirm.length;
+      confirmFixes += resolvedConfirm.length;
       confirmCards.push(confirmCard);
     }
 
@@ -94,6 +131,7 @@ export function scanSelectedTextNodes(
   nodeById: Map<string, TextNode>;
 } {
   const policy = options?.policy ?? "auto";
+  const includeSpelling = options?.includeSpelling ?? true;
   const textNodes = [...collectTextNodesFromSelection(selection)];
   const nodeById = new Map<string, TextNode>();
   for (const node of textNodes) nodeById.set(node.id, node);
@@ -101,7 +139,7 @@ export function scanSelectedTextNodes(
   const checkedTextLayers = buildCheckedTextLayers(textNodes);
 
   if (policy === "auto") {
-    const scan = scanAllPolicies(textNodes);
+    const scan = scanAllPolicies(textNodes, includeSpelling);
     return {
       result: {
         summary: buildCheckSummary(textNodes, {
@@ -118,7 +156,7 @@ export function scanSelectedTextNodes(
     };
   }
 
-  const { cards, foundFixes } = buildCards(textNodes, policy);
+  const { cards, foundFixes } = buildCards(textNodes, policy, includeSpelling);
 
   if (policy === "confirm") {
     return {

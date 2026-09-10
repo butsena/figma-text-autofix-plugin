@@ -4,10 +4,7 @@ import {
 } from "./build-auto-apply-report";
 import { runAutofixAutoPasses } from "./autofix-pipeline";
 import { applyTextFixesToTextNode } from "./apply-fixes";
-import {
-  findChosenWordNear,
-  recordChoiceResolutionOnNode,
-} from "./choice-resolution";
+import { recordChoiceResolutionOnNode, recordSpellSkipOnNode } from "./choice-resolution";
 import {
   getLastAutoApplyReport,
   postCheckResultToUi,
@@ -15,29 +12,22 @@ import {
 } from "./check-result-session";
 import type { TextFixDto } from "../shared/messages";
 import { textFixDtoToEngineFix } from "../shared/text-fix-mapping";
-import { isChoicePolicy } from "../core/apply-policy";
+import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
+import {
+  isPersistedManualResolution,
+  resolveChosenWordRangeAfterApply,
+} from "./apply-manual-fix-helpers";
 
 function recordChoiceResolutionAfterApply(node: TextNode, fix: TextFixDto): void {
   const text = node.characters;
-  const chosen = fix.after;
-  let from = fix.from;
-  let to = fix.from + chosen.length;
-
-  const wordAtExpected = text.slice(from, to);
-  if (wordAtExpected !== chosen) {
-    const found = findChosenWordNear(text, chosen, fix.from);
-    if (found != null) {
-      from = found;
-      to = found + chosen.length;
-    }
-  }
+  const { from, to } = resolveChosenWordRangeAfterApply(text, fix);
 
   recordChoiceResolutionOnNode(node, text, {
     ruleId: fix.rule.id,
     from,
     to,
     before: fix.before,
-    chosen,
+    chosen: fix.after,
   });
 }
 
@@ -49,14 +39,21 @@ export async function applyManualFixAndRefresh(
   if (!node || node.type !== "TEXT") return;
 
   const sourceText = node.characters;
+  const persistResolution = isPersistedManualResolution(fix);
+  const textChanges = fix.before !== fix.after;
 
-  const applied =
-    fix.before !== fix.after
-      ? await applyTextFixesToTextNode(node, [textFixDtoToEngineFix(fix)])
-      : [];
+  const applied = textChanges
+    ? await applyTextFixesToTextNode(node, [textFixDtoToEngineFix(fix)])
+    : [];
 
-  if (isChoicePolicy(fix.rule.applyPolicy)) {
+  // Даже если выбрана та же форма (ищите→ищите) — записать resolution, иначе choice всплывёт снова.
+  if (persistResolution) {
     recordChoiceResolutionAfterApply(node, fix);
+  }
+
+  if (!textChanges) {
+    postCheckResultToUi(figma.currentPage.selection);
+    return;
   }
 
   const selection = figma.currentPage.selection;
@@ -70,8 +67,8 @@ export async function applyManualFixAndRefresh(
 
   const { report } = await runAutofixAutoPasses(selection, reportBase);
 
-  // Автоправки (NBSP и т.п.) сдвигают текст — перезаписать якоря choice-resolution.
-  if (isChoicePolicy(fix.rule.applyPolicy)) {
+  // Автоправки (NBSP и т.п.) сдвигают текст — перезаписать якоря resolution.
+  if (persistResolution) {
     const refreshed = await figma.getNodeByIdAsync(nodeId);
     if (refreshed && refreshed.type === "TEXT") {
       recordChoiceResolutionAfterApply(refreshed, fix);
@@ -79,6 +76,25 @@ export async function applyManualFixAndRefresh(
   }
 
   setLastAutoApplyReport(report);
-  // Пересканировать уже с обновлёнными resolution, иначе choice всплывёт снова.
   postCheckResultToUi(selection);
+}
+
+/** «Пропустить» орфографию: макет не меняем, считаем показ (макс. 3 запуска). */
+export async function skipManualFixAndRefresh(
+  nodeId: string,
+  fix: TextFixDto,
+): Promise<void> {
+  const node = await figma.getNodeByIdAsync(nodeId);
+  if (!node || node.type !== "TEXT") return;
+
+  if (fix.rule.id === ORTHOGRAPHY_SPELL_RULE_ID) {
+    recordSpellSkipOnNode(node, {
+      ruleId: fix.rule.id,
+      from: fix.from,
+      to: fix.to,
+      before: fix.before,
+    });
+  }
+
+  postCheckResultToUi(figma.currentPage.selection);
 }

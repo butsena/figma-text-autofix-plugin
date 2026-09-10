@@ -49,6 +49,9 @@ describe("checkSpellingFixes", () => {
       applyPolicy: "confirm",
       ruleId: "orthography-spellcheck",
     });
+    expect(fixes[0]?.message).toBe(
+      "Возможно в слове «Кватира» опечатка или ошибка — проверьте",
+    );
   });
 
   it("не помечает корректные формы", () => {

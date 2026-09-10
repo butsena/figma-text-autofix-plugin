@@ -1,3 +1,4 @@
+import { compareFixesByPosition, orderFixesForApply } from "../shared/fix-sort";
 import { resolveApplyPolicy, type ApplyPolicy } from "./apply-policy";
 import { narrowReplacementRange } from "./narrow-replacement-range";
 
@@ -139,12 +140,7 @@ export function checkTextForAutofixes(text: string, rules: AutofixRule[]): TextC
   }
 
   // Deterministic ordering for UI/debugging; apply() does not rely on this.
-  fixes.sort((a, b) => {
-    if (a.from !== b.from) return a.from - b.from;
-    if (a.to !== b.to) return a.to - b.to;
-    // Higher priority first when positions tie.
-    return b.priority - a.priority;
-  });
+  fixes.sort(compareFixesByPosition);
 
   return { fixes };
 }
@@ -154,7 +150,7 @@ export function checkTextForAutofixes(text: string, rules: AutofixRule[]): TextC
  * Also validates `before` to safely skip overlapping/stale fixes.
  */
 export function applyTextFixes(text: string, fixes: TextFix[]): string {
-  const ordered = [...fixes].sort((a, b) => b.from - a.from);
+  const ordered = orderFixesForApply(fixes);
   let out = text;
 
   for (const fix of ordered) {

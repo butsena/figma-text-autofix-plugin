@@ -42,7 +42,10 @@ export async function runAutofixAutoPasses(
   let passCount = 0;
 
   while (passCount < MAX_AUTOFIX_PASSES) {
-    const { result: scan, nodeById } = scanSelectedTextNodes(selection, { policy: "auto" });
+    const { result: scan, nodeById } = scanSelectedTextNodes(selection, {
+      policy: "auto",
+      includeSpelling: false,
+    });
     if (scan.summary.foundFixes === 0) break;
 
     const { appliedCount, appliedByNode } = await applyFixesFromScan(scan, nodeById);
@@ -59,7 +62,10 @@ export async function runAutofixAutoPasses(
     if (appliedCount === 0) break;
   }
 
-  const { result: finalScan } = scanSelectedTextNodes(selection, { policy: "auto" });
+  const { result: finalScan } = scanSelectedTextNodes(selection, {
+    policy: "auto",
+    includeSpelling: false,
+  });
   const report = mergedReport
     ? { ...mergedReport, summary: { ...mergedReport.summary, appliedFixCount: totalApplied } }
     : buildEmptyAutoApplyReport(finalScan.summary.checkedLayers);
@@ -84,6 +90,7 @@ export async function runAutofixPipeline(): Promise<void> {
 
   const { report, finalScan } = await runAutofixAutoPasses(selection);
   setLastAutoApplyReport(report);
-  postCheckResultToUi(selection, finalScan);
+  // Полный скан с орфографией для UI (auto-pass цикл намеренно без Hunspell).
+  postCheckResultToUi(selection);
   notifyIfFixesStuck(finalScan, report);
 }

@@ -1,12 +1,54 @@
-import { describe, expect, it } from "vitest";
-import { mergeLexiconLoadStatus } from "./refresh-lexicon";
-import type {
-  RefreshAmbiguousFormChoicesResult,
-  RefreshBoundaryExceptionsResult,
-  RefreshLexiconReplacementsResult,
-  RefreshSpellDictionaryResult,
-  RefreshSpellWordListResult,
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("../config/feature-flags", () => ({
+  SPELLCHECK_ENABLED: false,
+}));
+
+vi.mock("./refresh-from-remote", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./refresh-from-remote")>();
+  return {
+    ...actual,
+    fetchRemoteTextViaHttp: vi.fn(),
+    refreshTextReplacementsFromRemote: vi.fn(async () => ({
+      ok: true,
+      ruleCount: 5,
+      fromRemote: true,
+      fetchUrl: "https://example.com/replacements.csv",
+    })),
+    refreshBoundaryExceptionsFromRemote: vi.fn(async () => ({
+      ok: true,
+      phraseCount: 3,
+      fromRemote: true,
+      fetchUrl: "https://example.com/boundary.txt",
+    })),
+    refreshAmbiguousFormChoicesFromRemote: vi.fn(async () => ({
+      ok: true,
+      choiceCount: 4,
+      fromRemote: true,
+      fetchUrl: "https://example.com/choices.txt",
+    })),
+    refreshSpellDictionaryFromRemote: vi.fn(),
+    refreshSpellSupplementFromRemote: vi.fn(),
+    refreshSpellWhitelistFromRemote: vi.fn(),
+  };
+});
+
+import {
+  refreshAmbiguousFormChoicesFromRemote,
+  refreshBoundaryExceptionsFromRemote,
+  refreshSpellDictionaryFromRemote,
+  refreshTextReplacementsFromRemote,
+  type RefreshAmbiguousFormChoicesResult,
+  type RefreshBoundaryExceptionsResult,
+  type RefreshLexiconReplacementsResult,
+  type RefreshSpellDictionaryResult,
+  type RefreshSpellWordListResult,
 } from "./refresh-from-remote";
+import {
+  mergeLexiconLoadStatus,
+  refreshLexiconFromRemote,
+  resetLexiconLoadCache,
+} from "./refresh-lexicon";
 
 describe("mergeLexiconLoadStatus", () => {
   it("собирает вложенный статус замен, исключений, choice-пар и орфографии", () => {
@@ -90,5 +132,31 @@ describe("mergeLexiconLoadStatus", () => {
         fetchUrl: "https://example.com/spell-whitelist.txt",
       },
     });
+  });
+});
+
+describe("refreshLexiconFromRemote with SPELLCHECK_ENABLED=false", () => {
+  beforeEach(() => {
+    resetLexiconLoadCache();
+    vi.clearAllMocks();
+  });
+
+  it("грузит три рабочих словаря и не трогает spell remote", async () => {
+    const status = await refreshLexiconFromRemote({ force: true });
+    expect(refreshTextReplacementsFromRemote).toHaveBeenCalled();
+    expect(refreshBoundaryExceptionsFromRemote).toHaveBeenCalled();
+    expect(refreshAmbiguousFormChoicesFromRemote).toHaveBeenCalled();
+    expect(refreshSpellDictionaryFromRemote).not.toHaveBeenCalled();
+    expect(status.replacements).toMatchObject({ ok: true, count: 5, fromRemote: true });
+    expect(status.spellDictionary).toMatchObject({ ok: true, count: 0, fromRemote: false });
+    expect(status.spellSupplement).toMatchObject({ ok: true, count: 0, fromRemote: false });
+    expect(status.spellWhitelist).toMatchObject({ ok: true, count: 0, fromRemote: false });
+  });
+
+  it("кэширует статус между вызовами без force", async () => {
+    await refreshLexiconFromRemote({ force: true });
+    const calls = vi.mocked(refreshTextReplacementsFromRemote).mock.calls.length;
+    await refreshLexiconFromRemote();
+    expect(vi.mocked(refreshTextReplacementsFromRemote).mock.calls.length).toBe(calls);
   });
 });

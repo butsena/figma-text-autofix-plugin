@@ -1,11 +1,9 @@
+import { escapeHtml } from "../shared/escape-html";
 import { formatFixDiffHtml } from "./diff-format";
-import {
-  escapeHtml,
-  formatChoiceHintHtml,
-  formatFixCategoryLabel,
-} from "./ui-helpers";
+import { formatChoiceHintHtml, formatFixCategoryLabel } from "./ui-helpers";
 import { selectedChoiceOptionIndex } from "./choice-selection";
 import type { TextFixDto } from "../shared/messages";
+import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
 
 export function renderFixRow(
   fix: {
@@ -22,6 +20,10 @@ export function renderFixRow(
   sourceText: string,
   confirmActions?: { cardIdx: number; fixIdx: number },
 ): string {
+  if (confirmActions && fix.ruleId === ORTHOGRAPHY_SPELL_RULE_ID) {
+    return renderOrthographySpellFixRow(fix, confirmActions.cardIdx, confirmActions.fixIdx);
+  }
+
   const actionsHtml = confirmActions
     ? `
       <div class="confirmActions">
@@ -51,6 +53,49 @@ export function renderFixRow(
       <div class="reportMeta">Правило: <code>${escapeHtml(fix.ruleId)}</code> · ${escapeHtml(formatFixCategoryLabel(fix.category, fix.ruleId))}</div>
       <div class="reportDiff">${formatFixDiffHtml(fix, sourceText)}</div>
       ${actionsHtml}
+    </div>
+  `;
+}
+
+/** Орфография: как choice-алерт, но с полем ввода вместо вариантов. */
+export function renderOrthographySpellFixRow(
+  fix: {
+    ruleId: string;
+    category: string;
+    message: string;
+    before: string;
+    after: string;
+  },
+  cardIdx: number,
+  fixIdx: number,
+): string {
+  const suggested = fix.after !== fix.before ? fix.after : "";
+  const applyDisabled = !suggested ? " disabled" : "";
+
+  return `
+    <div class="confirmFix spellFix" data-confirm-card="${cardIdx}" data-confirm-fix="${fixIdx}">
+      <div class="reportWhy">${escapeHtml(fix.message)}</div>
+      <div class="reportMeta">Правило: <code>${escapeHtml(fix.ruleId)}</code> · ${escapeHtml(formatFixCategoryLabel(fix.category, fix.ruleId))}</div>
+      <div class="reportDiff"><span class="reportCtxWord">${escapeHtml(fix.before)}</span></div>
+      <label class="spellInputLabel" for="spell-input-${cardIdx}-${fixIdx}">Исправление</label>
+      <input
+        id="spell-input-${cardIdx}-${fixIdx}"
+        type="text"
+        class="spellInput"
+        data-spell-input="${cardIdx}:${fixIdx}"
+        value="${escapeHtml(suggested)}"
+        placeholder="Введите правильное слово"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <div class="confirmActions">
+        <button type="button" class="confirmApplyBtn" data-spell-apply="${cardIdx}:${fixIdx}"${applyDisabled}>
+          Исправить
+        </button>
+        <button type="button" class="confirmSkipBtn" data-spell-skip="${cardIdx}:${fixIdx}">
+          Пропустить
+        </button>
+      </div>
     </div>
   `;
 }

@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { formatChoiceHintHtml, formatFixCategoryLabel, formatLayerTitleHtml, formatTextLayersBlockHtml } from "./ui-helpers";
+import {
+  countConfirmFixes,
+  detailsOpenAttr,
+  displayText,
+  formatChoiceHintHtml,
+  formatFixCategoryLabel,
+  formatLayerTitleHtml,
+  formatLexiconResourceStatusHtml,
+  formatTextLayersBlockHtml,
+} from "./ui-helpers";
 
 describe("formatFixCategoryLabel", () => {
   it("показывает Редполитику для правил про точки", () => {
@@ -75,5 +84,62 @@ describe("formatFixCategoryLabel", () => {
     expect(html).toContain("Заголовок");
     expect(html).toContain("10 символов");
     expect(html).not.toContain('details class="textLayersDetails" open');
+  });
+});
+
+describe("displayText", () => {
+  it("строка / message / JSON / fallback", () => {
+    expect(displayText(null)).toBe("");
+    expect(displayText("ok")).toBe("ok");
+    expect(displayText({ message: "err" })).toBe("err");
+    expect(displayText({ a: 1 })).toBe('{"a":1}');
+  });
+});
+
+describe("countConfirmFixes", () => {
+  it("суммирует fixes по карточкам", () => {
+    expect(countConfirmFixes([{ fixes: [1, 2] }, { fixes: [3] }, {}])).toBe(3);
+  });
+});
+
+describe("detailsOpenAttr", () => {
+  it("open только при true", () => {
+    expect(detailsOpenAttr(true)).toBe(" open");
+    expect(detailsOpenAttr(false)).toBe("");
+  });
+});
+
+describe("formatLexiconResourceStatusHtml", () => {
+  const labels = {
+    remoteOk: (n: number) => `remote ${n}`,
+    remoteErr: (n: number) => `err ${n}`,
+    bundledOk: (n: number) => `bundled ${n}`,
+  };
+
+  it("remote ok / err / bundled", () => {
+    expect(
+      formatLexiconResourceStatusHtml(
+        { ok: true, fromRemote: true, count: 3 },
+        labels,
+      ),
+    ).toContain("remote 3");
+    expect(
+      formatLexiconResourceStatusHtml(
+        { ok: false, fromRemote: false, count: 1, errorMessage: "<boom>" },
+        labels,
+      ),
+    ).toContain("err 1");
+    expect(
+      formatLexiconResourceStatusHtml(
+        { ok: false, fromRemote: false, count: 1, errorMessage: "<boom>" },
+        labels,
+      ),
+    ).toContain("&lt;boom&gt;");
+    expect(
+      formatLexiconResourceStatusHtml(
+        { ok: true, fromRemote: false, count: 9 },
+        labels,
+      ),
+    ).toContain("bundled 9");
   });
 });

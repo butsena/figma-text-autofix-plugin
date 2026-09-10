@@ -5,16 +5,21 @@ export type {
 
 export {
   buildChoiceAnchors,
+  beginPluginRun,
   createChoiceResolution,
   findChosenWordNear,
   findResolutionPositions,
+  getCurrentPluginRunId,
   isChoiceResolution,
   pruneStaleResolutions,
   readChoiceResolutionsFromPluginData,
   reanchorResolution,
+  resetPluginRunIdForTests,
   shouldSuppressChoiceFix,
   stripInvalidatedResolutionsForFixes,
   upsertChoiceResolution,
+  applySkipToResolutions,
+  MAX_SPELL_SKIP_COUNT,
 } from "./choice-resolution-core";
 
 import {
@@ -23,6 +28,7 @@ import {
   readChoiceResolutionsFromPluginData,
   stripInvalidatedResolutionsForFixes,
   upsertChoiceResolution,
+  applySkipToResolutions,
   type ChoiceFixPosition,
   type ChoiceResolution,
 } from "./choice-resolution-core";
@@ -79,4 +85,11 @@ export function recordChoiceResolutionOnNode(
   );
   const active = pruneStaleResolutions(text, readChoiceResolutions(node));
   writeChoiceResolutions(node, upsertChoiceResolution(active, resolution));
+}
+
+/** «Пропустить» орфографию: +1 запуск; после MAX_SPELL_SKIP_COUNT больше не показывать. */
+export function recordSpellSkipOnNode(node: TextNode, fix: ChoiceFixPosition): void {
+  const text = node.characters;
+  const active = pruneStaleResolutions(text, readChoiceResolutions(node));
+  writeChoiceResolutions(node, applySkipToResolutions(text, fix, active));
 }

@@ -1,4 +1,4 @@
-import { escapeHtml } from "./ui-helpers";
+import { escapeHtml } from "../shared/escape-html";
 
 export type FixDiffInput = {
   ruleId?: string;

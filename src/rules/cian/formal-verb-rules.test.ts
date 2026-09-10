@@ -11,8 +11,11 @@ describe("buildFormalVerbRules", () => {
     expect(applyAllRules("Нажми «Продолжить»", rules)).toBe("Нажмите «Продолжить»");
   });
 
-  it("повелительное: Запиши → Запишите", () => {
-    expect(applyAllRules("Запиши номер", rules)).toBe("Запишите номер");
+  it("повелительное: пиши / жди → пишите / ждите", () => {
+    expect(applyAllRules("пиши нам", rules)).toBe("пишите нам");
+    expect(applyAllRules("Пиши нам", rules)).toBe("Пишите нам");
+    expect(applyAllRules("жди ответа", rules)).toBe("ждите ответа");
+    expect(applyAllRules("Жди ответа", rules)).toBe("Ждите ответа");
   });
 
   it("повелительное: изучи / начни / спроси → формы на «вы»", () => {

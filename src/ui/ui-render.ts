@@ -1,4 +1,4 @@
-import { escapeHtml } from "./ui-helpers";
+import { escapeHtml } from "../shared/escape-html";
 import { schedulePluginResize } from "./ui-resize";
 import { captureUiAccordionState, state } from "./ui-state";
 import {

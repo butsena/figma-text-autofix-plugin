@@ -29,7 +29,7 @@ describe("lexicon-remote-config", () => {
 });
 
 describe("feature-flags", () => {
-  it("публичная сборка держит орфографию выключенной", () => {
-    expect(SPELLCHECK_ENABLED).toBe(false);
+  it("орфопроверка включена для проверки UX", () => {
+    expect(SPELLCHECK_ENABLED).toBe(true);
   });
 });

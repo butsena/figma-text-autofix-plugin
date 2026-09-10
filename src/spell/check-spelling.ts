@@ -4,7 +4,7 @@ import { capitalizeLike } from "../shared/case";
 import {
   ORTHOGRAPHY_SPELL_PRIORITY,
   ORTHOGRAPHY_SPELL_RULE_ID,
-  MSG_ORTHOGRAPHY_SPELL,
+  orthographySpellMessage,
 } from "../rules/orthography-spell-rules";
 import {
   getSpellChecker,
@@ -48,10 +48,7 @@ export function checkSpellingFixes(text: string, existingFixes: readonly TextFix
     if (isKnownWord(spell, word)) continue;
 
     const suggestion = suggestCorrection(spell, word);
-    if (!suggestion) continue;
-
-    const after = capitalizeLike(word, suggestion);
-    if (after === word) continue;
+    const after = suggestion ? capitalizeLike(word, suggestion) : word;
 
     fixes.push({
       from,
@@ -60,7 +57,7 @@ export function checkSpellingFixes(text: string, existingFixes: readonly TextFix
       after,
       ruleId: ORTHOGRAPHY_SPELL_RULE_ID,
       category: "orthography",
-      message: MSG_ORTHOGRAPHY_SPELL,
+      message: orthographySpellMessage(word),
       priority: ORTHOGRAPHY_SPELL_PRIORITY,
       applyPolicy: "confirm",
     });

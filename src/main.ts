@@ -1,22 +1,20 @@
 import uiHtml from "./ui/ui.figma.html?raw";
 import { collectTextNodesFromSelection } from "./figma/collect-text-nodes";
+import { beginPluginRun } from "./figma/choice-resolution";
 import { runAutofixPipeline } from "./figma/autofix-pipeline";
-import { applyManualFixAndRefresh } from "./figma/apply-manual-fix";
+import { applyManualFixAndRefresh, skipManualFixAndRefresh } from "./figma/apply-manual-fix";
 import { focusLayerById } from "./figma/focus-layer";
 import {
   PLUGIN_UI_INITIAL_HEIGHT,
-  PLUGIN_UI_MAX_HEIGHT,
-  PLUGIN_UI_MIN_HEIGHT,
   PLUGIN_UI_WIDTH,
+  clampPluginUiHeight,
 } from "./shared/plugin-ui-layout";
 import { NO_TEXT_IN_SELECTION_NOTICE, type PluginToUiMessage, type UiToPluginMessage } from "./shared/messages";
 
-function clampPluginHeight(height: number): number {
-  return Math.max(PLUGIN_UI_MIN_HEIGHT, Math.min(PLUGIN_UI_MAX_HEIGHT, Math.round(height)));
-}
+beginPluginRun();
 
 function resizePluginUi(width: number, height: number): void {
-  figma.ui.resize(width, clampPluginHeight(height));
+  figma.ui.resize(width, clampPluginUiHeight(height));
 }
 
 const selection = figma.currentPage.selection;
@@ -46,6 +44,10 @@ if (collectTextNodesFromSelection(selection).length === 0) {
         }
         case "ui:applyManualFix": {
           await applyManualFixAndRefresh(message.nodeId, message.fix);
+          break;
+        }
+        case "ui:skipManualFix": {
+          await skipManualFixAndRefresh(message.nodeId, message.fix);
           break;
         }
         case "ui:resize": {

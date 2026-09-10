@@ -1,5 +1,7 @@
 export const ORTHOGRAPHY_SPELL_RULE_ID = "orthography-spellcheck";
 
-export const MSG_ORTHOGRAPHY_SPELL = "Орфография: слово не найдено в словаре.";
+export function orthographySpellMessage(word: string): string {
+  return `Возможно в слове «${word}» опечатка или ошибка — проверьте`;
+}
 
 export const ORTHOGRAPHY_SPELL_PRIORITY = 72;

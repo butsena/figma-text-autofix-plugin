@@ -124,6 +124,11 @@ export type UiToPluginMessage =
       fix: TextFixDto;
     }
   | {
+      type: "ui:skipManualFix";
+      nodeId: string;
+      fix: TextFixDto;
+    }
+  | {
       type: "ui:resize";
       width: number;
       height: number;

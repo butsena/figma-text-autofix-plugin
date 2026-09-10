@@ -1,18 +1,7 @@
 import { getAmbiguousFormChoice } from "../lexicon/ambiguous-form-choices-store";
-import { capitalizeLike } from "../shared/case";
+import { escapeHtml } from "../shared/escape-html";
 import { formatCharacterCountLabel } from "../shared/text-char-count";
 import type { LexiconResourceLoadStatus } from "../shared/messages";
-
-export { capitalizeLike };
-
-export function escapeHtml(str: unknown): string {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
 
 export function displayText(value: unknown): string {
   if (value == null) return "";
@@ -41,13 +30,17 @@ export function formatChoiceHintHtml(
 ): string {
   if (hintHtmlFromFix) return hintHtmlFromFix;
 
+  const plainHint = fallbackHint?.trim();
+  if (plainHint) {
+    return `<div class="reportHint"><span class="reportHintTitle">Подсказка:</span> ${escapeHtml(plainHint)}</div>`;
+  }
+
   const choice = getAmbiguousFormChoice(ruleId);
   if (choice?.hintHtml) return choice.hintHtml;
-
-  const hint = choice?.hint ?? fallbackHint;
-  if (!hint) return "";
-
-  return `<div class="reportHint"><span class="reportHintTitle">Подсказка:</span> ${escapeHtml(hint)}</div>`;
+  if (choice?.hint) {
+    return `<div class="reportHint"><span class="reportHintTitle">Подсказка:</span> ${escapeHtml(choice.hint)}</div>`;
+  }
+  return "";
 }
 
 export function detailsOpenAttr(isOpen: boolean): string {

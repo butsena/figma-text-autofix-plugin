@@ -1,6 +1,44 @@
-/** Запись о подтверждённом choice-правке на текстовом слое. */
+import { rangesOverlap } from "../shared/ranges-overlap";
+
+/**
+ * Сколько раз подряд можно пропустить орфографию в разных запусках плагина,
+ * прежде чем скрыть навсегда. Один skip в рамках одного запуска.
+ */
+export const MAX_SPELL_SKIP_COUNT = 3;
+
+/**
+ * Ключи орфо-skip в текущем открытии плагина (in-memory).
+ * При закрытии/открытии плагина sandbox пересоздаётся — Set пустой, слово снова видно.
+ * Счётчик skipCount при этом живёт в pluginData на ноде.
+ */
+const skippedThisPluginSession = new Set<string>();
+
+function spellSkipSessionKey(ruleId: string, before: string): string {
+  return `${ruleId}\0${before}`;
+}
+
+/** Новый запуск плагина (или симуляция в тестах): сбросить «скрыто в этой сессии». */
+export function beginPluginRun(): void {
+  skippedThisPluginSession.clear();
+}
+
+/** @deprecated больше не используется; оставлен для совместимости экспортов/тестов. */
+export function getCurrentPluginRunId(): number {
+  return 0;
+}
+
+/** Только для тестов. */
+export function resetPluginRunIdForTests(_value = 0): void {
+  skippedThisPluginSession.clear();
+}
+
+/** Запись о подтверждённом choice/орфо-правке на текстовом слое. */
 export type ChoiceResolution = {
   ruleId: string;
+  /**
+   * Подтверждённая форма / исправление.
+   * Пустая строка — пока только счётчик skip (орфография, skipCount < MAX).
+   */
   chosen: string;
   beforeAtResolve: string;
   /** Текст непосредственно перед словом (без самого слова). */
@@ -9,6 +47,13 @@ export type ChoiceResolution = {
   anchorAfter: string;
   /** Длина слова (to − from) на момент подтверждения. */
   wordLength: number;
+  /** Сколько запусков плагина подряд пользователь нажал «Пропустить» (орфография). */
+  skipCount?: number;
+  /**
+   * @deprecated Раньше сравнивали с in-memory run id (ломалось: каждый запуск снова id=1).
+   * Оставляем в типе, чтобы старый pluginData парсился.
+   */
+  lastSkipPluginRunId?: number;
 };
 
 export type ChoiceFixPosition = {
@@ -42,6 +87,8 @@ export function createChoiceResolution(
   to: number,
   beforeAtResolve: string,
   chosen: string,
+  skipCount?: number,
+  lastSkipPluginRunId?: number,
 ): ChoiceResolution {
   const { anchorBefore, anchorAfter, wordLength } = buildChoiceAnchors(text, from, to);
   return {
@@ -51,11 +98,11 @@ export function createChoiceResolution(
     anchorBefore,
     anchorAfter,
     wordLength,
+    ...(skipCount != null && skipCount > 0 ? { skipCount } : {}),
+    ...(lastSkipPluginRunId != null && lastSkipPluginRunId > 0
+      ? { lastSkipPluginRunId }
+      : {}),
   };
-}
-
-function rangesOverlap(aFrom: number, aTo: number, bFrom: number, bTo: number): boolean {
-  return aFrom < bTo && aTo > bFrom;
 }
 
 /** Все позиции слова по якорям вокруг (без учёта формы слова). */
@@ -162,6 +209,58 @@ export function reanchorResolution(
     best.to,
     resolution.beforeAtResolve,
     resolution.chosen,
+    resolution.skipCount,
+    resolution.lastSkipPluginRunId,
+  );
+}
+
+/**
+ * Переякорить skip-запись (chosen пустой): слот ещё с beforeAtResolve.
+ * Обычный reanchor ищет chosen — для незавершённых skip это не подходит.
+ */
+function reanchorSkipInProgress(
+  text: string,
+  resolution: ChoiceResolution,
+): ChoiceResolution | null {
+  if (resolution.chosen) return null;
+  const positions = findResolutionPositions(text, resolution);
+  const stillValid = positions.find(
+    ({ from, to }) => text.slice(from, to) === resolution.beforeAtResolve,
+  );
+  if (stillValid) {
+    return {
+      ...resolution,
+      wordLength: stillValid.to - stillValid.from,
+    };
+  }
+
+  const occurrences = findWholeWordOccurrences(text, resolution.beforeAtResolve);
+  if (!occurrences.length) return null;
+
+  let best = occurrences[0]!;
+  if (occurrences.length > 1) {
+    let bestScore = -1;
+    for (const occ of occurrences) {
+      const { anchorBefore, anchorAfter } = buildChoiceAnchors(text, occ.from, occ.to);
+      let score = 0;
+      if (anchorBefore.endsWith(resolution.anchorBefore.slice(-8))) score += 2;
+      if (anchorAfter.startsWith(resolution.anchorAfter.slice(0, 8))) score += 2;
+      if (score > bestScore) {
+        bestScore = score;
+        best = occ;
+      }
+    }
+  }
+
+  return createChoiceResolution(
+    text,
+    resolution.ruleId,
+    best.from,
+    best.to,
+    resolution.beforeAtResolve,
+    "",
+    resolution.skipCount,
+    resolution.lastSkipPluginRunId,
   );
 }
 
@@ -172,6 +271,11 @@ export function pruneStaleResolutions(
 ): ChoiceResolution[] {
   const kept: ChoiceResolution[] = [];
   for (const resolution of resolutions) {
+    if (!resolution.chosen && (resolution.skipCount ?? 0) > 0) {
+      const nextSkip = reanchorSkipInProgress(text, resolution);
+      if (nextSkip) kept.push(nextSkip);
+      continue;
+    }
     const next = reanchorResolution(text, resolution);
     if (next) kept.push(next);
   }
@@ -204,7 +308,7 @@ function resolutionOverlapsFix(
   );
 }
 
-/** Не показывать choice, если пользователь уже подтвердил форму для этого вхождения. */
+/** Не показывать choice/орфо, если пользователь уже подтвердил или 3 запуска подряд пропустил. */
 export function shouldSuppressChoiceFix(
   text: string,
   fix: ChoiceFixPosition,
@@ -222,14 +326,78 @@ export function shouldSuppressChoiceFix(
     );
     if (!overlaps.length) continue;
 
-    // Подтверждённая форма на месте — не спрашиваем снова.
-    if (currentWord === resolution.chosen) return true;
+    if ((resolution.skipCount ?? 0) >= MAX_SPELL_SKIP_COUNT) return true;
 
-    // Слово на месте изменилось (вручную или иначе) — снова спрашиваем.
+    // Подтверждённая форма / исправление на месте — не спрашиваем снова.
+    if (resolution.chosen && currentWord === resolution.chosen) return true;
+
+    // Слово изменили вручную относительно подтверждённого — снова спрашиваем.
+    if (resolution.chosen && currentWord !== resolution.chosen) return false;
+
+    // Skip в этом открытии плагина: скрыть до закрытия.
+    // После переоткрытия Set пустой — снова показываем, пока skipCount < MAX.
+    if (!resolution.chosen && (resolution.skipCount ?? 0) > 0) {
+      return skippedThisPluginSession.has(
+        spellSkipSessionKey(resolution.ruleId, resolution.beforeAtResolve),
+      );
+    }
+
     return false;
   }
 
   return false;
+}
+
+/**
+ * «Пропустить» орфографию: +1 к счётчику запусков; на MAX — скрыть навсегда.
+ * Повторный skip в том же открытии плагина не увеличивает счётчик.
+ */
+export function applySkipToResolutions(
+  text: string,
+  fix: ChoiceFixPosition,
+  resolutions: ChoiceResolution[],
+): ChoiceResolution[] {
+  const sessionKey = spellSkipSessionKey(fix.ruleId, fix.before);
+
+  // Уже пропустили в этом открытии — не считаем повторный клик.
+  if (skippedThisPluginSession.has(sessionKey)) {
+    return resolutions;
+  }
+
+  const matchingIdx = resolutions.findIndex((r) => {
+    if (r.ruleId !== fix.ruleId) return false;
+    if (!resolutionOverlapsFix(text, fix, r)) return false;
+    // Активный skip или «принято как есть» для того же before.
+    if (!r.chosen) return true;
+    if ((r.skipCount ?? 0) >= MAX_SPELL_SKIP_COUNT && r.beforeAtResolve === fix.before) {
+      return true;
+    }
+    return false;
+  });
+
+  const matching = matchingIdx >= 0 ? resolutions[matchingIdx] : undefined;
+  const nextSkips = (matching?.skipCount ?? 0) + 1;
+  const accepted = nextSkips >= MAX_SPELL_SKIP_COUNT;
+  const next = createChoiceResolution(
+    text,
+    fix.ruleId,
+    fix.from,
+    fix.to,
+    fix.before,
+    accepted ? fix.before : "",
+    nextSkips,
+  );
+
+  if (!accepted) {
+    skippedThisPluginSession.add(sessionKey);
+  }
+
+  if (matchingIdx >= 0) {
+    const copy = resolutions.slice();
+    copy[matchingIdx] = next;
+    return copy;
+  }
+  return upsertChoiceResolution(resolutions, next);
 }
 
 /** Снять resolution, если найденное вхождение пересекается со слотом, но форма уже другая. */
@@ -247,6 +415,11 @@ export function stripInvalidatedResolutionsForFixes(
       for (const slot of positions) {
         if (!rangesOverlap(fix.from, fix.to, slot.from, slot.to)) continue;
         const slotWord = text.slice(slot.from, slot.to);
+        if (!resolution.chosen) {
+          // Skip-in-progress: сбрасываем, если слово ушло от исходной опечатки.
+          if (slotWord !== resolution.beforeAtResolve) return false;
+          continue;
+        }
         if (slotWord !== resolution.chosen) return false;
       }
     }
@@ -257,14 +430,26 @@ export function stripInvalidatedResolutionsForFixes(
 export function isChoiceResolution(value: unknown): value is ChoiceResolution {
   if (!value || typeof value !== "object") return false;
   const r = value as ChoiceResolution;
-  return (
-    typeof r.ruleId === "string" &&
-    typeof r.chosen === "string" &&
-    typeof r.beforeAtResolve === "string" &&
-    typeof r.anchorBefore === "string" &&
-    typeof r.anchorAfter === "string" &&
-    typeof r.wordLength === "number"
-  );
+  if (
+    typeof r.ruleId !== "string" ||
+    typeof r.chosen !== "string" ||
+    typeof r.beforeAtResolve !== "string" ||
+    typeof r.anchorBefore !== "string" ||
+    typeof r.anchorAfter !== "string" ||
+    typeof r.wordLength !== "number"
+  ) {
+    return false;
+  }
+  if (r.skipCount != null && (typeof r.skipCount !== "number" || r.skipCount < 0)) {
+    return false;
+  }
+  if (
+    r.lastSkipPluginRunId != null &&
+    (typeof r.lastSkipPluginRunId !== "number" || r.lastSkipPluginRunId < 0)
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export function readChoiceResolutionsFromPluginData(raw: string): ChoiceResolution[] {
