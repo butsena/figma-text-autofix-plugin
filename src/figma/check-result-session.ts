@@ -3,6 +3,7 @@ import type { PluginToUiMessage } from "../shared/messages";
 import { scanSelectedTextNodes } from "./scan-selection";
 
 let lastAutoApplyReport: AutoApplyReportDto | null = null;
+let lastManualApplyReport: AutoApplyReportDto | null = null;
 
 export function setLastAutoApplyReport(report: AutoApplyReportDto | null): void {
   lastAutoApplyReport = report;
@@ -10,6 +11,14 @@ export function setLastAutoApplyReport(report: AutoApplyReportDto | null): void 
 
 export function getLastAutoApplyReport(): AutoApplyReportDto | null {
   return lastAutoApplyReport;
+}
+
+export function setLastManualApplyReport(report: AutoApplyReportDto | null): void {
+  lastManualApplyReport = report;
+}
+
+export function getLastManualApplyReport(): AutoApplyReportDto | null {
+  return lastManualApplyReport;
 }
 
 export function buildCheckResultForUi(
@@ -20,6 +29,7 @@ export function buildCheckResultForUi(
   return {
     ...scanResult,
     lastAutoApplyReport,
+    lastManualApplyReport,
   };
 }
 

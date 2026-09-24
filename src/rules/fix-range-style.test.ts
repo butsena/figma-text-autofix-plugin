@@ -24,9 +24,9 @@ describe("диапазон замены не захватывает неизме
     expect(fix).toMatchObject({ before: "подтвержден", after: "подтверждён", from: 2 });
   });
 
-  it("Вы/вас: только местоимение", () => {
+  it("Вы/вас: только меняющаяся буква регистра", () => {
     const [fix] = fixesFor("ждём Вас", buildFormalPronounRules());
-    expect(fix).toMatchObject({ before: "Вас", after: "вас", from: 5, to: 8 });
+    expect(fix).toMatchObject({ before: "В", after: "в", from: 5, to: 6 });
   });
 
   it("твой: только слово", () => {

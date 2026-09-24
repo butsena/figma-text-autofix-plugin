@@ -10,6 +10,7 @@ import {
 } from "../rule-messages";
 import {
   EXCESS_LINE_BREAKS_PATTERN,
+  HORIZONTAL_SPACE,
   LEADING_LINE_BREAKS_PATTERN,
   NBSP,
   TRAILING_LINE_BREAKS_PATTERN,
@@ -28,6 +29,12 @@ function nbspBeforeUnit(num: string, sep: string, unit: string, matched: string)
   if (sep.length > 0) return `${num}${NBSP}${unit}`;
   if (GLUED_UNIT.test(unit)) return `${num}${NBSP}${unit}`;
   return matched;
+}
+
+function collapseExtraHorizontalSpaces(match: string): string {
+  // Два+ NBSP/узких NBSP → один NBSP; иначе обычный пробел.
+  if (/[\u00A0\u202F]/.test(match)) return NBSP;
+  return " ";
 }
 
 export function buildGeneralTypographyRules(): AutofixRule[] {
@@ -52,8 +59,8 @@ export function buildGeneralTypographyRules(): AutofixRule[] {
     rule({
       id: "cian-114-collapse-double-spaces",
       category: "typography",
-      pattern: / {2,}/g,
-      replacement: " ",
+      pattern: new RegExp(`${HORIZONTAL_SPACE}{2,}`, "g"),
+      replacement: collapseExtraHorizontalSpaces,
       message: MSG_TYPO_REMOVE_EXTRA_SPACE,
       priority: 54,
     }),

@@ -49,7 +49,7 @@ describe("buildSingleSentenceRemovePeriodRules", () => {
   it("сообщение в отчёте", () => {
     const [fix] = fixesFor("Заполните профиль.", rules);
     expect(fix).toMatchObject({
-      message: "Редполитика: одно предложение, точка не нужна.",
+      message: "Редполитика: одно предложение, точка не нужна",
       ruleId: "cian-139b-single-sentence-remove-period",
     });
     expect(applyAllRules("Заполните профиль.", rules)).toBe("Заполните профиль");

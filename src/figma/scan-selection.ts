@@ -1,5 +1,5 @@
 import { getAutofixRules } from "../rules/autofix-rules";
-import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
+import { isOrthographyRuleId } from "../rules/orthography-spell-rules";
 import type { CheckResultDto, TextNodeCardDto } from "../shared/messages";
 import { compareFixesByPosition } from "../shared/fix-sort";
 import type { TextFix } from "../core/autofix-engine";
@@ -27,10 +27,15 @@ export type ScanSelectionOptions = {
    * Для финального UI — true (по умолчанию).
    */
   includeSpelling?: boolean;
+  /**
+   * Только auto-правила и auto-карточки (цикл apply).
+   * Без confirm/choice и без полного partition — заметно быстрее на больших выборках.
+   */
+  autoApplyOnly?: boolean;
 };
 
 function isOrthographySpellFix(ruleId: string): boolean {
-  return ruleId === ORTHOGRAPHY_SPELL_RULE_ID;
+  return isOrthographyRuleId(ruleId);
 }
 
 function resolveConfirmFixes(node: TextNode, confirm: TextFix[]) {
@@ -132,11 +137,30 @@ export function scanSelectedTextNodes(
 } {
   const policy = options?.policy ?? "auto";
   const includeSpelling = options?.includeSpelling ?? true;
+  const autoApplyOnly = options?.autoApplyOnly ?? false;
   const textNodes = [...collectTextNodesFromSelection(selection)];
   const nodeById = new Map<string, TextNode>();
   for (const node of textNodes) nodeById.set(node.id, node);
 
   const checkedTextLayers = buildCheckedTextLayers(textNodes);
+
+  if (policy === "auto" && autoApplyOnly) {
+    const { cards, foundFixes } = buildCards(textNodes, "auto", includeSpelling);
+    return {
+      result: {
+        summary: buildCheckSummary(textNodes, {
+          foundFixes,
+          confirmFixes: 0,
+          choiceFixes: 0,
+        }),
+        checkedTextLayers,
+        cards,
+        confirmCards: [],
+        choiceCards: [],
+      },
+      nodeById,
+    };
+  }
 
   if (policy === "auto") {
     const scan = scanAllPolicies(textNodes, includeSpelling);

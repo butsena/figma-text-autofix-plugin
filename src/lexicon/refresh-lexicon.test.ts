@@ -159,4 +159,10 @@ describe("refreshLexiconFromRemote with SPELLCHECK_ENABLED=false", () => {
     await refreshLexiconFromRemote();
     expect(vi.mocked(refreshTextReplacementsFromRemote).mock.calls.length).toBe(calls);
   });
+
+  it("includeSpell:false не трогает spell remote", async () => {
+    const status = await refreshLexiconFromRemote({ force: true, includeSpell: false });
+    expect(refreshSpellDictionaryFromRemote).not.toHaveBeenCalled();
+    expect(status.spellDictionary.count).toBe(0);
+  });
 });

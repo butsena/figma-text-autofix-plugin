@@ -3,7 +3,7 @@ import { formatFixDiffHtml } from "./diff-format";
 import { formatChoiceHintHtml, formatFixCategoryLabel } from "./ui-helpers";
 import { selectedChoiceOptionIndex } from "./choice-selection";
 import type { TextFixDto } from "../shared/messages";
-import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
+import { isOrthographyRuleId } from "../rules/orthography-spell-rules";
 
 export function renderFixRow(
   fix: {
@@ -20,7 +20,7 @@ export function renderFixRow(
   sourceText: string,
   confirmActions?: { cardIdx: number; fixIdx: number },
 ): string {
-  if (confirmActions && fix.ruleId === ORTHOGRAPHY_SPELL_RULE_ID) {
+  if (confirmActions && isOrthographyRuleId(fix.ruleId)) {
     return renderOrthographySpellFixRow(fix, confirmActions.cardIdx, confirmActions.fixIdx);
   }
 
@@ -77,7 +77,7 @@ export function renderOrthographySpellFixRow(
       <div class="reportWhy">${escapeHtml(fix.message)}</div>
       <div class="reportMeta">Правило: <code>${escapeHtml(fix.ruleId)}</code> · ${escapeHtml(formatFixCategoryLabel(fix.category, fix.ruleId))}</div>
       <div class="reportDiff"><span class="reportCtxWord">${escapeHtml(fix.before)}</span></div>
-      <label class="spellInputLabel" for="spell-input-${cardIdx}-${fixIdx}">Исправление</label>
+      <label class="spellInputLabel" for="spell-input-${cardIdx}-${fixIdx}">Напишите, как исправить</label>
       <input
         id="spell-input-${cardIdx}-${fixIdx}"
         type="text"

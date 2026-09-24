@@ -13,6 +13,7 @@ SaaS
 API
 URL
 SMS
+смс
 Push
 email
 e-mail

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyAllRules, fixesFor } from "../../test/helpers";
+import { applyAllRules, applyProposedFixes, fixesFor } from "../../test/helpers";
 import { getAutofixRules } from "../autofix-rules";
 import {
   ensureSentenceTerminalPeriods,
@@ -85,7 +85,8 @@ describe("buildSentenceTerminalPeriodRules", () => {
     expect(applyAllRules("Первое. Второе", rules)).toBe("Первое. Второе.");
   });
 
-  it("в полном пайплайне после капитализации", () => {
-    expect(applyAllRules("первое. второе", allRules)).toBe("Первое. Второе.");
+  it("в полном пайплайне точка auto, заглавная — confirm", () => {
+    expect(applyAllRules("первое. второе", allRules)).toBe("первое. второе.");
+    expect(applyProposedFixes("первое. второе", allRules)).toBe("Первое. Второе.");
   });
 });

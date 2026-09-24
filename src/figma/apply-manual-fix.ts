@@ -7,12 +7,14 @@ import { applyTextFixesToTextNode } from "./apply-fixes";
 import { recordChoiceResolutionOnNode, recordSpellSkipOnNode } from "./choice-resolution";
 import {
   getLastAutoApplyReport,
+  getLastManualApplyReport,
   postCheckResultToUi,
   setLastAutoApplyReport,
+  setLastManualApplyReport,
 } from "./check-result-session";
 import type { TextFixDto } from "../shared/messages";
 import { textFixDtoToEngineFix } from "../shared/text-fix-mapping";
-import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
+import { isOrthographyRuleId } from "../rules/orthography-spell-rules";
 import {
   isPersistedManualResolution,
   resolveChosenWordRangeAfterApply,
@@ -57,23 +59,28 @@ export async function applyManualFixAndRefresh(
   }
 
   const selection = figma.currentPage.selection;
-  let reportBase = getLastAutoApplyReport();
   if (applied.length > 0) {
-    reportBase = mergeAutoApplyReports(
-      reportBase,
-      buildAutoApplyReportFromConfirmFix(node.id, node.name, fix, sourceText),
+    setLastManualApplyReport(
+      mergeAutoApplyReports(
+        getLastManualApplyReport(),
+        buildAutoApplyReportFromConfirmFix(node.id, node.name, fix, sourceText),
+      ),
     );
   }
 
-  const { report } = await runAutofixAutoPasses(selection, reportBase);
+  // После ручной правки (орфография и т.п.) сразу добираем auto: капитализация списка, NBSP…
+  let { report } = await runAutofixAutoPasses(selection, getLastAutoApplyReport());
 
-  // Автоправки (NBSP и т.п.) сдвигают текст — перезаписать якоря resolution.
+  // Автоправки сдвигают текст — перезаписать якоря resolution, затем ещё один быстрый проход.
   if (persistResolution) {
     const refreshed = await figma.getNodeByIdAsync(nodeId);
     if (refreshed && refreshed.type === "TEXT") {
       recordChoiceResolutionAfterApply(refreshed, fix);
     }
   }
+
+  const second = await runAutofixAutoPasses(selection, report);
+  report = second.report;
 
   setLastAutoApplyReport(report);
   postCheckResultToUi(selection);
@@ -87,7 +94,7 @@ export async function skipManualFixAndRefresh(
   const node = await figma.getNodeByIdAsync(nodeId);
   if (!node || node.type !== "TEXT") return;
 
-  if (fix.rule.id === ORTHOGRAPHY_SPELL_RULE_ID) {
+  if (isOrthographyRuleId(fix.rule.id)) {
     recordSpellSkipOnNode(node, {
       ruleId: fix.rule.id,
       from: fix.from,

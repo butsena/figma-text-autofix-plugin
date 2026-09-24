@@ -2,7 +2,7 @@ import type { PluginToUiMessage } from "../shared/messages";
 import { initUiEvents } from "./ui-events";
 import { sendToPlugin } from "./ui-plugin-bridge";
 import { render, renderPluginError } from "./ui-render";
-import { applyCheckResult, applyLexiconConfig, resetForError } from "./ui-state";
+import { applyCheckResult, applyLexiconConfig, applySpellcheckStatus, resetForError } from "./ui-state";
 
 export function handlePluginMessage(event: MessageEvent): void {
   const msg = event.data && (event.data as { pluginMessage?: PluginToUiMessage }).pluginMessage;
@@ -20,11 +20,19 @@ export function handlePluginMessage(event: MessageEvent): void {
     return;
   }
 
+  if (msg.type === "plugin:spellcheckStatus") {
+    applySpellcheckStatus(Boolean(msg.active));
+    render();
+    return;
+  }
+
   if (msg.type === "plugin:checkResult") {
     applyCheckResult({
       summary: msg.result.summary,
       checkedTextLayers: msg.result.checkedTextLayers || [],
       lastAutoApplyReport: msg.result.lastAutoApplyReport != null ? msg.result.lastAutoApplyReport : null,
+      lastManualApplyReport:
+        msg.result.lastManualApplyReport != null ? msg.result.lastManualApplyReport : null,
       cards: msg.result.cards,
       confirmCards: msg.result.confirmCards || [],
       choiceCards: msg.result.choiceCards || [],

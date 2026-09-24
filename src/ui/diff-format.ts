@@ -185,6 +185,59 @@ function formatContextualWhitespaceDiff(
   );
 }
 
+function isLetterFragment(text: string | undefined): boolean {
+  if (!text) return false;
+  for (let i = 0; i < text.length; i++) {
+    if (!WORD_CHAR_RE.test(text.charAt(i))) return false;
+  }
+  return true;
+}
+
+function isWordStartIndex(text: string, index: number): boolean {
+  if (index <= 0) return true;
+  return !WORD_CHAR_RE.test(text.charAt(index - 1));
+}
+
+function formatWordWithHighlightedPrefix(prefix: string, rest: string): string {
+  return (
+    '<span class="reportCtxWord"><b>' +
+    visualizeDiffFragment(prefix) +
+    "</b>" +
+    visualizeDiffFragment(rest) +
+    "</span>"
+  );
+}
+
+function formatWordPrefixDiff(
+  sourceText: string,
+  from: number,
+  to: number,
+  before: string,
+  after: string,
+): string | null {
+  if (!isLetterFragment(before) || !isLetterFragment(after)) return null;
+  if (!isWordStartIndex(sourceText, from)) return null;
+  const rest = extractContextWordAfter(sourceText, to);
+  if (!rest) return null;
+  return (
+    formatWordWithHighlightedPrefix(before, rest) +
+    ' <span style="color:#888;font-weight:400">→</span> ' +
+    formatWordWithHighlightedPrefix(after, rest)
+  );
+}
+
+function formatWordToWordWithPeriod(word: string, added: string): string {
+  return (
+    '<span class="reportCtxWord">' +
+    escapeHtml(word) +
+    "</span>" +
+    ' <span style="color:#888;font-weight:400">→</span> <b>' +
+    '<span class="reportCtxWord">' +
+    escapeHtml(word + added) +
+    "</span></b>"
+  );
+}
+
 function formatSentencePeriodDiff(
   sourceText: string,
   from: number,
@@ -194,15 +247,18 @@ function formatSentencePeriodDiff(
   if (isWhitespaceOnlyFragment(before) && isSentenceTerminalPunctuationFragment(after)) {
     const word = extractContextWordBefore(sourceText, from);
     if (!word) return null;
-    return (
-      '<span class="reportCtxWord">' +
-      escapeHtml(word) +
-      "</span>" +
-      ' <span style="color:#888;font-weight:400">→</span> <b>' +
-      '<span class="reportCtxWord">' +
-      escapeHtml(word + (after ?? "")) +
-      "</span></b>"
-    );
+    return formatWordToWordWithPeriod(word, after ?? "");
+  }
+
+  if (
+    before &&
+    after &&
+    after.startsWith(before) &&
+    isLetterFragment(before) &&
+    isSentenceTerminalPunctuationFragment(after.slice(before.length))
+  ) {
+    const word = extractContextWordBefore(sourceText, from) + before;
+    return formatWordToWordWithPeriod(word, after.slice(before.length));
   }
 
   if (before?.endsWith(".") && (!after || after === "" || after === before.slice(0, -1))) {
@@ -248,6 +304,23 @@ export function formatFixDiffHtml(fix: FixDiffInput, sourceText?: string): strin
       enriched.after,
     );
     if (contextual) return contextual;
+  }
+
+  if (
+    enriched.sourceText &&
+    enriched.from != null &&
+    enriched.to != null &&
+    enriched.before != null &&
+    enriched.after != null
+  ) {
+    const wordPrefix = formatWordPrefixDiff(
+      enriched.sourceText,
+      enriched.from,
+      enriched.to,
+      enriched.before,
+      enriched.after,
+    );
+    if (wordPrefix) return wordPrefix;
   }
 
   return formatDiffHtml(enriched.before, enriched.after);

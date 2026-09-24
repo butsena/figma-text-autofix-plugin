@@ -53,6 +53,6 @@ describe("buildServiceWordNbspRules", () => {
 
   it("неразрывный пробел после «от» в полном пайплайне", () => {
     const allRules = getAutofixRules();
-    expect(applyAllRules("от 100 000 ₽", allRules)).toBe(`От${nbsp}100${nbsp}000${nbsp}₽`);
+    expect(applyAllRules("от 100 000 ₽", allRules)).toBe(`от${nbsp}100${nbsp}000${nbsp}₽`);
   });
 });

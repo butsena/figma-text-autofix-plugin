@@ -16,6 +16,7 @@ vi.mock("./scan-text-check", async () => {
   return {
     ...actual,
     checkTextWithSpelling: (...args: unknown[]) => checkTextMock(...args),
+    checkTextForAutofixesOnly: (...args: unknown[]) => checkTextMock(...args),
     filterRulesByPolicy: actual.filterRulesByPolicy,
   };
 });
@@ -170,5 +171,27 @@ describe("scanSelectedTextNodes", () => {
     expect(result.confirmCards).toEqual([]);
     expect(result.choiceCards).toHaveLength(1);
     expect(result.summary.choiceFixes).toBe(1);
+  });
+
+  it("autoApplyOnly возвращает только auto-карточки", async () => {
+    const node = textNode("1:1", "текст");
+    collectMock.mockReturnValue([node]);
+    checkTextMock.mockReturnValue([
+      fix({ from: 0, to: 1, before: "т", after: "Т", ruleId: "auto-1", applyPolicy: "auto" }),
+    ]);
+
+    const { scanSelectedTextNodes } = await import("./scan-selection");
+    const { result } = scanSelectedTextNodes([node], {
+      policy: "auto",
+      includeSpelling: false,
+      autoApplyOnly: true,
+    });
+
+    expect(result.summary.foundFixes).toBe(1);
+    expect(result.summary.confirmFixes).toBe(0);
+    expect(result.summary.choiceFixes).toBe(0);
+    expect(result.cards).toHaveLength(1);
+    expect(result.confirmCards).toEqual([]);
+    expect(result.choiceCards).toEqual([]);
   });
 });

@@ -66,7 +66,7 @@ describe("buildImplicitSentencePeriodRules", () => {
     expect(fixes[0]).toMatchObject({
       applyPolicy: "confirm",
       after: ".",
-      message: "Редполитика: похоже, между словами пропущена точка.",
+      message: "Редполитика: похоже, между словами пропущена точка",
     });
   });
 

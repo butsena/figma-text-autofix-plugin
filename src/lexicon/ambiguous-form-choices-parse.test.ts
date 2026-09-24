@@ -68,4 +68,17 @@ describe("parseAmbiguousFormChoices", () => {
     });
     expect(choices[1]?.hintHtml).toContain("ждёте");
   });
+
+  it("парсит напишите/напишете с hintHtml", () => {
+    const [choice] = parseAmbiguousFormChoices(`
+# id: cian-choice-napishite-napishete
+напишите - напишете - что сделайте? | напишите мне срочно!; что сделаете? | завтра вы все напишете диктант!
+`);
+    expect(choice).toMatchObject({
+      id: "cian-choice-napishite-napishete",
+      options: ["напишите", "напишете"],
+    });
+    expect(choice?.hintHtml).toContain("напишите мне срочно!");
+    expect(choice?.hintHtml).toContain("завтра вы все напишете диктант!");
+  });
 });

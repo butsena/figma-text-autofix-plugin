@@ -48,6 +48,22 @@ describe("formatFixCategoryLabel", () => {
     expect(html).toContain("reportHintSep");
   });
 
+  it("форматирует подсказку для пишите/пишете", () => {
+    const html = formatChoiceHintHtml("cian-choice-pishite-pishete");
+    expect(html).toContain("что делайте?");
+    expect(html).toContain("пишите письма мелким почерком");
+    expect(html).toContain("что делаете?");
+    expect(html).toContain("вы всегда пишете правильно");
+  });
+
+  it("форматирует подсказку для напишите/напишете", () => {
+    const html = formatChoiceHintHtml("cian-choice-napishite-napishete");
+    expect(html).toContain("что сделайте?");
+    expect(html).toContain("напишите мне срочно!");
+    expect(html).toContain("что сделаете?");
+    expect(html).toContain("завтра вы все напишете диктант!");
+  });
+
   it("предпочитает hintHtml с плагина (remote-пары без UI-стора)", () => {
     const html = formatChoiceHintHtml("cian-choice-unknown", undefined, "<div class=\"reportHint\">из DTO</div>");
     expect(html).toBe("<div class=\"reportHint\">из DTO</div>");

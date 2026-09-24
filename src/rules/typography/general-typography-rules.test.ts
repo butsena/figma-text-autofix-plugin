@@ -28,8 +28,8 @@ describe("buildGeneralTypographyRules", () => {
 
   it("неразрывный пробел перед ₽ (полный пайплайн)", () => {
     const allRules = getAutofixRules();
-    expect(applyAllRules("от 100 000 ₽", allRules)).toBe(`От${nbsp}100${nbsp}000${nbsp}₽`);
-    expect(applyAllRules("от 100000₽", allRules)).toBe(`От${nbsp}100${nbsp}000${nbsp}₽`);
+    expect(applyAllRules("от 100 000 ₽", allRules)).toBe(`от${nbsp}100${nbsp}000${nbsp}₽`);
+    expect(applyAllRules("от 100000₽", allRules)).toBe(`от${nbsp}100${nbsp}000${nbsp}₽`);
   });
 
   it("неразрывный пробел перед млн и тыс", () => {
@@ -65,6 +65,12 @@ describe("buildGeneralTypographyRules", () => {
 
   it("убирает двойные пробелы", () => {
     expect(applyAllRules("слишком  много   пробелов", rules)).toBe("слишком много пробелов");
+  });
+
+  it("убирает два и более NBSP подряд", () => {
+    expect(applyAllRules(`слово${nbsp}${nbsp}слово`, rules)).toBe(`слово${nbsp}слово`);
+    expect(applyAllRules(`слово${nbsp}${nbsp}${nbsp}слово`, rules)).toBe(`слово${nbsp}слово`);
+    expect(applyAllRules(`слово ${nbsp}слово`, rules)).toBe(`слово${nbsp}слово`);
   });
 
   it("схлопывает пустую строку в один перенос, не склеивая абзацы", () => {

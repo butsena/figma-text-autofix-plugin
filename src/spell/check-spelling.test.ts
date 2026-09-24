@@ -50,7 +50,7 @@ describe("checkSpellingFixes", () => {
       ruleId: "orthography-spellcheck",
     });
     expect(fixes[0]?.message).toBe(
-      "Возможно в слове «Кватира» опечатка или ошибка — проверьте",
+      "Возможно, в слове «Кватира» опечатка или ошибка — проверьте",
     );
   });
 
@@ -74,5 +74,38 @@ describe("checkSpellingFixes", () => {
       },
     ];
     expect(checkSpellingFixes("Кватира в центре", existing)).toEqual([]);
+  });
+
+  it("ловит набор в английской раскладке, если после конвертации слово есть в словаре", () => {
+    const fixes = checkSpellingFixes("Наберите ghbdtn в чат");
+    expect(fixes.some((f) => f.before === "ghbdtn" && f.after === "привет")).toBe(true);
+    const layout = fixes.find((f) => f.before === "ghbdtn");
+    expect(layout?.ruleId).toBe("orthography-keyboard-layout");
+    expect(layout?.message).toContain("английской раскладке");
+  });
+
+  it("ловит латинский «мусор» без гласных в русском тексте", () => {
+    const fixes = checkSpellingFixes("Пункт 2. kjjklk’;kg в списке");
+    const layout = fixes.find((f) => f.before === "kjjklk’;kg");
+    expect(layout).toMatchObject({
+      after: "лоолдлэжлп",
+      ruleId: "orthography-keyboard-layout",
+      applyPolicy: "confirm",
+    });
+  });
+
+  it("не трогает осмысленный английский вроде Figma/online", () => {
+    const fixes = checkSpellingFixes("Сверстайте макет в Figma online");
+    expect(fixes.filter((f) => f.ruleId === "orthography-keyboard-layout")).toEqual([]);
+  });
+
+  it("ловит латиницу, прилипшую к кириллице (gдоказываем)", () => {
+    const fixes = checkSpellingFixes("но ищете:\n1. gдоказываем общее к");
+    const layout = fixes.find((f) => f.before === "gдоказываем");
+    expect(layout).toMatchObject({
+      after: "Доказываем",
+      ruleId: "orthography-keyboard-layout",
+      applyPolicy: "confirm",
+    });
   });
 });

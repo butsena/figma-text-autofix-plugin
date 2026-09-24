@@ -92,6 +92,24 @@ describe("buildAmbiguousFormChoiceRules", () => {
     ]);
   });
 
+  it("предлагает выбор для напишите и напишете", () => {
+    const [write] = fixesFor("напишите мне", rules);
+    expect(write).toMatchObject({
+      applyPolicy: "choice",
+      before: "напишите",
+      choiceOptions: ["напишите", "напишете"],
+      ruleId: "cian-choice-napishite-napishete",
+    });
+
+    const [willWrite] = fixesFor("завтра напишете диктант", rules);
+    expect(willWrite).toMatchObject({
+      applyPolicy: "choice",
+      before: "напишете",
+      choiceOptions: ["напишите", "напишете"],
+      ruleId: "cian-choice-napishite-napishete",
+    });
+  });
+
   it("находит все choice-формы в смешанной фразе, включая е вместо ё", () => {
     const text =
       "Привяжите номер телефона, онлайн не всё потерять доступ пишете квартиру ждете online ₽ Риэлтору";

@@ -17,6 +17,8 @@ export type AutofixRule = {
   hintHtml?: string;
   /** Равноправные варианты выбора (policy choice): кнопки в UI вместо «Исправить». */
   choiceOptions?: string[];
+  /** Варианты choice, зависящие от совпадения (например, два конкретных слова). */
+  choiceOptionsForMatch?: (match: RegExpExecArray) => string[] | undefined;
   priority: number;
   /** auto — применять сразу; confirm — после подтверждения; choice — выбор из вариантов. */
   applyPolicy?: ApplyPolicy;
@@ -97,7 +99,8 @@ export function checkTextForAutofixes(text: string, rules: AutofixRule[]): TextC
       if (rule.matchFilter && !rule.matchFilter(text, match)) continue;
 
       const after = computeAfter(text, match, rule);
-      const isChoice = Boolean(rule.choiceOptions?.length);
+      const choiceOptions = rule.choiceOptionsForMatch?.(match) ?? rule.choiceOptions;
+      const isChoice = Boolean(choiceOptions?.length);
 
       if (!isChoice && after === matched) continue;
 
@@ -112,7 +115,7 @@ export function checkTextForAutofixes(text: string, rules: AutofixRule[]): TextC
           message: rule.message,
           ...(rule.hint ? { hint: rule.hint } : {}),
           ...(rule.hintHtml ? { hintHtml: rule.hintHtml } : {}),
-          choiceOptions: rule.choiceOptions,
+          ...(choiceOptions?.length ? { choiceOptions } : {}),
           priority: rule.priority,
           applyPolicy: resolveApplyPolicy(rule.applyPolicy),
         });

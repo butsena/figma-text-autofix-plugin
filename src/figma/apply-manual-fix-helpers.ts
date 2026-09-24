@@ -1,10 +1,10 @@
 import { isChoicePolicy } from "../core/apply-policy";
-import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
+import { isOrthographyRuleId } from "../rules/orthography-spell-rules";
 import type { TextFixDto } from "../shared/messages";
 import { findChosenWordNear } from "./choice-resolution-core";
 
 export function isPersistedManualResolution(fix: TextFixDto): boolean {
-  return isChoicePolicy(fix.rule.applyPolicy) || fix.rule.id === ORTHOGRAPHY_SPELL_RULE_ID;
+  return isChoicePolicy(fix.rule.applyPolicy) || isOrthographyRuleId(fix.rule.id);
 }
 
 /** Диапазон выбранного слова после apply (с учётом сдвига текста). */

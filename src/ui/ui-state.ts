@@ -9,6 +9,7 @@ export type UiAccordionState = {
   confirmDetailsOpen: boolean;
   choiceDetailsOpen: boolean;
   reportDetailsOpen: boolean;
+  manualReportDetailsOpen: boolean;
   textLayersDetailsOpen: boolean;
   techDetailsOpen: boolean;
 };
@@ -25,7 +26,10 @@ export type UiState = {
   confirmCards: TextNodeCardDto[];
   choiceCards: TextNodeCardDto[];
   lastReport: AutoApplyReportDto | null;
+  lastManualReport: AutoApplyReportDto | null;
   lexiconLoad: LexiconLoadStatusDto | null;
+  /** Пока грузится / крутится Hunspell после auto-apply. */
+  spellcheckInProgress: boolean;
   ui: UiAccordionState;
   /** Выбранный вариант choice-правки: ключ «cardIdx:fixIdx» → индекс опции. */
   choiceSelection: Record<string, number>;
@@ -38,11 +42,14 @@ export const state: UiState = {
   confirmCards: [],
   choiceCards: [],
   lastReport: null,
+  lastManualReport: null,
   lexiconLoad: null,
+  spellcheckInProgress: false,
   ui: {
     confirmDetailsOpen: true,
     choiceDetailsOpen: true,
     reportDetailsOpen: false,
+    manualReportDetailsOpen: true,
     textLayersDetailsOpen: false,
     techDetailsOpen: false,
   },
@@ -70,13 +77,20 @@ export function resetForError(): void {
   state.summary = null;
   state.checkedTextLayers = [];
   state.lastReport = null;
+  state.lastManualReport = null;
   state.cards = [];
+  state.spellcheckInProgress = false;
+}
+
+export function applySpellcheckStatus(active: boolean): void {
+  state.spellcheckInProgress = active;
 }
 
 export function applyCheckResult(result: {
   summary: UiState["summary"];
   checkedTextLayers: CheckedTextLayerDto[];
   lastAutoApplyReport: AutoApplyReportDto | null;
+  lastManualApplyReport: AutoApplyReportDto | null;
   cards: TextNodeCardDto[];
   confirmCards: TextNodeCardDto[];
   choiceCards: TextNodeCardDto[];
@@ -85,6 +99,7 @@ export function applyCheckResult(result: {
   state.summary = result.summary;
   state.checkedTextLayers = result.checkedTextLayers || [];
   state.lastReport = result.lastAutoApplyReport;
+  state.lastManualReport = result.lastManualApplyReport;
   state.cards = result.cards.map(mapTextNodeCard);
   state.confirmCards = (result.confirmCards || []).map(mapTextNodeCard);
   state.choiceCards = (result.choiceCards || []).map(mapTextNodeCard);
@@ -101,6 +116,10 @@ export function captureUiAccordionState(): void {
   if (choiceEl instanceof HTMLDetailsElement) state.ui.choiceDetailsOpen = choiceEl.open;
   const reportEl = document.querySelector("details.reportDetails");
   if (reportEl instanceof HTMLDetailsElement) state.ui.reportDetailsOpen = reportEl.open;
+  const manualReportEl = document.querySelector("details.manualReportDetails");
+  if (manualReportEl instanceof HTMLDetailsElement) {
+    state.ui.manualReportDetailsOpen = manualReportEl.open;
+  }
   const textLayersEl = document.querySelector("details.textLayersDetails");
   if (textLayersEl instanceof HTMLDetailsElement) {
     state.ui.textLayersDetailsOpen = textLayersEl.open;
@@ -116,6 +135,8 @@ export function syncAccordionStateFromElement(el: Element): void {
     state.ui.choiceDetailsOpen = (el as HTMLDetailsElement).open;
   } else if (el.classList.contains("reportDetails")) {
     state.ui.reportDetailsOpen = (el as HTMLDetailsElement).open;
+  } else if (el.classList.contains("manualReportDetails")) {
+    state.ui.manualReportDetailsOpen = (el as HTMLDetailsElement).open;
   } else if (el.classList.contains("textLayersDetails")) {
     state.ui.textLayersDetailsOpen = (el as HTMLDetailsElement).open;
   } else if (el.classList.contains("techDetails")) {

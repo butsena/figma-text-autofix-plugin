@@ -17,6 +17,14 @@ export function applyAllRules(text: string, rules: AutofixRule[]): string {
   return applyTextFixes(text, autoFixesFor(text, rules));
 }
 
+/** Auto + confirm (без choice): как если бы все confirm приняли. */
+export function applyProposedFixes(text: string, rules: AutofixRule[]): string {
+  return applyTextFixes(
+    text,
+    fixesFor(text, rules).filter((f) => f.applyPolicy !== "choice"),
+  );
+}
+
 export function fixByRuleId(
   text: string,
   rules: AutofixRule[],

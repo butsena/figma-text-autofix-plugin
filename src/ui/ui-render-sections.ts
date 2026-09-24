@@ -9,12 +9,15 @@ import {
 import { state } from "./ui-state";
 import { renderChoiceFixRow, renderFixRow } from "./ui-render-fix-row";
 
-function wrapReportInDetails(bodyHtml: string): string {
+function wrapReportInDetails(
+  bodyHtml: string,
+  options: { title: string; detailsClass: string; open: boolean },
+): string {
   return `
     <div class="reportBlock">
-      <details class="reportDetails"${detailsOpenAttr(state.ui.reportDetailsOpen)}>
+      <details class="${options.detailsClass}"${detailsOpenAttr(options.open)}>
         <summary class="reportDetailsSummary">
-          <span class="reportDetailsTitle">Что исправлено</span>
+          <span class="reportDetailsTitle">${options.title}</span>
         </summary>
         <div class="reportDetailsBody">${bodyHtml}</div>
       </details>
@@ -22,16 +25,49 @@ function wrapReportInDetails(bodyHtml: string): string {
   `;
 }
 
+function renderReportLayersHtml(report: NonNullable<typeof state.lastReport>): string {
+  return report.layers
+    .map((layer) => {
+      const fixesHtml = layer.fixes
+        .map((f) =>
+          renderFixRow(
+            {
+              ruleId: f.ruleId,
+              category: f.category,
+              message: f.message,
+              from: f.from,
+              to: f.to,
+              before: f.before,
+              after: f.after,
+              sourceText: f.sourceText,
+            },
+            f.sourceText ?? "",
+          ),
+        )
+        .join("");
+      return `
+        <div class="reportLayer">
+          ${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}
+          ${fixesHtml}
+        </div>
+      `;
+    })
+    .join("");
+}
+
 export function renderResultHeaderHtml(): string {
   if (!state.summary) {
     return '<div class="resultWaiting">Шуршу по макету…</div>';
   }
-  const applied = state.lastReport ? state.lastReport.summary.appliedFixCount : 0;
+  const appliedAuto = state.lastReport ? state.lastReport.summary.appliedFixCount : 0;
+  const appliedManual = state.lastManualReport
+    ? state.lastManualReport.summary.appliedFixCount
+    : 0;
+  const applied = appliedAuto + appliedManual;
   const pendingCount =
     countConfirmFixes(state.confirmCards) + countConfirmFixes(state.choiceCards);
   return `
     <div class="resultHeader">
-      <h1 class="resultTitle">Проверка окончена</h1>
       <div class="resultStats">
         <div class="resultStat">
           <div class="resultStatLabel">Проверено слоёв</div>
@@ -46,6 +82,16 @@ export function renderResultHeaderHtml(): string {
           <div class="resultStatValue">${pendingCount}</div>
         </div>
       </div>
+    </div>
+  `;
+}
+
+export function renderSpellcheckStatusHtml(): string {
+  if (!state.spellcheckInProgress) return "";
+  return `
+    <div class="spellcheckStatus" role="status" aria-live="polite">
+      <span class="spellcheckSpinner" aria-hidden="true"></span>
+      <span class="spellcheckStatusText">Проверяю орфорграфию — пажжите малька</span>
     </div>
   `;
 }
@@ -118,41 +164,28 @@ export function renderReportHtml(): string {
   const r = state.lastReport;
   if (!r) return "";
   if (!r.layers.length) {
-    if (state.summary && state.summary.foundFixes === 0) {
+    if (state.summary && state.summary.foundFixes === 0 && !state.lastManualReport?.layers.length) {
       return '<div class="empty" style="padding:4px 0;margin-bottom:14px">В выделенных слоях правок нет</div>';
     }
     return "";
   }
 
-  const layerBlocks = r.layers
-    .map((layer) => {
-      const fixesHtml = layer.fixes
-        .map((f) =>
-          renderFixRow(
-            {
-              ruleId: f.ruleId,
-              category: f.category,
-              message: f.message,
-              from: f.from,
-              to: f.to,
-              before: f.before,
-              after: f.after,
-              sourceText: f.sourceText,
-            },
-            f.sourceText ?? "",
-          ),
-        )
-        .join("");
-      return `
-        <div class="reportLayer">
-          ${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}
-          ${fixesHtml}
-        </div>
-      `;
-    })
-    .join("");
+  return wrapReportInDetails(renderReportLayersHtml(r), {
+    title: "Что исправлено автоматически",
+    detailsClass: "reportDetails",
+    open: state.ui.reportDetailsOpen,
+  });
+}
 
-  return wrapReportInDetails(layerBlocks);
+export function renderManualReportHtml(): string {
+  const r = state.lastManualReport;
+  if (!r?.layers.length) return "";
+
+  return wrapReportInDetails(renderReportLayersHtml(r), {
+    title: "Вы исправили",
+    detailsClass: "manualReportDetails",
+    open: state.ui.manualReportDetailsOpen,
+  });
 }
 
 export function renderConfirmHtml(): string {

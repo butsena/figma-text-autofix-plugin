@@ -77,9 +77,24 @@ describe("narrowReplacementRange", () => {
   it("не дробит замену при смене регистра в слове", () => {
     expect(narrowReplacementRange(5, "Вас", "вас")).toEqual({
       from: 5,
-      to: 8,
-      before: "Вас",
-      after: "вас",
+      to: 6,
+      before: "В",
+      after: "в",
+    });
+  });
+
+  it("сужает капитализацию после маркера списка до одной буквы", () => {
+    expect(narrowReplacementRange(0, "1. п", "1. П")).toEqual({
+      from: 3,
+      to: 4,
+      before: "п",
+      after: "П",
+    });
+    expect(narrowReplacementRange(10, "период 2. п", "период 2. П")).toEqual({
+      from: 20,
+      to: 21,
+      before: "п",
+      after: "П",
     });
   });
 

@@ -91,6 +91,8 @@ export type CheckResultDto = {
   choiceCards: TextNodeCardDto[];
   /** Отчёт о автоисправлении (может объединять несколько проходов). */
   lastAutoApplyReport?: AutoApplyReportDto | null;
+  /** Отчёт о правках, которые пользователь подтвердил вручную. */
+  lastManualApplyReport?: AutoApplyReportDto | null;
 };
 
 /** Запуск без фреймов, в которых есть текст. */
@@ -137,5 +139,6 @@ export type UiToPluginMessage =
 export type PluginToUiMessage =
   | { type: "plugin:checkResult"; result: CheckResultDto }
   | { type: "plugin:error"; message: string }
-  | { type: "plugin:config"; lexiconLoad?: LexiconLoadStatusDto | null };
+  | { type: "plugin:config"; lexiconLoad?: LexiconLoadStatusDto | null }
+  | { type: "plugin:spellcheckStatus"; active: boolean };
 

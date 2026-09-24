@@ -103,7 +103,7 @@ function isContinuationOfTitleCaseRun(text: string, capStart: number): boolean {
   return Boolean(prevWord && isTitleCaseWord(prevWord));
 }
 
-function isInsideGuillemets(text: string, index: number): boolean {
+export function isInsideGuillemets(text: string, index: number): boolean {
   let depth = 0;
   for (let i = 0; i < index; i++) {
     const ch = text[i];
@@ -113,7 +113,7 @@ function isInsideGuillemets(text: string, index: number): boolean {
   return depth > 0;
 }
 
-function isInsideDoubleQuotes(text: string, index: number): boolean {
+export function isInsideDoubleQuotes(text: string, index: number): boolean {
   let inQuotes = false;
   for (let i = 0; i < index; i++) {
     if (text[i] === '"') inQuotes = !inQuotes;

@@ -3,6 +3,7 @@ import type { TextNodeCardDto } from "../shared/messages";
 import {
   applyCheckResult,
   applyLexiconConfig,
+  applySpellcheckStatus,
   choiceSelectionKey,
   mapTextNodeCard,
   resetForError,
@@ -25,6 +26,7 @@ describe("ui-state", () => {
     state.confirmCards = [];
     state.choiceCards = [];
     state.lexiconLoad = null;
+    state.spellcheckInProgress = false;
     state.choiceSelection = {};
     state.ui.confirmDetailsOpen = true;
     state.ui.techDetailsOpen = false;
@@ -44,6 +46,7 @@ describe("ui-state", () => {
       summary: { checkedLayers: 1, foundFixes: 0, confirmFixes: 1, choiceFixes: 0 },
       checkedTextLayers: [{ nodeId: "1:1", nodeName: "A", characterCount: 5 }],
       lastAutoApplyReport: null,
+      lastManualApplyReport: null,
       cards: [sampleCard],
       confirmCards: [sampleCard],
       choiceCards: [],
@@ -67,12 +70,23 @@ describe("ui-state", () => {
     expect(state.lexiconLoad?.replacements.count).toBe(10);
   });
 
+  it("applySpellcheckStatus и resetForError управляют индикатором орфографии", () => {
+    applySpellcheckStatus(true);
+    expect(state.spellcheckInProgress).toBe(true);
+    resetForError();
+    expect(state.spellcheckInProgress).toBe(false);
+  });
+
   it("resetForError чистит summary/cards/report", () => {
     applyCheckResult({
       summary: { checkedLayers: 1, foundFixes: 1, confirmFixes: 0, choiceFixes: 0 },
       checkedTextLayers: [],
       lastAutoApplyReport: {
         summary: { checkedLayers: 1, appliedFixCount: 1, changedLayerCount: 1 },
+        layers: [],
+      },
+      lastManualApplyReport: {
+        summary: { checkedLayers: 1, appliedFixCount: 2, changedLayerCount: 1 },
         layers: [],
       },
       cards: [sampleCard],
@@ -83,6 +97,7 @@ describe("ui-state", () => {
     expect(state.summary).toBeNull();
     expect(state.cards).toEqual([]);
     expect(state.lastReport).toBeNull();
+    expect(state.lastManualReport).toBeNull();
   });
 
   it("syncAccordionStateFromElement обновляет флаги details", () => {

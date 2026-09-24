@@ -12,7 +12,7 @@ describe("parseTyVyCuratedRows", () => {
     expect(rows[0].replace).toBe("нажмите");
     expect(rows[0].category).toBe("cian_editorial");
     expect(rows[0].priority).toBe(59);
-    expect(rows[0].message).toBe("Редполитика: глагол на «ты» → форма на «вы».");
+    expect(rows[0].message).toBe("Редполитика: глагол на «ты» → форма на «вы»");
   });
 
   it("поддерживает несколько исходников в кавычках", () => {

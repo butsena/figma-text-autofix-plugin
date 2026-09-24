@@ -20,6 +20,7 @@ function resizePluginUi(width: number, height: number): void {
 const selection = figma.currentPage.selection;
 if (collectTextNodesFromSelection(selection).length === 0) {
   figma.notify(NO_TEXT_IN_SELECTION_NOTICE, { error: true });
+  figma.closePlugin();
 } else {
   figma.showUI(uiHtml, { width: PLUGIN_UI_WIDTH, height: PLUGIN_UI_INITIAL_HEIGHT });
 

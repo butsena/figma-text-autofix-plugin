@@ -30,7 +30,7 @@ function messageForChoiceId(id: string): string {
   return MSG_CHOICE_ISHCHITE_ISHCHETE;
 }
 
-function formatChoiceHintHtml(hint: string): { hint?: string; hintHtml?: string } {
+export function formatAmbiguousChoiceHintFields(hint: string): { hint?: string; hintHtml?: string } {
   const trimmed = hint.trim();
   if (!trimmed) return {};
 
@@ -89,7 +89,7 @@ export function parseAmbiguousFormChoices(raw: string): AmbiguousFormChoice[] {
     const id = pendingId ?? slugChoiceId(option1, option2);
     pendingId = undefined;
 
-    const hintFields = formatChoiceHintHtml(hint);
+    const hintFields = formatAmbiguousChoiceHintFields(hint);
     out.push({
       id,
       options: [option1, option2],

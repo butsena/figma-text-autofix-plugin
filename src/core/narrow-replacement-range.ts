@@ -73,10 +73,22 @@ function simpleMiddleDiff(
   };
 }
 
+function isCaseOnlyChange(before: string, after: string): boolean {
+  return (
+    before.length > 0 &&
+    before.length === after.length &&
+    before !== after &&
+    before.toLowerCase() === after.toLowerCase()
+  );
+}
+
 /**
  * Сужает диапазон замены до реально меняющейся части.
  * С краёв снимаются совпадающие разделители; неизменное слово в середине тоже
  * выносится из диапазона, если меняются только пробелы/знаки рядом с ним.
+ *
+ * Смена только регистра («1. п» → «1. П», «период 2. п» → …) всегда сужается
+ * до отличающихся букв — иначе в Figma длинный before легко устаревает.
  */
 export function narrowReplacementRange(
   from: number,
@@ -85,6 +97,19 @@ export function narrowReplacementRange(
 ): { from: number; to: number; before: string; after: string } {
   if (before === after) {
     return { from, to: from + before.length, before, after };
+  }
+
+  if (isCaseOnlyChange(before, after)) {
+    const simple = simpleMiddleDiff(before, after);
+    // Только однобуквенная смена регистра («1. п»→«П») — не дробим «ЦИАН»→«Циан».
+    if (simple.before.length === 1 && simple.after.length === 1) {
+      return {
+        from: from + simple.prefixLen,
+        to: from + before.length - simple.suffixLen,
+        before: simple.before,
+        after: simple.after,
+      };
+    }
   }
 
   let prefixLen = 0;

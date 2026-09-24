@@ -4,8 +4,10 @@ import { captureUiAccordionState, state } from "./ui-state";
 import {
   renderChoiceHtml,
   renderConfirmHtml,
+  renderManualReportHtml,
   renderReportHtml,
   renderResultHeaderHtml,
+  renderSpellcheckStatusHtml,
   renderTechDetailsHtml,
   renderTextLayersHtml,
 } from "./ui-render-sections";
@@ -22,10 +24,12 @@ export function render(): void {
   captureUiAccordionState();
 
   const resultHeaderHtml = renderResultHeaderHtml();
+  const spellcheckStatusHtml = renderSpellcheckStatusHtml();
   const textLayersHtml = renderTextLayersHtml();
   const confirmHtml = renderConfirmHtml();
   const choiceHtml = renderChoiceHtml();
   const reportHtml = renderReportHtml();
+  const manualReportHtml = renderManualReportHtml();
   const thanksHtml = state.summary ? REPORT_THANKS_HTML : "";
 
   let bodyHtml = "";
@@ -50,9 +54,11 @@ export function render(): void {
     <div class="appShell">
       <div class="appMain">
         ${resultHeaderHtml}
-        ${reportHtml}
+        ${spellcheckStatusHtml}
         ${choiceHtml}
         ${confirmHtml}
+        ${manualReportHtml}
+        ${reportHtml}
         ${
           state.cards.length
             ? `<div class="sectionTitle">Оставшиеся совпадения (если есть)</div><div class="cards">${bodyHtml}</div>`
