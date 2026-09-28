@@ -5,7 +5,7 @@ import { buildSentenceCapitalizationRules } from "../rules/typography/sentence-c
 import { buildSentenceTerminalPeriodRules } from "../rules/typography/sentence-terminal-period-rules";
 import { buildSingleSentenceRemovePeriodRules } from "../rules/typography/single-sentence-remove-period-rules";
 import { buildFormalVerbRules } from "../rules/cian/formal-verb-rules";
-import { formatFixDiffHtml } from "./diff-format";
+import { formatAnchorContextHtml, formatFixDiffHtml } from "./diff-format";
 
 describe("formatFixDiffHtml", () => {
   it("показывает контекстное слово при снятии точки в одном предложении", () => {
@@ -122,6 +122,41 @@ describe("formatFixDiffHtml", () => {
     expect(html).toContain("ите");
     expect(html).not.toContain("Заполни");
     expect(html).not.toContain("Заполните");
+  });
+
+  it("показывает окно из соседних слов и не режет короткий слой", () => {
+    const sourceText =
+      "один два три четыре пять шесть семь восемь девять десять";
+    const html = formatFixDiffHtml(
+      {
+        ruleId: "cian-001-cian-brand-uppercase",
+        from: 13,
+        to: 19,
+        before: "четыре",
+        after: "Четыре",
+      },
+      sourceText,
+    );
+    expect(html).toContain("один");
+    expect(html).toContain("три");
+    expect(html).toContain("<b>Четыре</b>");
+    expect(html).toContain("пять");
+    expect(html).toContain("восемь");
+    expect(html).not.toContain("девять");
+    expect(html).toContain("reportCtxEllipsis");
+
+    const short = formatAnchorContextHtml("напишите мне", 0, 8);
+    expect(short).toContain("<b>напишите</b>");
+    expect(short).toContain("мне");
+    expect(short).not.toContain("reportCtxEllipsis");
+  });
+
+  it("в окне видны NBSP и перевод строки", () => {
+    const sourceText = "слово\u00a0рядом\nдальше ещё текст тут лишний хвост";
+    const html = formatAnchorContextHtml(sourceText, 6, 11);
+    expect(html).toContain("ws-nbsp");
+    expect(html).toContain("ws-nl");
+    expect(html).toContain("<b>рядом</b>");
   });
 
   it("показывает обычный diff для прочих правил", () => {

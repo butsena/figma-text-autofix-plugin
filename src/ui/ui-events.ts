@@ -1,132 +1,16 @@
-import type { TextFixDto } from "../shared/messages";
-import { capitalizeLike } from "../shared/case";
-import { countConfirmFixes } from "./ui-helpers";
-import { sendToPlugin } from "./ui-plugin-bridge";
-import { render } from "./ui-render";
-import { schedulePluginResize } from "./ui-resize";
-import { selectedChoiceOptionIndex } from "./choice-selection";
+import { parseKey } from "./ui-event-keys";
 import {
-  choiceSelectionKey,
-  state,
-  syncAccordionStateFromElement,
-} from "./ui-state";
-
-function parseKey(key: string | null, parts: number): number[] | null {
-  if (!key) return null;
-  const values = key.split(":").map(Number);
-  if (values.length !== parts || values.some((value) => Number.isNaN(value))) {
-    return null;
-  }
-  return values;
-}
-
-function skipConfirmFix(cardIdx: number, fixIdx: number): void {
-  const card = state.confirmCards[cardIdx];
-  if (!card || !card.fixes[fixIdx]) return;
-  card.fixes.splice(fixIdx, 1);
-  if (card.fixes.length === 0) {
-    state.confirmCards.splice(cardIdx, 1);
-  }
-  if (state.summary) {
-    state.summary.confirmFixes = countConfirmFixes(state.confirmCards);
-  }
-  render();
-}
-
-function readSpellInputValue(cardIdx: number, fixIdx: number): string {
-  const input = document.querySelector(
-    `input.spellInput[data-spell-input="${cardIdx}:${fixIdx}"]`,
-  );
-  if (!(input instanceof HTMLInputElement)) return "";
-  return input.value.trim();
-}
-
-function syncSpellApplyButton(cardIdx: number, fixIdx: number): void {
-  const card = state.confirmCards[cardIdx];
-  const fix = card?.fixes[fixIdx];
-  if (!fix) return;
-  const value = readSpellInputValue(cardIdx, fixIdx);
-  const btn = document.querySelector(
-    `button[data-spell-apply="${cardIdx}:${fixIdx}"]`,
-  );
-  if (!(btn instanceof HTMLButtonElement)) return;
-  btn.disabled = !value || value === fix.before;
-}
-
-function applySpellFix(cardIdx: number, fixIdx: number): void {
-  const card = state.confirmCards[cardIdx];
-  if (!card) return;
-  const fix = card.fixes[fixIdx];
-  if (!fix) return;
-
-  const typed = readSpellInputValue(cardIdx, fixIdx);
-  if (!typed || typed === fix.before) return;
-
-  const after = capitalizeLike(fix.before, typed);
-  state.ui.confirmDetailsOpen = true;
-  sendToPlugin({
-    type: "ui:applyManualFix",
-    nodeId: card.nodeId,
-    fix: {
-      ...fix,
-      after,
-      rule: {
-        ...fix.rule,
-        applyPolicy: fix.rule.applyPolicy,
-      },
-    },
-  });
-}
-
-function skipSpellFix(cardIdx: number, fixIdx: number): void {
-  const card = state.confirmCards[cardIdx];
-  if (!card) return;
-  const fix = card.fixes[fixIdx];
-  if (!fix) return;
-
-  state.ui.confirmDetailsOpen = true;
-  sendToPlugin({
-    type: "ui:skipManualFix",
-    nodeId: card.nodeId,
-    fix: fix as TextFixDto,
-  });
-}
-
-function selectChoiceOption(cardIdx: number, fixIdx: number, optionIdx: number): void {
-  state.choiceSelection[choiceSelectionKey(cardIdx, fixIdx)] = optionIdx;
-  state.ui.choiceDetailsOpen = true;
-  render();
-}
-
-function confirmChoiceSelection(cardIdx: number, fixIdx: number): void {
-  const card = state.choiceCards[cardIdx];
-  if (!card) return;
-  const fix = card.fixes[fixIdx];
-  if (!fix) return;
-
-  const selectionKey = choiceSelectionKey(cardIdx, fixIdx);
-  const options = fix.rule?.choiceOptions ?? [];
-  const optionIdx = selectedChoiceOptionIndex(cardIdx, fixIdx, fix.before, options);
-  const option = optionIdx != null ? options[optionIdx] : undefined;
-  if (!option) return;
-
-  delete state.choiceSelection[selectionKey];
-
-  const chosen = capitalizeLike(fix.before, option);
-  state.ui.choiceDetailsOpen = true;
-  sendToPlugin({
-    type: "ui:applyManualFix",
-    nodeId: card.nodeId,
-    fix: {
-      ...fix,
-      after: chosen,
-      rule: {
-        ...fix.rule,
-        applyPolicy: fix.rule.applyPolicy,
-      },
-    },
-  });
-}
+  applyConfirmFix,
+  applySpellFix,
+  confirmChoiceSelection,
+  selectChoiceOption,
+  skipConfirmFix,
+  skipSpellFix,
+  syncSpellApplyButton,
+} from "./ui-event-actions";
+import { sendToPlugin } from "./ui-plugin-bridge";
+import { schedulePluginResize } from "./ui-resize";
+import { syncAccordionStateFromElement } from "./ui-state";
 
 function handleAppClick(event: Event): void {
   const target = event.target;
@@ -156,17 +40,7 @@ function handleAppClick(event: Event): void {
     event.stopPropagation();
     const parts = parseKey(confirmApply.getAttribute("data-confirm-apply"), 2);
     if (!parts) return;
-    const [cardIdx, fixIdx] = parts;
-    const card = state.confirmCards[cardIdx];
-    if (!card) return;
-    const fix = card.fixes[fixIdx];
-    if (!fix) return;
-    state.ui.confirmDetailsOpen = true;
-    sendToPlugin({
-      type: "ui:applyManualFix",
-      nodeId: card.nodeId,
-      fix: fix as TextFixDto,
-    });
+    applyConfirmFix(parts[0], parts[1]);
     return;
   }
 
@@ -234,9 +108,5 @@ export function initUiEvents(): void {
   if (!app) return;
   app.addEventListener("click", handleAppClick);
   app.addEventListener("input", handleAppInput);
-  app.addEventListener(
-    "toggle",
-    handleAppToggle,
-    true,
-  );
+  app.addEventListener("toggle", handleAppToggle, true);
 }

@@ -26,10 +26,18 @@ export function getAmbiguousFormChoicesLoadStats(): AmbiguousFormChoicesLoadStat
   return store.getLoadStats();
 }
 
+/** Remote — источник правды для своих id. Пары, которых в файле нет, остаются из bundled. */
+function keepBundledPairsMissingFromRemote(
+  remote: readonly AmbiguousFormChoice[],
+): AmbiguousFormChoice[] {
+  const remoteIds = new Set(remote.map((choice) => choice.id));
+  return [...remote, ...bundledChoices.filter((choice) => !remoteIds.has(choice.id))];
+}
+
 /** Загрузить пары; пустой/битый → false, активный набор не меняется. */
 export function applyAmbiguousFormChoicesFromRaw(raw: string): boolean {
   try {
-    return store.apply(parseAmbiguousFormChoices(stripUtf8Bom(raw)));
+    return store.apply(keepBundledPairsMissingFromRemote(parseAmbiguousFormChoices(stripUtf8Bom(raw))));
   } catch {
     return false;
   }

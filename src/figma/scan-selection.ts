@@ -34,13 +34,9 @@ export type ScanSelectionOptions = {
   autoApplyOnly?: boolean;
 };
 
-function isOrthographySpellFix(ruleId: string): boolean {
-  return isOrthographyRuleId(ruleId);
-}
-
 function resolveConfirmFixes(node: TextNode, confirm: TextFix[]) {
-  const spellConfirm = confirm.filter((f) => isOrthographySpellFix(f.ruleId));
-  const otherConfirm = confirm.filter((f) => !isOrthographySpellFix(f.ruleId));
+  const spellConfirm = confirm.filter((f) => isOrthographyRuleId(f.ruleId));
+  const otherConfirm = confirm.filter((f) => !isOrthographyRuleId(f.ruleId));
   return [
     ...filterUnresolvedChoiceFixes(node, spellConfirm),
     ...otherConfirm,
@@ -128,6 +124,34 @@ function scanAllPolicies(
   return { cards, confirmCards, choiceCards, foundFixes, confirmFixes, choiceFixes };
 }
 
+function toScanResult(
+  textNodes: TextNode[],
+  nodeById: Map<string, TextNode>,
+  payload: {
+    foundFixes: number;
+    confirmFixes: number;
+    choiceFixes: number;
+    cards: TextNodeCardDto[];
+    confirmCards: TextNodeCardDto[];
+    choiceCards: TextNodeCardDto[];
+  },
+) {
+  return {
+    result: {
+      summary: buildCheckSummary(textNodes, {
+        foundFixes: payload.foundFixes,
+        confirmFixes: payload.confirmFixes,
+        choiceFixes: payload.choiceFixes,
+      }),
+      checkedTextLayers: buildCheckedTextLayers(textNodes),
+      cards: payload.cards,
+      confirmCards: payload.confirmCards,
+      choiceCards: payload.choiceCards,
+    },
+    nodeById,
+  };
+}
+
 export function scanSelectedTextNodes(
   selection: readonly SceneNode[],
   options?: ScanSelectionOptions,
@@ -142,75 +166,42 @@ export function scanSelectedTextNodes(
   const nodeById = new Map<string, TextNode>();
   for (const node of textNodes) nodeById.set(node.id, node);
 
-  const checkedTextLayers = buildCheckedTextLayers(textNodes);
-
   if (policy === "auto" && autoApplyOnly) {
     const { cards, foundFixes } = buildCards(textNodes, "auto", includeSpelling);
-    return {
-      result: {
-        summary: buildCheckSummary(textNodes, {
-          foundFixes,
-          confirmFixes: 0,
-          choiceFixes: 0,
-        }),
-        checkedTextLayers,
-        cards,
-        confirmCards: [],
-        choiceCards: [],
-      },
-      nodeById,
-    };
+    return toScanResult(textNodes, nodeById, {
+      foundFixes,
+      confirmFixes: 0,
+      choiceFixes: 0,
+      cards,
+      confirmCards: [],
+      choiceCards: [],
+    });
   }
 
   if (policy === "auto") {
     const scan = scanAllPolicies(textNodes, includeSpelling);
-    return {
-      result: {
-        summary: buildCheckSummary(textNodes, {
-          foundFixes: scan.foundFixes,
-          confirmFixes: scan.confirmFixes,
-          choiceFixes: scan.choiceFixes,
-        }),
-        checkedTextLayers,
-        cards: scan.cards,
-        confirmCards: scan.confirmCards,
-        choiceCards: scan.choiceCards,
-      },
-      nodeById,
-    };
+    return toScanResult(textNodes, nodeById, scan);
   }
 
   const { cards, foundFixes } = buildCards(textNodes, policy, includeSpelling);
 
   if (policy === "confirm") {
-    return {
-      result: {
-        summary: buildCheckSummary(textNodes, {
-          foundFixes: 0,
-          confirmFixes: foundFixes,
-          choiceFixes: 0,
-        }),
-        checkedTextLayers,
-        cards: [],
-        confirmCards: cards,
-        choiceCards: [],
-      },
-      nodeById,
-    };
+    return toScanResult(textNodes, nodeById, {
+      foundFixes: 0,
+      confirmFixes: foundFixes,
+      choiceFixes: 0,
+      cards: [],
+      confirmCards: cards,
+      choiceCards: [],
+    });
   }
 
-  return {
-    result: {
-      summary: buildCheckSummary(textNodes, {
-        foundFixes: 0,
-        confirmFixes: 0,
-        choiceFixes: foundFixes,
-      }),
-      checkedTextLayers,
-      cards: [],
-      confirmCards: [],
-      choiceCards: cards,
-    },
-    nodeById,
-  };
+  return toScanResult(textNodes, nodeById, {
+    foundFixes: 0,
+    confirmFixes: 0,
+    choiceFixes: foundFixes,
+    cards: [],
+    confirmCards: [],
+    choiceCards: cards,
+  });
 }

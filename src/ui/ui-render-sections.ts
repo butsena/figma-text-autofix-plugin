@@ -1,4 +1,6 @@
 import { SPELLCHECK_ENABLED } from "../config/feature-flags";
+import { escapeHtml } from "../shared/escape-html";
+import type { AutoApplyFixLineDto } from "../shared/messages";
 import {
   countConfirmFixes,
   detailsOpenAttr,
@@ -6,8 +8,24 @@ import {
   formatLexiconResourceStatusHtml,
   formatTextLayersBlockHtml,
 } from "./ui-helpers";
+import { isNbspGlueFix, renderNbspGlueSummaryHtml } from "./nbsp-glue-summary";
 import { state } from "./ui-state";
 import { renderChoiceFixRow, renderFixRow } from "./ui-render-fix-row";
+
+function renderLayerBlocksHtml<
+  T extends { nodeId: string; nodeName: string; characterCount: number },
+>(layers: T[], renderFixes: (layer: T, cardIdx: number) => string): string {
+  return layers
+    .map(
+      (layer, cardIdx) => `
+        <div class="reportLayer">
+          ${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}
+          ${renderFixes(layer, cardIdx)}
+        </div>
+      `,
+    )
+    .join("");
+}
 
 function wrapReportInDetails(
   bodyHtml: string,
@@ -25,37 +43,56 @@ function wrapReportInDetails(
   `;
 }
 
-function renderReportLayersHtml(report: NonNullable<typeof state.lastReport>): string {
-  return report.layers
-    .map((layer) => {
-      const fixesHtml = layer.fixes
-        .map((f) =>
-          renderFixRow(
-            {
-              ruleId: f.ruleId,
-              category: f.category,
-              message: f.message,
-              from: f.from,
-              to: f.to,
-              before: f.before,
-              after: f.after,
-              sourceText: f.sourceText,
-            },
-            f.sourceText ?? "",
-          ),
-        )
-        .join("");
-      return `
-        <div class="reportLayer">
-          ${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}
-          ${fixesHtml}
-        </div>
-      `;
-    })
-    .join("");
+function renderFixLineHtml(f: AutoApplyFixLineDto): string {
+  return renderFixRow(
+    {
+      ruleId: f.ruleId,
+      category: f.category,
+      message: f.message,
+      from: f.from,
+      to: f.to,
+      before: f.before,
+      after: f.after,
+      sourceText: f.sourceText,
+    },
+    f.sourceText ?? "",
+  );
+}
+
+function renderLayerFixesHtml(
+  fixes: AutoApplyFixLineDto[],
+  collapseNbspGlues: boolean,
+): string {
+  if (!collapseNbspGlues || !fixes.some(isNbspGlueFix)) {
+    return fixes.map(renderFixLineHtml).join("");
+  }
+
+  const parts: string[] = [];
+  let summaryEmitted = false;
+  for (const fix of fixes) {
+    if (isNbspGlueFix(fix)) {
+      if (!summaryEmitted) {
+        parts.push(renderNbspGlueSummaryHtml(fixes));
+        summaryEmitted = true;
+      }
+      continue;
+    }
+    parts.push(renderFixLineHtml(fix));
+  }
+  return parts.join("");
+}
+
+function renderReportLayersHtml(
+  report: NonNullable<typeof state.lastReport>,
+  collapseNbspGlues: boolean,
+): string {
+  return renderLayerBlocksHtml(report.layers, (layer) =>
+    renderLayerFixesHtml(layer.fixes, collapseNbspGlues),
+  );
 }
 
 export function renderResultHeaderHtml(): string {
+  if (state.spellcheckInProgress) return "";
   if (!state.summary) {
     return '<div class="resultWaiting">Шуршу по макету…</div>';
   }
@@ -86,21 +123,34 @@ export function renderResultHeaderHtml(): string {
   `;
 }
 
+const REPORT_THANKS_HTML =
+  '<div class="reportThanksRow">' +
+  '<button id="thanksBtn" type="button" class="thanksBtn">Спасибо, шайтан-машина!</button>' +
+  "</div>";
+
+/** «Спасибо» — закрыть плагин. Пока Hunspell не доехал, кнопки нет: иначе кажется, что проверка кончилась. */
+export function renderReportThanksHtml(): string {
+  if (!state.summary || state.spellcheckInProgress) return "";
+  return REPORT_THANKS_HTML;
+}
+
 export function renderSpellcheckStatusHtml(): string {
   if (!state.spellcheckInProgress) return "";
   return `
     <div class="spellcheckStatus" role="status" aria-live="polite">
       <span class="spellcheckSpinner" aria-hidden="true"></span>
-      <span class="spellcheckStatusText">Проверяю орфорграфию — пажжите малька</span>
+      <span class="spellcheckStatusText">Проверяю орфографию — пажжите...</span>
     </div>
   `;
 }
 
 export function renderTextLayersHtml(): string {
+  if (state.spellcheckInProgress) return "";
   return formatTextLayersBlockHtml(state.checkedTextLayers, state.ui.textLayersDetailsOpen);
 }
 
 export function renderTechDetailsHtml(): string {
+  if (state.spellcheckInProgress) return "";
   const lex = state.lexiconLoad;
   let bodyHtml = "";
 
@@ -161,6 +211,7 @@ export function renderTechDetailsHtml(): string {
 }
 
 export function renderReportHtml(): string {
+  if (state.spellcheckInProgress) return "";
   const r = state.lastReport;
   if (!r) return "";
   if (!r.layers.length) {
@@ -170,18 +221,19 @@ export function renderReportHtml(): string {
     return "";
   }
 
-  return wrapReportInDetails(renderReportLayersHtml(r), {
-    title: "Что исправлено автоматически",
+  return wrapReportInDetails(renderReportLayersHtml(r, true), {
+    title: "Исправлено автоматически",
     detailsClass: "reportDetails",
     open: state.ui.reportDetailsOpen,
   });
 }
 
 export function renderManualReportHtml(): string {
+  if (state.spellcheckInProgress) return "";
   const r = state.lastManualReport;
   if (!r?.layers.length) return "";
 
-  return wrapReportInDetails(renderReportLayersHtml(r), {
+  return wrapReportInDetails(renderReportLayersHtml(r, false), {
     title: "Вы исправили",
     detailsClass: "manualReportDetails",
     open: state.ui.manualReportDetailsOpen,
@@ -189,39 +241,32 @@ export function renderManualReportHtml(): string {
 }
 
 export function renderConfirmHtml(): string {
+  if (state.spellcheckInProgress) return "";
   if (!state.confirmCards.length) return "";
-  const layerBlocks = state.confirmCards
-    .map((layer, cardIdx) => {
-      const fixesHtml = layer.fixes
-        .map((f, fixIdx) => {
-          const ruleId = f.rule?.id ?? "";
-          const category = f.rule?.category ?? "";
-          const message = f.rule?.message ?? "";
-          const hint = f.rule?.hint;
-          return renderFixRow(
-            {
-              ruleId,
-              category,
-              message,
-              hint,
-              from: f.from,
-              to: f.to,
-              before: f.before,
-              after: f.after,
-            },
-            layer.originalText,
-            { cardIdx, fixIdx },
-          );
-        })
-        .join("");
-      return `
-        <div class="reportLayer">
-          ${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}
-          ${fixesHtml}
-        </div>
-      `;
-    })
-    .join("");
+  const layerBlocks = renderLayerBlocksHtml(state.confirmCards, (layer, cardIdx) =>
+    layer.fixes
+      .map((f, fixIdx) => {
+        const ruleId = f.rule?.id ?? "";
+        const category = f.rule?.category ?? "";
+        const message = f.rule?.message ?? "";
+        const hint = f.rule?.hint;
+        return renderFixRow(
+          {
+            ruleId,
+            category,
+            message,
+            hint,
+            from: f.from,
+            to: f.to,
+            before: f.before,
+            after: f.after,
+          },
+          layer.originalText,
+          { cardIdx, fixIdx },
+        );
+      })
+      .join(""),
+  );
 
   return `
     <div class="confirmBlock">
@@ -235,21 +280,31 @@ export function renderConfirmHtml(): string {
   `;
 }
 
-export function renderChoiceHtml(): string {
-  if (!state.choiceCards.length) return "";
-  const layerBlocks = state.choiceCards
-    .map((layer, cardIdx) => {
-      const fixesHtml = layer.fixes
-        .map((f, fixIdx) => renderChoiceFixRow(f, cardIdx, fixIdx))
-        .join("");
-      return `
-        <div class="reportLayer">
-          ${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}
-          ${fixesHtml}
-        </div>
-      `;
-    })
+export function renderLeftoverCardsHtml(): string {
+  if (state.spellcheckInProgress || !state.cards.length) return "";
+  const bodyHtml = state.cards
+    .map(
+      (c) => `
+          <div class="card cardClickable" data-node-id="${escapeHtml(c.nodeId)}">
+            <div class="cardTitle">${escapeHtml(c.nodeName || "Без имени")}</div>
+            <div class="fieldLabel">Текст слоя сейчас</div>
+            <div class="textPreview">${escapeHtml(c.originalText)}</div>
+            <div class="fieldLabel" style="color:#888;font-size:11px">Если снова нужны правки — измените текст или выделение и снова запустите плагин.</div>
+          </div>
+        `,
+    )
     .join("");
+  return `<div class="sectionTitle">Оставшиеся совпадения (если есть)</div><div class="cards">${bodyHtml}</div>`;
+}
+
+export function renderChoiceHtml(): string {
+  if (state.spellcheckInProgress) return "";
+  if (!state.choiceCards.length) return "";
+  const layerBlocks = renderLayerBlocksHtml(state.choiceCards, (layer, cardIdx) =>
+    layer.fixes
+      .map((f, fixIdx) => renderChoiceFixRow(f, cardIdx, fixIdx, layer.originalText))
+      .join(""),
+  );
 
   return `
     <div class="choiceBlock">

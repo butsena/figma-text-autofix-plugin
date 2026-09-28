@@ -15,8 +15,13 @@ describe("ambiguous-form-choices-store", () => {
   it("применяет remote-файл и обновляет статистику", () => {
     const ok = applyAmbiguousFormChoicesFromRaw("тест - тест2 - подсказка\n");
     expect(ok).toBe(true);
-    expect(getAmbiguousFormChoicesLoadStats()).toMatchObject({ fromRemote: true, count: 1 });
+    expect(getAmbiguousFormChoicesLoadStats().fromRemote).toBe(true);
     expect(getAmbiguousFormChoices()[0]?.options).toEqual(["тест", "тест2"]);
+    expect(
+      getAmbiguousFormChoices().some(
+        (choice) => choice.options[0] === "напишите" && choice.options[1] === "напишете",
+      ),
+    ).toBe(true);
     resetAmbiguousFormChoicesToBundled();
   });
 });

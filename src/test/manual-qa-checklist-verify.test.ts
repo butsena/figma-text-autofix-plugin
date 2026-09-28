@@ -10,6 +10,8 @@ import { checkTextForAutofixes } from "../core/autofix-engine";
 import { getAutofixRules } from "../rules/autofix-rules";
 import { applyAllRules, fixesFor } from "./helpers";
 import { TITLE_CASE_PAIR_CHOICE_RULE_ID } from "../rules/typography/title-case-pair-choice-rules";
+import { renderReportHtml } from "../ui/ui-render-sections";
+import { state } from "../ui/ui-state";
 import { checkSpellingFixes } from "../spell/check-spelling";
 import { applyHunspellDictionaryFromRaw } from "../spell/hunspell-dictionary-store";
 import { ensureSpellCheckerReady } from "../spell/spell-checker";
@@ -63,6 +65,9 @@ describe("manual QA checklist verify", () => {
       (f) => f.ruleId === TITLE_CASE_PAIR_CHOICE_RULE_ID,
     );
     expect(fix?.choiceOptions).toEqual(["Кватира. Обломе", "Кватира обломе"]);
+    expect(fix?.message).toBe("Проверьте, нужна ли точка");
+    expect(fix?.hint).toBeUndefined();
+    expect(fix?.hintHtml).toBeUndefined();
     expect(applyAllRules("Кватира Обломе", allRules())).toBe("Кватира Обломе");
   });
 
@@ -125,6 +130,88 @@ describe("manual QA checklist verify", () => {
 
   it("#20 double NBSP", () => {
     expect(applyAllRules(`слово${nbsp}${nbsp}слово`, allRules())).toBe(`слово${nbsp}слово`);
+  });
+
+  it("#35 авто-отчёт схлопывает NBSP", () => {
+    state.spellcheckInProgress = false;
+    state.summary = { checkedLayers: 1, foundFixes: 2, confirmFixes: 0, choiceFixes: 0 };
+    state.lastManualReport = null;
+    const glue = "\u00a0";
+    state.lastReport = {
+      summary: { checkedLayers: 1, appliedFixCount: 2, changedLayerCount: 1 },
+      layers: [
+        {
+          nodeId: "1:1",
+          nodeName: "Слой",
+          characterCount: 10,
+          fixes: [
+            {
+              fixId: "b1",
+              ruleId: "cian-001-cian-brand-uppercase",
+              category: "cian_branding",
+              message: "Бренд: «ЦИАН» → «Циан»",
+              before: "ЦИАН",
+              after: "Циан",
+              from: 0,
+              to: 4,
+              sourceText: "ЦИАН и дом",
+            },
+            {
+              fixId: "n1",
+              ruleId: "cian-095-nbsp-и",
+              category: "typography",
+              message: "Типографика: неразрывный пробел после служебного слова",
+              before: " ",
+              after: glue,
+              from: 6,
+              to: 7,
+              sourceText: "ЦИАН и дом",
+            },
+          ],
+        },
+      ],
+    };
+    const html = renderReportHtml();
+    expect(html).toContain("Типографика: неразрывные пробелы");
+    expect(html).toContain("1 склейка в этом слое");
+    expect(html).toContain("Бренд: «ЦИАН» → «Циан»");
+    expect(html).not.toContain("Типографика: неразрывный пробел после служебного слова");
+    state.lastReport = null;
+    state.summary = null;
+  });
+
+  it("#31 авто-отчёт «Исправлено автоматически»", () => {
+    state.spellcheckInProgress = false;
+    state.summary = { checkedLayers: 1, foundFixes: 1, confirmFixes: 0, choiceFixes: 0 };
+    state.lastManualReport = null;
+    state.lastReport = {
+      summary: { checkedLayers: 1, appliedFixCount: 1, changedLayerCount: 1 },
+      layers: [
+        {
+          nodeId: "1:1",
+          nodeName: "Слой",
+          characterCount: 4,
+          fixes: [
+            {
+              fixId: "a1",
+              ruleId: "cian-brand",
+              category: "brand",
+              message: "Циан",
+              before: "ЦИАН",
+              after: "Циан",
+              from: 0,
+              to: 4,
+              sourceText: "ЦИАН",
+            },
+          ],
+        },
+      ],
+    };
+    const html = renderReportHtml();
+    expect(html).toContain("Исправлено автоматически");
+    expect(html).not.toContain("Что исправлено автоматически");
+    state.lastReport = null;
+    state.summary = null;
   });
 
   it("#18 auto typography sample", () => {

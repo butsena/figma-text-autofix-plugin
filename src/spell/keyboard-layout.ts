@@ -128,11 +128,26 @@ export function convertLatinCharsToRuLayout(input: string): string {
  * Слово смешало латиницу и кириллицу (gдоказываем, пokаз…).
  * Без EN-словаря: раскладка латинских букв или отбрасывание латиницы.
  */
+/**
+ * Одна латинская буква с краю («yпишете», «пишитеy»).
+ * Если русская основа есть в словаре — срезаем букву, не переводим её по клавише (y→н).
+ */
+function stripSingleLatinAffix(word: string, isKnown: (candidate: string) => boolean): string | null {
+  const prefixed = /^[A-Za-z]([А-Яа-яЁё]{3,})$/u.exec(word);
+  const suffixed = /^([А-Яа-яЁё]{3,})[A-Za-z]$/u.exec(word);
+  const stem = prefixed?.[1] ?? suffixed?.[1];
+  if (!stem || !isKnown(stem)) return null;
+  return stem;
+}
+
 export function suggestMixedScriptRu(
   word: string,
   isKnown: (candidate: string) => boolean,
 ): string | null {
   if (!/[A-Za-z]/.test(word) || !/[А-Яа-яЁё]/.test(word)) return null;
+
+  const strippedAffix = stripSingleLatinAffix(word, isKnown);
+  if (strippedAffix) return strippedAffix;
 
   const converted = convertLatinCharsToRuLayout(word);
   if (converted !== word && isKnown(converted)) return converted;

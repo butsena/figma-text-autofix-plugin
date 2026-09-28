@@ -45,7 +45,20 @@ function overlapsExistingFix(from: number, to: number, fixes: readonly TextFix[]
   return fixes.some((fix) => rangesOverlap(from, to, fix.from, fix.to));
 }
 
-function checkKeyboardLayoutFixes(
+/** Латиница токена уже целиком внутри другой правки — вторую карточку не дублируем. */
+function latinCharsCoveredByFixes(from: number, word: string, fixes: readonly TextFix[]): boolean {
+  let sawLatin = false;
+  for (let i = 0; i < word.length; i++) {
+    if (!/[A-Za-z]/.test(word[i])) continue;
+    sawLatin = true;
+    const pos = from + i;
+    const covered = fixes.some((fix) => pos >= fix.from && pos < fix.to);
+    if (!covered) return false;
+  }
+  return sawLatin;
+}
+
+function checkMixedScriptFixes(
   text: string,
   spell: SpellChecker,
   whitelist: Set<string>,
@@ -60,8 +73,9 @@ function checkKeyboardLayoutFixes(
     const { word, from, to } = token;
     if (isWhitelisted(word, whitelist)) continue;
     if (isLikelyUrlOrEmailContext(text, from, to)) continue;
-    if (overlapsExistingFix(from, to, existingFixes)) continue;
-    if (overlapsExistingFix(from, to, fixes)) continue;
+    // Choice на кириллической основе («пишете» внутри «yпишете») не закрывает латинскую букву.
+    if (latinCharsCoveredByFixes(from, word, existingFixes)) continue;
+    if (latinCharsCoveredByFixes(from, word, fixes)) continue;
 
     const suggested = suggestMixedScriptRu(word, known);
     if (!suggested || suggested === word) continue;
@@ -78,6 +92,19 @@ function checkKeyboardLayoutFixes(
       applyPolicy: "confirm",
     });
   }
+
+  return fixes;
+}
+
+function checkLatinLayoutFixes(
+  text: string,
+  spell: SpellChecker,
+  whitelist: Set<string>,
+  existingFixes: readonly TextFix[],
+): TextFix[] {
+  if (!textHasCyrillic(text)) return [];
+
+  const fixes: TextFix[] = [];
 
   for (const token of extractLatinLayoutTokens(text)) {
     const { word, from, to } = token;
@@ -128,11 +155,16 @@ export function checkSpellingFixes(text: string, existingFixes: readonly TextFix
   /** suggest() у nspell дорогой — кэш на слово в рамках одного прохода текста. */
   const suggestionByLower = new Map<string, string | null>();
 
+  // Смешанные слова (yпишете) раскладка чинит целиком — считаем их первыми,
+  // чтобы орфография не ругалась на кириллические обрывки вокруг латинской буквы.
+  const mixedFixes = checkMixedScriptFixes(text, spell, whitelist, existingFixes);
+  const spellExisting = [...existingFixes, ...mixedFixes];
+
   for (const token of extractCyrillicWordTokens(text)) {
     const { word, from, to } = token;
     if (shouldSkipSpellToken(word)) continue;
     if (isWhitelisted(word, whitelist)) continue;
-    if (overlapsExistingFix(from, to, existingFixes)) continue;
+    if (overlapsExistingFix(from, to, spellExisting)) continue;
     if (isKnownWord(spell, word)) continue;
 
     const key = word.toLowerCase();
@@ -158,10 +190,9 @@ export function checkSpellingFixes(text: string, existingFixes: readonly TextFix
     });
   }
 
-  const layoutFixes = checkKeyboardLayoutFixes(text, spell, whitelist, [
-    ...existingFixes,
+  const latinFixes = checkLatinLayoutFixes(text, spell, whitelist, [
+    ...spellExisting,
     ...fixes,
   ]);
-  if (!layoutFixes.length) return fixes;
-  return [...fixes, ...layoutFixes];
+  return [...fixes, ...mixedFixes, ...latinFixes];
 }

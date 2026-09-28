@@ -1,21 +1,18 @@
-import { escapeHtml } from "../shared/escape-html";
 import { schedulePluginResize } from "./ui-resize";
 import { captureUiAccordionState, state } from "./ui-state";
 import {
   renderChoiceHtml,
   renderConfirmHtml,
+  renderLeftoverCardsHtml,
   renderManualReportHtml,
   renderReportHtml,
+  renderReportThanksHtml,
   renderResultHeaderHtml,
   renderSpellcheckStatusHtml,
   renderTechDetailsHtml,
   renderTextLayersHtml,
 } from "./ui-render-sections";
-
-const REPORT_THANKS_HTML =
-  '<div class="reportThanksRow">' +
-  '<button id="thanksBtn" type="button" class="thanksBtn">Спасибо, шайтан-машина!</button>' +
-  "</div>";
+import { escapeHtml } from "../shared/escape-html";
 
 export function render(): void {
   const app = document.getElementById("app");
@@ -23,51 +20,32 @@ export function render(): void {
 
   captureUiAccordionState();
 
-  const resultHeaderHtml = renderResultHeaderHtml();
-  const spellcheckStatusHtml = renderSpellcheckStatusHtml();
-  const textLayersHtml = renderTextLayersHtml();
-  const confirmHtml = renderConfirmHtml();
-  const choiceHtml = renderChoiceHtml();
-  const reportHtml = renderReportHtml();
-  const manualReportHtml = renderManualReportHtml();
-  const thanksHtml = state.summary ? REPORT_THANKS_HTML : "";
-
-  let bodyHtml = "";
-  if (state.cards.length) {
-    bodyHtml = state.cards
-      .map((c) => {
-        return `
-          <div class="card cardClickable" data-node-id="${escapeHtml(c.nodeId)}">
-            <div class="cardTitle">${escapeHtml(c.nodeName || "Без имени")}</div>
-            <div class="fieldLabel">Текст слоя сейчас</div>
-            <div class="textPreview">${escapeHtml(c.originalText)}</div>
-            <div class="fieldLabel" style="color:#888;font-size:11px">Если снова нужны правки — измените текст или выделение и снова запустите плагин.</div>
-          </div>
-        `;
-      })
-      .join("");
+  if (state.spellcheckInProgress) {
+    app.innerHTML = `
+    <div class="appShell">
+      <div class="appMain">
+        ${renderSpellcheckStatusHtml()}
+      </div>
+    </div>
+  `;
+    schedulePluginResize();
+    return;
   }
-
-  const techDetailsHtml = renderTechDetailsHtml();
 
   app.innerHTML = `
     <div class="appShell">
       <div class="appMain">
-        ${resultHeaderHtml}
-        ${spellcheckStatusHtml}
-        ${choiceHtml}
-        ${confirmHtml}
-        ${manualReportHtml}
-        ${reportHtml}
-        ${
-          state.cards.length
-            ? `<div class="sectionTitle">Оставшиеся совпадения (если есть)</div><div class="cards">${bodyHtml}</div>`
-            : ""
-        }
-        ${textLayersHtml}
-        ${thanksHtml}
+        ${renderResultHeaderHtml()}
+        ${renderSpellcheckStatusHtml()}
+        ${renderChoiceHtml()}
+        ${renderConfirmHtml()}
+        ${renderManualReportHtml()}
+        ${renderReportHtml()}
+        ${renderLeftoverCardsHtml()}
+        ${renderTextLayersHtml()}
+        ${renderReportThanksHtml()}
       </div>
-      ${techDetailsHtml}
+      ${renderTechDetailsHtml()}
     </div>
   `;
 

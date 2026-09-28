@@ -4,22 +4,25 @@ export type {
 } from "./choice-resolution-core";
 
 export {
-  buildChoiceAnchors,
   beginPluginRun,
+  getCurrentPluginRunId,
+  MAX_SPELL_SKIP_COUNT,
+  resetPluginRunIdForTests,
+} from "./choice-skip-session";
+
+export {
+  buildChoiceAnchors,
   createChoiceResolution,
   findChosenWordNear,
   findResolutionPositions,
-  getCurrentPluginRunId,
   isChoiceResolution,
   pruneStaleResolutions,
   readChoiceResolutionsFromPluginData,
   reanchorResolution,
-  resetPluginRunIdForTests,
   shouldSuppressChoiceFix,
   stripInvalidatedResolutionsForFixes,
   upsertChoiceResolution,
   applySkipToResolutions,
-  MAX_SPELL_SKIP_COUNT,
 } from "./choice-resolution-core";
 
 import {

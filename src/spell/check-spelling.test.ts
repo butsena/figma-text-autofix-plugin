@@ -7,6 +7,8 @@ vi.mock("../config/feature-flags", () => ({
   SPELLCHECK_ENABLED: true,
 }));
 
+import type { TextFix } from "../core/autofix-engine";
+import { checkTextWithSpelling, filterRulesByPolicy } from "../figma/scan-text-check";
 import { checkSpellingFixes } from "./check-spelling";
 import { applyHunspellDictionaryFromRaw } from "./hunspell-dictionary-store";
 import { ensureSpellCheckerReady } from "./spell-checker";
@@ -107,5 +109,57 @@ describe("checkSpellingFixes", () => {
       ruleId: "orthography-keyboard-layout",
       applyPolicy: "confirm",
     });
+  });
+
+  it("латинская буква в середине даёт одну карточку раскладки, без орфографических обрывков", () => {
+    for (const text of ["Заполните ваш пиyшете тут", "Заполните ваш пишyете тут"]) {
+      const fixes = checkSpellingFixes(text);
+      expect(fixes.map((f) => [f.ruleId, f.before, f.after])).toEqual([
+        ["orthography-keyboard-layout", text.includes("пиyшете") ? "пиyшете" : "пишyете", "пишете"],
+      ]);
+    }
+  });
+
+  it("латинская y у пишите/пишете остаётся карточкой, даже если choice уже закрыл основу", () => {
+    const text = "Заполните ваш yпишете или yпишите, псина!";
+    const yPishete = text.indexOf("yпишете");
+    const stemFrom = yPishete + 1;
+    const choiceOnStem: TextFix = {
+      from: stemFrom,
+      to: stemFrom + "пишете".length,
+      before: "пишете",
+      after: "пишете",
+      ruleId: "choice-ambiguous-form",
+      category: "form_choice",
+      message: "choice",
+      priority: 78,
+      applyPolicy: "choice",
+    };
+    const fixes = checkSpellingFixes(text, [choiceOnStem]);
+    const layout = fixes.filter((f) => f.ruleId === "orthography-keyboard-layout");
+    expect(layout.map((f) => ({ before: f.before, after: f.after }))).toEqual([
+      { before: "yпишете", after: "пишете" },
+      { before: "yпишите", after: "пишите" },
+    ]);
+    expect(layout.every((f) => f.after !== f.before.replace(/y/g, "н"))).toBe(true);
+  });
+
+  it("вместе с choice формы и без ложной раскладки на обычных пишите/пишете", () => {
+    const text = "Заполните ваш yпишете или yпишите, псина!";
+    const fixes = checkTextWithSpelling(text, filterRulesByPolicy("all"));
+    const layout = fixes.filter((f) => f.ruleId === "orthography-keyboard-layout");
+    expect(layout.map((f) => [f.before, f.after])).toEqual([
+      ["yпишете", "пишете"],
+      ["yпишите", "пишите"],
+    ]);
+    expect(
+      fixes.filter((f) => f.applyPolicy === "choice").map((f) => f.before),
+    ).toEqual(["пишете", "пишите"]);
+
+    for (const plain of ["пишите письма", "пишете письма"]) {
+      const plainFixes = checkTextWithSpelling(plain, filterRulesByPolicy("all"));
+      expect(plainFixes.filter((f) => f.ruleId === "orthography-keyboard-layout")).toEqual([]);
+      expect(plainFixes.some((f) => f.applyPolicy === "choice")).toBe(true);
+    }
   });
 });

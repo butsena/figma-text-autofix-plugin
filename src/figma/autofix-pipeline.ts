@@ -8,7 +8,7 @@ import {
   refreshSpellLexiconFromRemote,
 } from "../lexicon/refresh-lexicon";
 import { ensureSpellCheckerReady } from "../spell/spell-checker";
-import type { LexiconLoadStatusDto, PluginToUiMessage } from "../shared/messages";
+import { postPluginConfigToUi, postSpellcheckStatus } from "./plugin-ui-messages";
 import { scanSelectedTextNodes } from "./scan-selection";
 
 /** Защита от зацикливания, если правила конфликтуют или текст не меняется. */
@@ -18,13 +18,6 @@ export type AutofixAutoPassesResult = {
   report: AutoApplyReportDto;
   finalScan: CheckResultDto;
 };
-
-export async function postPluginConfigToUi(lexiconLoad?: LexiconLoadStatusDto | null): Promise<void> {
-  figma.ui.postMessage({
-    type: "plugin:config",
-    lexiconLoad: lexiconLoad ?? null,
-  } satisfies PluginToUiMessage);
-}
 
 function notifyIfFixesStuck(scan: CheckResultDto, report: AutoApplyReportDto): void {
   if (scan.summary.foundFixes > 0 && report.summary.appliedFixCount === 0) {
@@ -84,39 +77,33 @@ export async function runAutofixAutoPasses(
   return { report, finalScan };
 }
 
-function postSpellcheckStatus(active: boolean): void {
-  figma.ui.postMessage({
-    type: "plugin:spellcheckStatus",
-    active,
-  } satisfies PluginToUiMessage);
-}
-
 /** Сканирование → применение в цикле, пока есть правки; сводный отчёт в UI. */
 export async function runAutofixPipeline(): Promise<void> {
   const selection = figma.currentPage.selection;
-  // Сначала только редакционные словари — без ~2 МБ Hunspell на критическом пути.
-  const lexiconLoad = await refreshLexiconFromRemote({ includeSpell: false });
-  await postPluginConfigToUi(lexiconLoad);
+  // Пока Hunspell не готов, в UI только плашка: choice/confirm/отчёты не показываем.
+  if (SPELLCHECK_ENABLED) postSpellcheckStatus(true);
 
-  const { report, finalScan } = await runAutofixAutoPasses(selection);
-  setLastAutoApplyReport(report);
-  // Быстрый UI без орфографии, чтобы auto/choice/confirm не ждали nspell.
-  postCheckResultToUi(
-    selection,
-    scanSelectedTextNodes(selection, { policy: "auto", includeSpelling: false }).result,
-  );
-  notifyIfFixesStuck(finalScan, report);
-
-  if (SPELLCHECK_ENABLED) {
-    postSpellcheckStatus(true);
-    try {
-      const spellLexiconLoad = await refreshSpellLexiconFromRemote();
-      await ensureSpellCheckerReady();
-      await postPluginConfigToUi(spellLexiconLoad);
-      // Полный скан с орфографией — вторым проходом после показа основных правок.
-      postCheckResultToUi(selection);
-    } finally {
-      postSpellcheckStatus(false);
+  try {
+    if (SPELLCHECK_ENABLED) {
+      try {
+        await refreshSpellLexiconFromRemote();
+        await ensureSpellCheckerReady();
+      } catch (error) {
+        console.warn("[text-autofix] spellcheck failed, continuing with other rules", error);
+      }
     }
+
+    const lexiconLoad = await refreshLexiconFromRemote({
+      includeSpell: SPELLCHECK_ENABLED,
+    });
+    postPluginConfigToUi(lexiconLoad);
+
+    const { report, finalScan } = await runAutofixAutoPasses(selection);
+    setLastAutoApplyReport(report);
+    // Один отчёт после орфографии: авто, choice и confirm не вспыхивают раньше.
+    postCheckResultToUi(selection);
+    notifyIfFixesStuck(finalScan, report);
+  } finally {
+    if (SPELLCHECK_ENABLED) postSpellcheckStatus(false);
   }
 }

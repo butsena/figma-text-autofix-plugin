@@ -502,6 +502,13 @@
         font-size: 11px;
         line-height: 1.5;
       }
+      .reportNbspSentence {
+        color: #1f1f1f;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 12px;
+        line-height: 1.55;
+      }
       .reportCtxWord {
         font-family: var(--figma-font, Inter, -apple-system, BlinkMacSystemFont, sans-serif);
         font-weight: 600;

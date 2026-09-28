@@ -1,36 +1,11 @@
 import { rangesOverlap } from "../shared/ranges-overlap";
+import {
+  MAX_SPELL_SKIP_COUNT,
+  markSpellSkippedThisSession,
+  wasSpellSkippedThisSession,
+} from "./choice-skip-session";
 
-/**
- * Сколько раз подряд можно пропустить орфографию в разных запусках плагина,
- * прежде чем скрыть навсегда. Один skip в рамках одного запуска.
- */
-export const MAX_SPELL_SKIP_COUNT = 3;
-
-/**
- * Ключи орфо-skip в текущем открытии плагина (in-memory).
- * При закрытии/открытии плагина sandbox пересоздаётся — Set пустой, слово снова видно.
- * Счётчик skipCount при этом живёт в pluginData на ноде.
- */
-const skippedThisPluginSession = new Set<string>();
-
-function spellSkipSessionKey(ruleId: string, before: string): string {
-  return `${ruleId}\0${before}`;
-}
-
-/** Новый запуск плагина (или симуляция в тестах): сбросить «скрыто в этой сессии». */
-export function beginPluginRun(): void {
-  skippedThisPluginSession.clear();
-}
-
-/** @deprecated больше не используется; оставлен для совместимости экспортов/тестов. */
-export function getCurrentPluginRunId(): number {
-  return 0;
-}
-
-/** Только для тестов. */
-export function resetPluginRunIdForTests(_value = 0): void {
-  skippedThisPluginSession.clear();
-}
+export { MAX_SPELL_SKIP_COUNT };
 
 /** Запись о подтверждённом choice/орфо-правке на текстовом слое. */
 export type ChoiceResolution = {
@@ -337,9 +312,7 @@ export function shouldSuppressChoiceFix(
     // Skip в этом открытии плагина: скрыть до закрытия.
     // После переоткрытия Set пустой — снова показываем, пока skipCount < MAX.
     if (!resolution.chosen && (resolution.skipCount ?? 0) > 0) {
-      return skippedThisPluginSession.has(
-        spellSkipSessionKey(resolution.ruleId, resolution.beforeAtResolve),
-      );
+      return wasSpellSkippedThisSession(resolution.ruleId, resolution.beforeAtResolve);
     }
 
     return false;
@@ -357,10 +330,8 @@ export function applySkipToResolutions(
   fix: ChoiceFixPosition,
   resolutions: ChoiceResolution[],
 ): ChoiceResolution[] {
-  const sessionKey = spellSkipSessionKey(fix.ruleId, fix.before);
-
   // Уже пропустили в этом открытии — не считаем повторный клик.
-  if (skippedThisPluginSession.has(sessionKey)) {
+  if (wasSpellSkippedThisSession(fix.ruleId, fix.before)) {
     return resolutions;
   }
 
@@ -389,7 +360,7 @@ export function applySkipToResolutions(
   );
 
   if (!accepted) {
-    skippedThisPluginSession.add(sessionKey);
+    markSpellSkippedThisSession(fix.ruleId, fix.before);
   }
 
   if (matchingIdx >= 0) {

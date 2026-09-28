@@ -1,5 +1,4 @@
-import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
-import type { PluginToUiMessage } from "../shared/messages";
+import type { AutoApplyReportDto, CheckResultDto, PluginToUiMessage } from "../shared/messages";
 import { scanSelectedTextNodes } from "./scan-selection";
 
 let lastAutoApplyReport: AutoApplyReportDto | null = null;

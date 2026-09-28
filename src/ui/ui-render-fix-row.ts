@@ -1,5 +1,5 @@
 import { escapeHtml } from "../shared/escape-html";
-import { formatFixDiffHtml } from "./diff-format";
+import { formatAnchorContextHtml, formatFixDiffHtml } from "./diff-format";
 import { formatChoiceHintHtml, formatFixCategoryLabel } from "./ui-helpers";
 import { selectedChoiceOptionIndex } from "./choice-selection";
 import type { TextFixDto } from "../shared/messages";
@@ -21,7 +21,12 @@ export function renderFixRow(
   confirmActions?: { cardIdx: number; fixIdx: number },
 ): string {
   if (confirmActions && isOrthographyRuleId(fix.ruleId)) {
-    return renderOrthographySpellFixRow(fix, confirmActions.cardIdx, confirmActions.fixIdx);
+    return renderOrthographySpellFixRow(
+      fix,
+      confirmActions.cardIdx,
+      confirmActions.fixIdx,
+      sourceText,
+    );
   }
 
   const actionsHtml = confirmActions
@@ -65,18 +70,25 @@ export function renderOrthographySpellFixRow(
     message: string;
     before: string;
     after: string;
+    from?: number;
+    to?: number;
   },
   cardIdx: number,
   fixIdx: number,
+  sourceText?: string,
 ): string {
   const suggested = fix.after !== fix.before ? fix.after : "";
   const applyDisabled = !suggested ? " disabled" : "";
+  const diffHtml =
+    sourceText && fix.from != null && fix.to != null
+      ? formatAnchorContextHtml(sourceText, fix.from, fix.to)
+      : `<span class="reportCtxWord">${escapeHtml(fix.before)}</span>`;
 
   return `
     <div class="confirmFix spellFix" data-confirm-card="${cardIdx}" data-confirm-fix="${fixIdx}">
       <div class="reportWhy">${escapeHtml(fix.message)}</div>
       <div class="reportMeta">Правило: <code>${escapeHtml(fix.ruleId)}</code> · ${escapeHtml(formatFixCategoryLabel(fix.category, fix.ruleId))}</div>
-      <div class="reportDiff"><span class="reportCtxWord">${escapeHtml(fix.before)}</span></div>
+      <div class="reportDiff">${diffHtml}</div>
       <label class="spellInputLabel" for="spell-input-${cardIdx}-${fixIdx}">Напишите, как исправить</label>
       <input
         id="spell-input-${cardIdx}-${fixIdx}"
@@ -100,7 +112,12 @@ export function renderOrthographySpellFixRow(
   `;
 }
 
-export function renderChoiceFixRow(fix: TextFixDto, cardIdx: number, fixIdx: number): string {
+export function renderChoiceFixRow(
+  fix: TextFixDto,
+  cardIdx: number,
+  fixIdx: number,
+  sourceText?: string,
+): string {
   const ruleId = fix.rule?.id ?? "";
   const category = fix.rule?.category ?? "";
   const message = fix.rule?.message ?? "";
@@ -122,7 +139,11 @@ export function renderChoiceFixRow(fix: TextFixDto, cardIdx: number, fixIdx: num
       <div class="reportWhy">${escapeHtml(message)}</div>
       ${hintHtml}
       <div class="reportMeta">Правило: <code>${escapeHtml(ruleId)}</code> · ${escapeHtml(formatFixCategoryLabel(category, ruleId))}</div>
-      <div class="reportDiff"><span class="reportCtxWord">${escapeHtml(current)}</span></div>
+      <div class="reportDiff">${
+        sourceText
+          ? formatAnchorContextHtml(sourceText, fix.from, fix.to)
+          : `<span class="reportCtxWord">${escapeHtml(current)}</span>`
+      }</div>
       <div class="choiceActions">
         ${optionsHtml}
         <button type="button" class="choiceConfirmBtn" data-choice-confirm="${cardIdx}:${fixIdx}"${confirmDisabled}>Подтвердить</button>

@@ -35,6 +35,12 @@ describe("mixed script", () => {
     ).toBe("доказываем");
   });
 
+  it("yпишете срезает латинскую y, даже если y→н тоже «известно»", () => {
+    const known = new Set(["пишете", "пишите", "нпишете", "нпишите"]);
+    expect(suggestMixedScriptRu("yпишете", (w) => known.has(w.toLowerCase()))).toBe("пишете");
+    expect(suggestMixedScriptRu("yпишите", (w) => known.has(w.toLowerCase()))).toBe("пишите");
+  });
+
   it("латиница внутри слова конвертируется по раскладке, если получается известное слово", () => {
     expect(convertLatinCharsToRuLayout("cиан")).toBe("сиан");
     expect(suggestMixedScriptRu("cиан", (w) => w.toLowerCase() === "сиан")).toBe("сиан");

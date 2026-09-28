@@ -1,4 +1,15 @@
 import { escapeHtml } from "../shared/escape-html";
+import {
+  applyOutsideContext,
+  formatContextualWhitespaceDiff,
+  isContextSpace,
+} from "./diff-context-window";
+import {
+  formatDiffHtml,
+  isGroupingSpaceChar,
+  isWhitespaceOnlyFragment,
+  visualizeDiffFragment,
+} from "./diff-visualize";
 
 export type FixDiffInput = {
   ruleId?: string;
@@ -8,6 +19,9 @@ export type FixDiffInput = {
   after?: string;
   sourceText?: string;
 };
+
+export { formatAnchorContextHtml } from "./diff-context-window";
+export { formatDiffHtml, visualizeDiffFragment } from "./diff-visualize";
 
 const LINE_BREAK_RULE_IDS: Record<string, true> = {
   "cian-121-remove-leading-line-breaks": true,
@@ -28,59 +42,6 @@ const NUMBER_CONTEXT_CHAR_RE = /[0-9.,]/;
 
 /** Единицы измерения, валюта и символы справа от пробела. */
 const UNIT_CONTEXT_CHAR_RE = /[0-9A-Za-z\u0400-\u04FF\u0451\u0401%°²³№§₽]/;
-
-function isGroupingSpaceChar(ch: string, code: number): boolean {
-  return ch === " " || code === 0x00a0 || code === 0x202f;
-}
-
-/** Показать невидимые символы в фрагменте diff. */
-export function visualizeDiffFragment(text: string | null | undefined): string {
-  if (text == null) return '<span class="ws-empty">∅</span>';
-  const s = String(text);
-  if (s.length === 0) return '<span class="ws-empty">∅</span>';
-
-  let out = "";
-  for (let i = 0; i < s.length; i++) {
-    const ch = s.charAt(i);
-    const code = s.charCodeAt(i);
-    if (ch === "\n") {
-      out += '<span class="ws-mark ws-nl" title="перевод строки (U+000A)">↵</span>\n';
-    } else if (ch === "\t") {
-      out += '<span class="ws-mark ws-tab" title="табуляция (U+0009)">⇥</span>';
-    } else if (code === 0x00a0) {
-      out += '<span class="ws-mark ws-nbsp" title="неразрывный пробел (U+00A0)">□</span>';
-    } else if (code === 0x202f) {
-      out += '<span class="ws-mark ws-nnbsp" title="узкий неразрывный пробел (U+202F)">▫</span>';
-    } else if (ch === " ") {
-      out += '<span class="ws-mark ws-sp" title="пробел (U+0020)">·</span>';
-    } else {
-      out += escapeHtml(ch);
-    }
-  }
-  return out;
-}
-
-export function formatDiffHtml(before: string | undefined, after: string | undefined): string {
-  return (
-    visualizeDiffFragment(before) +
-    ' <span style="color:#888;font-weight:400">→</span> <b>' +
-    visualizeDiffFragment(after) +
-    "</b>"
-  );
-}
-
-function isWhitespaceOnlyFragment(text: string | null | undefined): boolean {
-  if (text == null || text === "") return true;
-  const s = String(text);
-  for (let i = 0; i < s.length; i++) {
-    const code = s.charCodeAt(i);
-    const ch = s.charAt(i);
-    if (ch !== " " && ch !== "\t" && ch !== "\n" && ch !== "\r" && code !== 0x00a0 && code !== 0x202f) {
-      return false;
-    }
-  }
-  return true;
-}
 
 function isSentenceTerminalPunctuationFragment(text: string | null | undefined): boolean {
   if (text == null || text === "") return false;
@@ -128,15 +89,11 @@ function extractUnitContextAfter(text: string, index: number): string {
 }
 
 function extractContextBefore(text: string, index: number): string {
-  const number = extractNumberContextBefore(text, index);
-  if (number && NUMBER_CONTEXT_CHAR_RE.test(number)) return number;
-  return extractContextWordBefore(text, index);
+  return extractNumberContextBefore(text, index) || extractContextWordBefore(text, index);
 }
 
 function extractContextAfter(text: string, index: number): string {
-  const unit = extractUnitContextAfter(text, index);
-  if (unit) return unit;
-  return extractContextWordAfter(text, index);
+  return extractUnitContextAfter(text, index) || extractContextWordAfter(text, index);
 }
 
 function shouldShowContextualWhitespaceDiff(fix: FixDiffInput): boolean {
@@ -147,42 +104,6 @@ function shouldShowContextualWhitespaceDiff(fix: FixDiffInput): boolean {
   const left = extractContextBefore(fix.sourceText, fix.from);
   const right = extractContextAfter(fix.sourceText, fix.to);
   return Boolean(left || right);
-}
-
-function formatContextSide(
-  leftWord: string,
-  fragment: string | undefined,
-  rightWord: string,
-  bold: boolean,
-): string {
-  const parts: string[] = [];
-  if (leftWord) {
-    parts.push('<span class="reportCtxWord">' + visualizeDiffFragment(leftWord) + "</span>");
-  }
-  parts.push(
-    bold ? "<b>" + visualizeDiffFragment(fragment) + "</b>" : visualizeDiffFragment(fragment),
-  );
-  if (rightWord) {
-    parts.push('<span class="reportCtxWord">' + visualizeDiffFragment(rightWord) + "</span>");
-  }
-  return parts.join(" ");
-}
-
-function formatContextualWhitespaceDiff(
-  sourceText: string,
-  from: number,
-  to: number,
-  before: string | undefined,
-  after: string | undefined,
-): string | null {
-  const leftWord = extractContextBefore(sourceText, from);
-  const rightWord = extractContextAfter(sourceText, to);
-  if (!leftWord && !rightWord) return null;
-  return (
-    formatContextSide(leftWord, before, rightWord, false) +
-    ' <span style="color:#888;font-weight:400">→</span> ' +
-    formatContextSide(leftWord, after, rightWord, true)
-  );
 }
 
 function isLetterFragment(text: string | undefined): boolean {
@@ -292,7 +213,14 @@ export function formatFixDiffHtml(fix: FixDiffInput, sourceText?: string): strin
       enriched.before,
       enriched.after,
     );
-    if (periodDiff) return periodDiff;
+    if (periodDiff) {
+      const at = enriched.from ?? 0;
+      let start = at;
+      while (start > 0 && !isContextSpace(enriched.sourceText, start - 1)) start--;
+      let end = at;
+      while (end < enriched.sourceText.length && !isContextSpace(enriched.sourceText, end)) end++;
+      return applyOutsideContext(periodDiff, enriched.sourceText, start, Math.max(end, at));
+    }
   }
 
   if (shouldShowContextualWhitespaceDiff(enriched)) {
@@ -320,8 +248,14 @@ export function formatFixDiffHtml(fix: FixDiffInput, sourceText?: string): strin
       enriched.before,
       enriched.after,
     );
-    if (wordPrefix) return wordPrefix;
+    if (wordPrefix) {
+      return applyOutsideContext(wordPrefix, enriched.sourceText, enriched.from, enriched.to);
+    }
   }
 
-  return formatDiffHtml(enriched.before, enriched.after);
+  const plain = formatDiffHtml(enriched.before, enriched.after);
+  if (enriched.sourceText && enriched.from != null && enriched.to != null) {
+    return applyOutsideContext(plain, enriched.sourceText, enriched.from, enriched.to);
+  }
+  return plain;
 }

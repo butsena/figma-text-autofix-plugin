@@ -96,8 +96,7 @@ export type CheckResultDto = {
 };
 
 /** Запуск без фреймов, в которых есть текст. */
-export const NO_TEXT_IN_SELECTION_NOTICE =
-  "Выберите хотя бы один фрейм с текстовыми полями";
+export const NO_TEXT_IN_SELECTION_NOTICE = "Выделите хотя бы один фрейм";
 
 export type LexiconResourceLoadStatus = {
   ok: boolean;

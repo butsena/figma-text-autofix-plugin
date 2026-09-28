@@ -1,7 +1,6 @@
 import type { AutofixRule } from "../../core/autofix-engine";
 import { APPLY_POLICY_CHOICE } from "../../core/apply-policy";
 import { rule, rules } from "../../core/rule-def";
-import { formatAmbiguousChoiceHintFields } from "../../lexicon/ambiguous-form-choices-parse";
 import { MSG_CHOICE_TITLE_CASE_BOUNDARY } from "../rule-messages";
 import { matchesBoundaryExceptionAt } from "./boundary-exception-match";
 import {
@@ -22,9 +21,6 @@ const TITLE_CASE_PAIR_RE = new RegExp(
   String.raw`(?<![A-Za-zА-Яа-яЁё])([А-ЯЁ][а-яё]+|[а-яё]{1,3})([ \t\u00A0\u202F]+)([А-ЯЁ][а-яё]+)(?![A-Za-zА-Яа-яЁё])`,
   "gu",
 );
-
-const TITLE_CASE_PAIR_HINT =
-  "новое предложение | поставьте точку перед заглавной; то же предложение | сделайте второе слово строчным";
 
 function lowercaseFirstLetter(word: string): string {
   if (word.charAt(0).toLowerCase() === "ё" || word.charAt(0) === "Ё") {
@@ -55,7 +51,6 @@ function shouldSkipTitleCasePair(text: string, match: RegExpExecArray): boolean 
 }
 
 export function buildTitleCasePairChoiceRules(): AutofixRule[] {
-  const hintFields = formatAmbiguousChoiceHintFields(TITLE_CASE_PAIR_HINT);
   return rules([
     rule({
       id: TITLE_CASE_PAIR_CHOICE_RULE_ID,
@@ -63,7 +58,6 @@ export function buildTitleCasePairChoiceRules(): AutofixRule[] {
       pattern: TITLE_CASE_PAIR_RE,
       replacement: (matched) => matched,
       message: MSG_CHOICE_TITLE_CASE_BOUNDARY,
-      ...hintFields,
       choiceOptionsForMatch: titleCasePairOptions,
       matchFilter: (text, match) => !shouldSkipTitleCasePair(text, match),
       priority: 86,

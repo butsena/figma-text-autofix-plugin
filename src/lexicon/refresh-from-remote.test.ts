@@ -60,12 +60,19 @@ describe("refresh-from-remote", () => {
     expect(result.phraseCount).toBe(bundledCount);
   });
 
-  it("подставляет remote ambiguous form choices", async () => {
+  it("подставляет remote ambiguous form choices и не выкидывает bundled-пары", async () => {
+    const bundledCount = (
+      await refreshAmbiguousFormChoicesFromRemote("", async () => "")
+    ).choiceCount;
     const result = await refreshAmbiguousFormChoicesFromRemote(
       "https://example.com/x.txt",
       async () => "ищите - ищете - что делаете? | пример\n",
     );
-    expect(result).toMatchObject({ ok: true, fromRemote: true, choiceCount: 1 });
+    expect(result).toMatchObject({
+      ok: true,
+      fromRemote: true,
+      choiceCount: bundledCount + 1,
+    });
   });
 
   it("сбрасывает ambiguous form choices на bundled при сетевой ошибке", async () => {

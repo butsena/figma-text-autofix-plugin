@@ -24,8 +24,7 @@ export const MSG_RED_POLICY_SINGLE_SENTENCE_NO_PERIOD =
 export const MSG_CONFIRM_IMPLICIT_SENTENCE_PERIOD =
   "Редполитика: похоже, между словами пропущена точка";
 
-export const MSG_CHOICE_TITLE_CASE_BOUNDARY =
-  "Редполитика: новое предложение или строчная";
+export const MSG_CHOICE_TITLE_CASE_BOUNDARY = "Проверьте, нужна ли точка";
 
 export function msgConfirmYoHomograph(eForm: string, yoForm: string): string {
   return `Проверьте: «${eForm}» или «${yoForm}»?`;
@@ -53,6 +52,9 @@ export const MSG_BRAND_NOUN_OR_NET = "Бренд: «нет ЦИАН» → «не
 
 export const MSG_TYPO_NBSP_AFTER_SERVICE_WORD =
   "Типографика: неразрывный пробел после служебного слова";
+
+/** Сводка нескольких space→nbsp в авто-отчёте. */
+export const MSG_TYPO_NBSP_SUMMARY = "Типографика: неразрывные пробелы";
 
 export const MSG_TYPO_NBSP_DATE_ADDRESS =
   "Типографика: неразрывный пробел в дате и адресе";

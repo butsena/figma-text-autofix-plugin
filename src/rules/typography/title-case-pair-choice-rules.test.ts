@@ -19,8 +19,10 @@ describe("buildTitleCasePairChoiceRules", () => {
       ruleId: TITLE_CASE_PAIR_CHOICE_RULE_ID,
       before: "Кватира Обломе",
       choiceOptions: ["Кватира. Обломе", "Кватира обломе"],
-      message: "Редполитика: новое предложение или строчная",
+      message: "Проверьте, нужна ли точка",
     });
+    expect(fix?.hint).toBeUndefined();
+    expect(fix?.hintHtml).toBeUndefined();
   });
 
   it("предлагает выбор для Пишите Ждите", () => {
