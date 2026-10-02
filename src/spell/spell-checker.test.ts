@@ -49,6 +49,7 @@ describe("spell-checker", () => {
   it("isKnownWord и suggestCorrection", async () => {
     const {
       ensureSpellCheckerReady,
+      getSpellSuggestMissCount,
       isKnownWord,
       suggestCorrection,
       resetSpellCheckerCache,
@@ -60,7 +61,10 @@ describe("spell-checker", () => {
     expect(isKnownWord(spell!, "Ошибка")).toBe(true);
     expect(isKnownWord(spell!, "ашыбка")).toBe(false);
     expect(suggestCorrection(spell!, "ашыбка")).toBe("ошибка");
+    expect(suggestCorrection(spell!, "Ашыбка")).toBe("ошибка");
+    expect(getSpellSuggestMissCount()).toBe(1);
     expect(suggestCorrection(spell!, "zzzzzz")).toBeNull();
+    expect(getSpellSuggestMissCount()).toBe(2);
   });
 
   it("concurrent ensureSpellCheckerReady шарит один promise", async () => {

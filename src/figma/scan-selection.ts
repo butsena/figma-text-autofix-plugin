@@ -3,6 +3,7 @@ import { isOrthographyRuleId } from "../rules/orthography-spell-rules";
 import type { CheckResultDto, TextNodeCardDto } from "../shared/messages";
 import { compareFixesByPosition } from "../shared/fix-sort";
 import type { TextFix } from "../core/autofix-engine";
+import { beginSpellCardBudget, endSpellCardBudget } from "../spell/spell-card-budget";
 import { collectTextNodesFromSelection } from "./collect-text-nodes";
 import {
   buildCardForNode,
@@ -166,42 +167,47 @@ export function scanSelectedTextNodes(
   const nodeById = new Map<string, TextNode>();
   for (const node of textNodes) nodeById.set(node.id, node);
 
-  if (policy === "auto" && autoApplyOnly) {
-    const { cards, foundFixes } = buildCards(textNodes, "auto", includeSpelling);
-    return toScanResult(textNodes, nodeById, {
-      foundFixes,
-      confirmFixes: 0,
-      choiceFixes: 0,
-      cards,
-      confirmCards: [],
-      choiceCards: [],
-    });
-  }
+  if (includeSpelling) beginSpellCardBudget();
+  try {
+    if (policy === "auto" && autoApplyOnly) {
+      const { cards, foundFixes } = buildCards(textNodes, "auto", includeSpelling);
+      return toScanResult(textNodes, nodeById, {
+        foundFixes,
+        confirmFixes: 0,
+        choiceFixes: 0,
+        cards,
+        confirmCards: [],
+        choiceCards: [],
+      });
+    }
 
-  if (policy === "auto") {
-    const scan = scanAllPolicies(textNodes, includeSpelling);
-    return toScanResult(textNodes, nodeById, scan);
-  }
+    if (policy === "auto") {
+      const scan = scanAllPolicies(textNodes, includeSpelling);
+      return toScanResult(textNodes, nodeById, scan);
+    }
 
-  const { cards, foundFixes } = buildCards(textNodes, policy, includeSpelling);
+    const { cards, foundFixes } = buildCards(textNodes, policy, includeSpelling);
 
-  if (policy === "confirm") {
+    if (policy === "confirm") {
+      return toScanResult(textNodes, nodeById, {
+        foundFixes: 0,
+        confirmFixes: foundFixes,
+        choiceFixes: 0,
+        cards: [],
+        confirmCards: cards,
+        choiceCards: [],
+      });
+    }
+
     return toScanResult(textNodes, nodeById, {
       foundFixes: 0,
-      confirmFixes: foundFixes,
-      choiceFixes: 0,
+      confirmFixes: 0,
+      choiceFixes: foundFixes,
       cards: [],
-      confirmCards: cards,
-      choiceCards: [],
+      confirmCards: [],
+      choiceCards: cards,
     });
+  } finally {
+    if (includeSpelling) endSpellCardBudget();
   }
-
-  return toScanResult(textNodes, nodeById, {
-    foundFixes: 0,
-    confirmFixes: 0,
-    choiceFixes: foundFixes,
-    cards: [],
-    confirmCards: [],
-    choiceCards: cards,
-  });
 }

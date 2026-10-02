@@ -243,6 +243,29 @@ export function looksLikeRuTypedInEnLayout(word: string): boolean {
   return !EN_VOWELS.test(lettersOnly);
 }
 
+/**
+ * EN-раскладка → русское слово. Лишняя клавиша в конце («,elbntg» → будитеп)
+ * срезается, если без неё слово есть в словаре.
+ */
+export function suggestRuFromLatinLayout(
+  word: string,
+  isKnown: (candidate: string) => boolean,
+): string | null {
+  const converted = convertEnLayoutToRu(word);
+  if (!converted || converted === word) return null;
+  if (![...converted].some((ch) => /[а-яё]/i.test(ch))) return null;
+  if (isKnown(converted)) return converted;
+
+  for (let drop = 1; drop <= 2; drop++) {
+    if (converted.length - drop < 4) break;
+    const trimmed = converted.slice(0, -drop);
+    if (isKnown(trimmed)) return trimmed;
+  }
+
+  if (looksLikeRuTypedInEnLayout(word)) return converted;
+  return null;
+}
+
 export function isLikelyUrlOrEmailContext(text: string, from: number, to: number): boolean {
   const before = text.slice(Math.max(0, from - 1), from);
   const after = text.slice(to, Math.min(text.length, to + 1));

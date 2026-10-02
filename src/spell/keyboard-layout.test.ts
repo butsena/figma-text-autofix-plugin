@@ -8,6 +8,7 @@ import {
   looksLikeRuTypedInEnLayout,
   shouldSkipLatinLayoutToken,
   suggestMixedScriptRu,
+  suggestRuFromLatinLayout,
 } from "./keyboard-layout";
 
 describe("convertEnLayoutToRu", () => {
@@ -56,6 +57,20 @@ describe("extractLatinLayoutTokens", () => {
     expect(extractLatinLayoutTokens("2. kjjklk’;kg рядом")).toEqual([
       { word: "kjjklk’;kg", from: 3, to: 13 },
     ]);
+  });
+});
+
+describe("suggestRuFromLatinLayout", () => {
+  it("«ghbdtn» и «,elbnt» даёт известное слово", () => {
+    const known = (w: string) => ["привет", "будите"].includes(w.toLowerCase());
+    expect(suggestRuFromLatinLayout("ghbdtn", known)).toBe("привет");
+    expect(suggestRuFromLatinLayout(",elbnt", known)).toBe("будите");
+  });
+
+  it("лишняя клавиша в конце «,elbntg» срезается до «будите»", () => {
+    const known = (w: string) => w.toLowerCase() === "будите";
+    expect(suggestRuFromLatinLayout(",elbntg", known)).toBe("будите");
+    expect(suggestRuFromLatinLayout("online", known)).toBeNull();
   });
 });
 

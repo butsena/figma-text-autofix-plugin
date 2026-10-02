@@ -9,6 +9,10 @@ describe("buildPunctuationSpacingRules", () => {
     expect(applyAllRules("слово , ещё", rules)).toBe("слово, ещё");
   });
 
+  it("не трогает пробел перед запятой, которая начинает латинскую раскладку", () => {
+    expect(applyAllRules("Не ,elbnt медведя!", rules)).toBe("Не ,elbnt медведя!");
+  });
+
   it("схлопывает двойной восклицательный знак", () => {
     expect(applyAllRules("Ура!!", rules)).toBe("Ура!");
   });

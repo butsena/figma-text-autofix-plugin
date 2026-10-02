@@ -22,6 +22,9 @@ describe("ambiguous-form-choices-store", () => {
         (choice) => choice.options[0] === "напишите" && choice.options[1] === "напишете",
       ),
     ).toBe(true);
+    expect(
+      getAmbiguousFormChoices().some((choice) => choice.id === "cian-choice-budite-budete"),
+    ).toBe(true);
     resetAmbiguousFormChoicesToBundled();
   });
 });

@@ -16,14 +16,13 @@ import {
   type SpellChecker,
 } from "./spell-checker";
 import {
-  convertEnLayoutToRu,
   casingForSuggestion,
   extractLatinLayoutTokens,
   extractMixedScriptTokens,
   isLikelyUrlOrEmailContext,
-  looksLikeRuTypedInEnLayout,
   shouldSkipLatinLayoutToken,
   suggestMixedScriptRu,
+  suggestRuFromLatinLayout,
   textHasCyrillic,
 } from "./keyboard-layout";
 import {
@@ -31,6 +30,7 @@ import {
   rangesOverlap,
   shouldSkipSpellToken,
 } from "./tokenize-cyrillic-words";
+import { takeSpellCardSlot } from "./spell-card-budget";
 import { getSpellWhitelistWords } from "./spell-word-list-store";
 
 const whitelistLower = (): Set<string> => {
@@ -114,18 +114,16 @@ function checkLatinLayoutFixes(
     if (overlapsExistingFix(from, to, existingFixes)) continue;
     if (overlapsExistingFix(from, to, fixes)) continue;
 
-    const converted = convertEnLayoutToRu(word);
-    if (!converted || converted === word) continue;
-    if (![...converted].some((ch) => /[а-яё]/i.test(ch))) continue;
+    const suggestedRu = suggestRuFromLatinLayout(word, (w) => isKnownWord(spell, w));
+    if (!suggestedRu) continue;
+    const knownRu = isKnownWord(spell, suggestedRu);
 
-    const knownRu = isKnownWord(spell, converted);
-    const suspiciousGibberish = looksLikeRuTypedInEnLayout(word);
-
-    if (!knownRu && !suspiciousGibberish) continue;
-
-    const after = knownRu
-      ? casingForSuggestion(text, from, converted)
-      : capitalizeLike(word, converted);
+    const cased = knownRu
+      ? casingForSuggestion(text, from, suggestedRu)
+      : capitalizeLike(word, suggestedRu);
+    const prev = from > 0 ? text.charAt(from - 1) : "";
+    const gluedToLetter = /^[^A-Za-z]/.test(word) && /[A-Za-zА-Яа-яЁё]/.test(prev);
+    const after = gluedToLetter && !/^\s/.test(cased) ? ` ${cased}` : cased;
 
     fixes.push({
       from,
@@ -152,29 +150,29 @@ export function checkSpellingFixes(text: string, existingFixes: readonly TextFix
 
   const whitelist = whitelistLower();
   const fixes: TextFix[] = [];
-  /** suggest() у nspell дорогой — кэш на слово в рамках одного прохода текста. */
-  const suggestionByLower = new Map<string, string | null>();
 
   // Смешанные слова (yпишете) раскладка чинит целиком — считаем их первыми,
   // чтобы орфография не ругалась на кириллические обрывки вокруг латинской буквы.
   const mixedFixes = checkMixedScriptFixes(text, spell, whitelist, existingFixes);
   const spellExisting = [...existingFixes, ...mixedFixes];
 
+  // Проход 1: только «знает / не знает». suggest — ниже, для уникальных форм и с лимитом карточек.
+  const unknown: { word: string; from: number; to: number }[] = [];
   for (const token of extractCyrillicWordTokens(text)) {
     const { word, from, to } = token;
     if (shouldSkipSpellToken(word)) continue;
     if (isWhitelisted(word, whitelist)) continue;
     if (overlapsExistingFix(from, to, spellExisting)) continue;
     if (isKnownWord(spell, word)) continue;
+    unknown.push(token);
+  }
 
-    const key = word.toLowerCase();
-    let suggestion: string | null;
-    if (suggestionByLower.has(key)) {
-      suggestion = suggestionByLower.get(key) ?? null;
-    } else {
-      suggestion = suggestCorrection(spell, word);
-      suggestionByLower.set(key, suggestion);
-    }
+  let emitted = 0;
+  for (const token of unknown) {
+    if (!takeSpellCardSlot(emitted)) break;
+    emitted += 1;
+    const { word, from, to } = token;
+    const suggestion = suggestCorrection(spell, word);
     const after = suggestion ? capitalizeLike(word, suggestion) : word;
 
     fixes.push({

@@ -86,11 +86,25 @@ export function getSpellChecker(): SpellChecker | null {
   return checker;
 }
 
+const suggestionByLower = new Map<string, string | null>();
+let spellSuggestMisses = 0;
+
+export function getSpellSuggestMissCount(): number {
+  return spellSuggestMisses;
+}
+
+/** Кэш suggest на сессию плагина. Сброс вместе со словарём. */
+export function resetSpellSuggestionCache(): void {
+  suggestionByLower.clear();
+  spellSuggestMisses = 0;
+}
+
 export function resetSpellCheckerCache(): void {
   checker = null;
   initPromise = null;
   signature = "";
   buildingSignature = "";
+  resetSpellSuggestionCache();
 }
 
 export function isKnownWord(spell: SpellChecker, word: string): boolean {
@@ -101,12 +115,15 @@ export function isKnownWord(spell: SpellChecker, word: string): boolean {
   return false;
 }
 
+/**
+ * Один suggest на нижний регистр. Повтор того же слова (и пара слово/lower)
+ * берётся из кэша сессии, без второго прохода nspell.
+ */
 export function suggestCorrection(spell: SpellChecker, word: string): string | null {
-  const suggestions = spell.suggest(word);
-  if (!suggestions.length) {
-    const lowerSuggestions = spell.suggest(word.toLowerCase());
-    if (!lowerSuggestions.length) return null;
-    return lowerSuggestions[0] ?? null;
-  }
-  return suggestions[0] ?? null;
+  const lower = word.toLowerCase();
+  if (suggestionByLower.has(lower)) return suggestionByLower.get(lower) ?? null;
+  spellSuggestMisses += 1;
+  const suggestion = spell.suggest(lower)[0] ?? null;
+  suggestionByLower.set(lower, suggestion);
+  return suggestion;
 }

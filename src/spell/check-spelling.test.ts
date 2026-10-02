@@ -9,9 +9,17 @@ vi.mock("../config/feature-flags", () => ({
 
 import type { TextFix } from "../core/autofix-engine";
 import { checkTextWithSpelling, filterRulesByPolicy } from "../figma/scan-text-check";
+import { getAutofixRules } from "../rules/autofix-rules";
+import { applyAllRules } from "../test/helpers";
 import { checkSpellingFixes } from "./check-spelling";
 import { applyHunspellDictionaryFromRaw } from "./hunspell-dictionary-store";
-import { ensureSpellCheckerReady } from "./spell-checker";
+import {
+  ensureSpellCheckerReady,
+  getSpellSuggestMissCount,
+  resetSpellSuggestionCache,
+} from "./spell-checker";
+import { MAX_SPELL_CARDS_PER_TEXT } from "./spell-card-budget";
+import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -162,4 +170,75 @@ describe("checkSpellingFixes", () => {
       expect(plainFixes.some((f) => f.applyPolicy === "choice")).toBe(true);
     }
   });
+
+  it("«,elbnt» и «,elbntg» не склеиваются с «Не» и не становятся «Будите»", () => {
+    const rules = getAutofixRules();
+    for (const latin of [",elbnt", ",elbntg"]) {
+      const source = `Не ${latin} медведя!`;
+      const afterAuto = applyAllRules(source, rules);
+      expect(afterAuto).toMatch(new RegExp(`^Не[\\u00a0 ]${latin.replace(",", "\\,")} медведя!$`));
+
+      const layout = checkSpellingFixes(afterAuto).find((f) => f.before === latin);
+      expect(layout).toMatchObject({
+        ruleId: "orthography-keyboard-layout",
+        after: "будите",
+      });
+
+      const applied =
+        afterAuto.slice(0, layout!.from) + layout!.after + afterAuto.slice(layout!.to);
+      expect(applied).toMatch(/^Не[\u00a0 ]будите медведя!$/);
+      expect(
+        checkSpellingFixes(applied).filter((f) => /небудите/i.test(f.before)),
+      ).toEqual([]);
+    }
+
+    const glued = checkSpellingFixes("Не,elbnt медведя!").find((f) => f.before === ",elbnt");
+    expect(glued?.after).toBe(" будите");
+    expect(`Не${glued!.after} медведя!`).toBe("Не будите медведя!");
+  });
+
+  it("одинаковая опечатка не вызывает suggest второй раз", () => {
+    resetSpellSuggestionCache();
+    const first = checkSpellingFixes("Кватира");
+    expect(first[0]?.after).toBe("Квартира");
+    const misses = getSpellSuggestMissCount();
+    expect(misses).toBe(1);
+    const second = checkSpellingFixes("Ещё Кватира тут");
+    expect(second.find((f) => f.before === "Кватира")?.after).toBe("Квартира");
+    expect(getSpellSuggestMissCount()).toBe(misses);
+  });
+
+  it("раскладка не идёт через suggest словаря", () => {
+    resetSpellSuggestionCache();
+    const fixes = checkSpellingFixes("Наберите ghbdtn в чат");
+    expect(fixes.find((f) => f.before === "ghbdtn")?.after).toBe("привет");
+    expect(getSpellSuggestMissCount()).toBe(0);
+    const mixed = checkSpellingFixes("Заполните ваш yпишете или yпишите, псина!");
+    expect(mixed.filter((f) => f.ruleId === "orthography-keyboard-layout").map((f) => f.after)).toEqual([
+      "пишете",
+      "пишите",
+    ]);
+    expect(getSpellSuggestMissCount()).toBe(0);
+  });
+
+  it("whitelist «смс» не становится опечаткой", () => {
+    const fixes = checkSpellingFixes("Отправьте смс клиенту");
+    expect(fixes.filter((f) => f.ruleId === ORTHOGRAPHY_SPELL_RULE_ID).map((f) => f.before)).not.toContain(
+      "смс",
+    );
+  });
+
+  it("стена мусора не считает suggest на каждое слово", () => {
+    resetSpellSuggestionCache();
+    const letters = "абвгдежзиклмнопрстуфхцчшщыэюя";
+    const words = Array.from({ length: 20 }, (_, i) => `ъъъ${letters[i] ?? "а"}ффжж`);
+    const cards = checkSpellingFixes(words.join(" ")).filter(
+      (f) => f.ruleId === ORTHOGRAPHY_SPELL_RULE_ID,
+    );
+    expect(cards.length).toBeLessThanOrEqual(MAX_SPELL_CARDS_PER_TEXT);
+    expect(cards.length).toBeGreaterThan(0);
+    expect(getSpellSuggestMissCount()).toBe(cards.length);
+    expect(getSpellSuggestMissCount()).toBeLessThanOrEqual(MAX_SPELL_CARDS_PER_TEXT);
+  }, 60_000);
+
 });

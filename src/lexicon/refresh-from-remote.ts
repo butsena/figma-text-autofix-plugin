@@ -31,6 +31,7 @@ export type {
 
 export {
   fetchRemoteTextViaHttp,
+  fetchSpellDictionaryFile,
   refreshSpellDictionaryFromRemote,
   refreshSpellSupplementFromRemote,
   refreshSpellWhitelistFromRemote,

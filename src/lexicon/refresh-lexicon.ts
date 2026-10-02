@@ -3,6 +3,7 @@ import { SPELLCHECK_ENABLED } from "../config/feature-flags";
 import { LEXICON_REMOTE } from "../config/lexicon-remote-config";
 import {
   fetchRemoteTextViaHttp,
+  fetchSpellDictionaryFile,
   refreshAmbiguousFormChoicesFromRemote,
   refreshBoundaryExceptionsFromRemote,
   refreshSpellDictionaryFromRemote,
@@ -157,6 +158,7 @@ async function loadSpellResources(): Promise<{
       LEXICON_REMOTE.spellDictionary.affUrl,
       LEXICON_REMOTE.spellDictionary.dicUrl,
       fetchRemoteTextViaHttp,
+      { fetchFile: fetchSpellDictionaryFile },
     ),
     refreshSpellSupplementFromRemote(LEXICON_REMOTE.spellSupplement.url, fetchRemoteTextViaHttp),
     refreshSpellWhitelistFromRemote(LEXICON_REMOTE.spellWhitelist.url, fetchRemoteTextViaHttp),

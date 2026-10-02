@@ -92,6 +92,36 @@ describe("buildAmbiguousFormChoiceRules", () => {
     ]);
   });
 
+  it("предлагает выбор для будите и будете и не трогает будьте", () => {
+    const wake = fixesFor("не будите спящего", rules);
+    expect(wake).toMatchObject([
+      {
+        applyPolicy: "choice",
+        before: "будите",
+        after: "будите",
+        choiceOptions: ["будите", "будете"],
+        ruleId: "cian-choice-budite-budete",
+      },
+    ]);
+    expect(wake[0]?.hintHtml).toContain("что делайте?");
+    expect(wake[0]?.hintHtml).toContain("не будите спящего");
+    expect(wake[0]?.hintHtml).toContain("форма «быть»");
+    expect(wake[0]?.hintHtml).toContain("вы будете дома вечером");
+
+    const [willBe] = fixesFor("вы будете дома", rules);
+    expect(willBe).toMatchObject({
+      applyPolicy: "choice",
+      before: "будете",
+      choiceOptions: ["будите", "будете"],
+      ruleId: "cian-choice-budite-budete",
+    });
+
+    expect(fixesFor("Будьте внимательны", rules)).toEqual([]);
+    expect(applyAllRules("Будьте внимательны", allRules)).toBe("Будьте внимательны");
+    expect(applyAllRules("не будите спящего", allRules).toLowerCase()).toContain("будите");
+    expect(applyAllRules("вы будете дома", allRules)).toContain("будете");
+  });
+
   it("предлагает выбор для напишите и напишете", () => {
     const [write] = fixesFor("напишите мне", rules);
     expect(write).toMatchObject({
