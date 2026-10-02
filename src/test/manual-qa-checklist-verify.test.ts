@@ -14,6 +14,8 @@ import { formatTextLayersBlockHtml } from "../ui/ui-helpers";
 import { renderOrthographySpellFixRow } from "../ui/ui-render-fix-row";
 import { TITLE_CASE_PAIR_CHOICE_RULE_ID } from "../rules/typography/title-case-pair-choice-rules";
 import {
+  renderChoiceHtml,
+  renderConfirmHtml,
   renderLeftoverCardsHtml,
   renderManualReportHtml,
   renderReportHtml,
@@ -320,6 +322,64 @@ describe("manual QA checklist verify", () => {
     expect(html).toContain('<details class="manualReportDetails">');
     expect(html).not.toContain('<details class="manualReportDetails" open>');
     state.lastManualReport = null;
+  });
+
+  it("#48 confirm (орфография) выше choice", () => {
+    state.spellcheckInProgress = false;
+    state.confirmCards = [
+      {
+        nodeId: "1:1",
+        nodeName: "Слой",
+        originalText: "yпишете",
+        previewText: "yпишете",
+        characterCount: 7,
+        fixes: [
+          {
+            ruleId: "orthography-keyboard-layout",
+            category: "orthography",
+            message: "раскладка",
+            before: "yпишете",
+            after: "пишете",
+            from: 0,
+            to: 7,
+          },
+        ],
+      },
+    ];
+    state.choiceCards = [
+      {
+        nodeId: "1:1",
+        nodeName: "Слой",
+        originalText: "пишете",
+        previewText: "пишете",
+        characterCount: 6,
+        fixes: [
+          {
+            ruleId: "cian-choice-pishite-pishete",
+            category: "form_choice",
+            message: "choice",
+            before: "пишете",
+            after: "пишете",
+            from: 0,
+            to: 6,
+            choiceOptions: ["пишите", "пишете"],
+          },
+        ],
+      },
+    ];
+    expect(renderConfirmHtml()).toContain("Обратите внимание");
+    expect(renderChoiceHtml()).toContain("Выберите вариант");
+    const renderSrc = fs.readFileSync(
+      path.join(root, "src/ui/ui-render.ts"),
+      "utf8",
+    );
+    const confirmCall = renderSrc.indexOf("${renderConfirmHtml()}");
+    const choiceCall = renderSrc.indexOf("${renderChoiceHtml()}");
+    expect(confirmCall).toBeGreaterThan(-1);
+    expect(choiceCall).toBeGreaterThan(-1);
+    expect(confirmCall).toBeLessThan(choiceCall);
+    state.confirmCards = [];
+    state.choiceCards = [];
   });
 
   it("#38 раскладка ,elbnt / ,elbntg не склеивается с Не", () => {

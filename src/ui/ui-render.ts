@@ -37,8 +37,8 @@ export function render(): void {
       <div class="appMain">
         ${renderResultHeaderHtml()}
         ${renderSpellcheckStatusHtml()}
-        ${renderChoiceHtml()}
         ${renderConfirmHtml()}
+        ${renderChoiceHtml()}
         ${renderManualReportHtml()}
         ${renderReportHtml()}
         ${renderLeftoverCardsHtml()}
