@@ -232,13 +232,18 @@ describe("checkSpellingFixes", () => {
     resetSpellSuggestionCache();
     const letters = "абвгдежзиклмнопрстуфхцчшщыэюя";
     const words = Array.from({ length: 20 }, (_, i) => `ъъъ${letters[i] ?? "а"}ффжж`);
-    const cards = checkSpellingFixes(words.join(" ")).filter(
-      (f) => f.ruleId === ORTHOGRAPHY_SPELL_RULE_ID,
-    );
+    const text = words.join(" ");
+    const cards = checkSpellingFixes(text).filter((f) => f.ruleId === ORTHOGRAPHY_SPELL_RULE_ID);
     expect(cards.length).toBeLessThanOrEqual(MAX_SPELL_CARDS_PER_TEXT);
     expect(cards.length).toBeGreaterThan(0);
     expect(getSpellSuggestMissCount()).toBe(cards.length);
     expect(getSpellSuggestMissCount()).toBeLessThanOrEqual(MAX_SPELL_CARDS_PER_TEXT);
+
+    const merged = checkTextWithSpelling(text, filterRulesByPolicy("all"));
+    expect(merged.some((f) => f.ruleId === "cian-138-sentence-start-capitalize")).toBe(false);
+    expect(merged.filter((f) => f.ruleId === ORTHOGRAPHY_SPELL_RULE_ID).length).toBeLessThanOrEqual(
+      MAX_SPELL_CARDS_PER_TEXT,
+    );
   }, 60_000);
 
 });

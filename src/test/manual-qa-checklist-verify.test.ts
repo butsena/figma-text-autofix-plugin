@@ -23,6 +23,7 @@ import {
   renderTextLayersHtml,
 } from "../ui/ui-render-sections";
 import { applySpellcheckStatus, state } from "../ui/ui-state";
+import { checkTextWithSpelling, filterRulesByPolicy } from "../figma/scan-text-check";
 import { checkSpellingFixes } from "../spell/check-spelling";
 import { applyHunspellDictionaryFromRaw } from "../spell/hunspell-dictionary-store";
 import {
@@ -520,6 +521,21 @@ describe("manual QA checklist verify", () => {
     const cards = checkSpellingFixes(junk).filter((f) => f.ruleId === ORTHOGRAPHY_SPELL_RULE_ID);
     expect(cards.length).toBeLessThanOrEqual(MAX_SPELL_CARDS_PER_TEXT);
     expect(getSpellSuggestMissCount()).toBeLessThanOrEqual(MAX_SPELL_CARDS_PER_TEXT);
+
+    const merged = checkTextWithSpelling(junk, filterRulesByPolicy("all"));
+    expect(merged.some((f) => f.ruleId === "cian-138-sentence-start-capitalize")).toBe(false);
+    expect(merged.filter((f) => f.ruleId === ORTHOGRAPHY_SPELL_RULE_ID)).toHaveLength(cards.length);
+  }, 60_000);
+
+  it("#49 стена мусора: без заглавной сверху, ≤12 орфографии", () => {
+    resetSpellSuggestionCache();
+    const letters = "абвгдежзиклмнопрстуфхцчшщыэюя";
+    const junk = Array.from({ length: 20 }, (_, i) => `ъъъ${letters[i] ?? "а"}ффжж`).join(" ");
+    const merged = checkTextWithSpelling(junk, filterRulesByPolicy("all"));
+    expect(merged.some((f) => f.ruleId.startsWith("cian-138-"))).toBe(false);
+    const spell = merged.filter((f) => f.ruleId === ORTHOGRAPHY_SPELL_RULE_ID);
+    expect(spell.length).toBeLessThanOrEqual(MAX_SPELL_CARDS_PER_TEXT);
+    expect(merged.length).toBe(spell.length);
   }, 60_000);
 
 

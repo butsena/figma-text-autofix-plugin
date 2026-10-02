@@ -1,6 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import type { TextFix } from "../core/autofix-engine";
-import { filterRulesByPolicy, mergeAutofixAndSpellingFixes } from "./scan-text-check";
+import {
+  ORTHOGRAPHY_LAYOUT_RULE_ID,
+  ORTHOGRAPHY_SPELL_RULE_ID,
+} from "../rules/orthography-spell-rules";
+import {
+  dropSentenceCapOverlappingOrthography,
+  filterRulesByPolicy,
+  mergeAutofixAndSpellingFixes,
+} from "./scan-text-check";
 
 function fix(partial: Partial<TextFix> & Pick<TextFix, "from" | "to" | "before" | "after" | "ruleId">): TextFix {
   return {
@@ -11,6 +19,77 @@ function fix(partial: Partial<TextFix> & Pick<TextFix, "from" | "to" | "before" 
     ...partial,
   };
 }
+
+describe("dropSentenceCapOverlappingOrthography", () => {
+  it("убирает заглавную на мусоре без подсказки", () => {
+    const out = dropSentenceCapOverlappingOrthography([
+      fix({
+        from: 0,
+        to: 1,
+        before: "ъ",
+        after: "Ъ",
+        ruleId: "cian-138-sentence-start-capitalize",
+        applyPolicy: "confirm",
+      }),
+      fix({
+        from: 0,
+        to: 8,
+        before: "ъъъаффжж",
+        after: "ъъъаффжж",
+        ruleId: ORTHOGRAPHY_SPELL_RULE_ID,
+        applyPolicy: "confirm",
+      }),
+    ]);
+    expect(out.map((f) => f.ruleId)).toEqual([ORTHOGRAPHY_SPELL_RULE_ID]);
+  });
+
+  it("оставляет заглавную, если орфография предлагает замену", () => {
+    const out = dropSentenceCapOverlappingOrthography([
+      fix({
+        from: 0,
+        to: 1,
+        before: "п",
+        after: "П",
+        ruleId: "cian-138-sentence-start-capitalize",
+        applyPolicy: "confirm",
+      }),
+      fix({
+        from: 0,
+        to: 6,
+        before: "превет",
+        after: "привет",
+        ruleId: ORTHOGRAPHY_SPELL_RULE_ID,
+        applyPolicy: "confirm",
+      }),
+    ]);
+    expect(out.map((f) => f.ruleId)).toEqual([
+      "cian-138-sentence-start-capitalize",
+      ORTHOGRAPHY_SPELL_RULE_ID,
+    ]);
+  });
+
+  it("убирает заглавную при раскладке на том же слове", () => {
+    const out = dropSentenceCapOverlappingOrthography([
+      fix({
+        from: 0,
+        to: 1,
+        before: "g",
+        after: "G",
+        ruleId: "cian-138-sentence-start-capitalize",
+        applyPolicy: "confirm",
+      }),
+      fix({
+        from: 0,
+        to: 6,
+        before: "ghbdtn",
+        after: "привет",
+        ruleId: ORTHOGRAPHY_LAYOUT_RULE_ID,
+        applyPolicy: "confirm",
+      }),
+    ]);
+    expect(out.map((f) => f.ruleId)).toEqual([ORTHOGRAPHY_LAYOUT_RULE_ID]);
+  });
+});
 
 describe("filterRulesByPolicy", () => {
   it("auto не включает choice-правила", () => {
