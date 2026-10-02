@@ -32,6 +32,10 @@ describe("ui-state", () => {
     state.ui.techDetailsOpen = false;
   });
 
+  it("«Вы исправили» свёрнут по умолчанию", () => {
+    expect(state.ui.manualReportDetailsOpen).toBe(false);
+  });
+
   it("choiceSelectionKey собирает ключ", () => {
     expect(choiceSelectionKey(2, 3)).toBe("2:3");
   });

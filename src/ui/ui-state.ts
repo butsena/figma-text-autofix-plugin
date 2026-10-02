@@ -49,7 +49,7 @@ export const state: UiState = {
     confirmDetailsOpen: true,
     choiceDetailsOpen: true,
     reportDetailsOpen: false,
-    manualReportDetailsOpen: true,
+    manualReportDetailsOpen: false,
     textLayersDetailsOpen: false,
     techDetailsOpen: false,
   },

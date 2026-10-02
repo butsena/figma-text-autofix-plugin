@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { capitalizeLike } from "./case";
+import { capitalizeLike, replacementFromSpellInput } from "./case";
 import { stripUtf8Bom } from "./text-normalize";
 
 describe("capitalizeLike", () => {
@@ -9,6 +9,17 @@ describe("capitalizeLike", () => {
 
   it("сохраняет заглавную первую букву", () => {
     expect(capitalizeLike("Ищите", "ищете")).toBe("Ищете");
+  });
+
+  it("не считает запятую раскладки заглавной буквой", () => {
+    expect(capitalizeLike(",elbnt", "будите")).toBe("будите");
+    expect(capitalizeLike("Ghbdtn", "привет")).toBe("Привет");
+    expect(capitalizeLike(",ELBNT", "будите")).toBe("БУДИТЕ");
+  });
+
+  it("сохраняет ведущий пробел подсказки раскладки", () => {
+    expect(replacementFromSpellInput(",elbnt", " будите", " будите")).toBe(" будите");
+    expect(replacementFromSpellInput(",elbnt", "будите", "будите")).toBe("будите");
   });
 });
 

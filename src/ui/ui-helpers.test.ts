@@ -56,6 +56,15 @@ describe("formatFixCategoryLabel", () => {
     expect(html).toContain("вы всегда пишете правильно");
   });
 
+  it("форматирует подсказку для будите/будете", () => {
+    const html = formatChoiceHintHtml("cian-choice-budite-budete");
+    expect(html).toContain("что делайте?");
+    expect(html).toContain("не будите спящего");
+    expect(html).toContain("форма «быть»");
+    expect(html).toContain("вы будете дома вечером");
+    expect(html).toContain("Подсказка:");
+  });
+
   it("форматирует подсказку для напишите/напишете", () => {
     const html = formatChoiceHintHtml("cian-choice-napishite-napishete");
     expect(html).toContain("что сделайте?");

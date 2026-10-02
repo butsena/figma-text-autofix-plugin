@@ -52,6 +52,39 @@ describe("manual vs auto report blocks", () => {
     expect(html).not.toContain("Что вы исправили");
   });
 
+  it("«Вы исправили» по умолчанию без атрибута open", () => {
+    state.ui.manualReportDetailsOpen = false;
+    state.lastManualReport = {
+      summary: { checkedLayers: 1, appliedFixCount: 1, changedLayerCount: 1 },
+      layers: [
+        {
+          nodeId: "1:1",
+          nodeName: "Слой",
+          characterCount: 10,
+          fixes: [
+            {
+              fixId: "f1",
+              ruleId: "orthography-spellcheck",
+              category: "orthography",
+              message: "msg",
+              before: "перд",
+              after: "перед",
+              from: 0,
+              to: 4,
+              sourceText: "перд тест",
+            },
+          ],
+        },
+      ],
+    };
+
+    const html = renderManualReportHtml();
+    expect(html).toContain('<details class="manualReportDetails">');
+    expect(html).not.toContain('<details class="manualReportDetails" open>');
+    expect(html).toContain("Вы исправили");
+    expect(html).toContain("перд");
+  });
+
   it("renderReportHtml не смешивает ручные правки", () => {
     state.lastReport = {
       summary: { checkedLayers: 1, appliedFixCount: 1, changedLayerCount: 1 },

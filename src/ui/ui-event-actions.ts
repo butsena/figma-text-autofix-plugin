@@ -1,5 +1,5 @@
 import type { TextFixDto } from "../shared/messages";
-import { capitalizeLike } from "../shared/case";
+import { capitalizeLike, replacementFromSpellInput } from "../shared/case";
 import { countConfirmFixes } from "./ui-helpers";
 import { sendToPlugin } from "./ui-plugin-bridge";
 import { render } from "./ui-render";
@@ -48,7 +48,7 @@ export function applySpellFix(cardIdx: number, fixIdx: number): void {
   const typed = readSpellInputValue(cardIdx, fixIdx);
   if (!typed || typed === fix.before) return;
 
-  const after = capitalizeLike(fix.before, typed);
+  const after = replacementFromSpellInput(fix.before, fix.after, typed);
   state.ui.confirmDetailsOpen = true;
   sendToPlugin({
     type: "ui:applyManualFix",

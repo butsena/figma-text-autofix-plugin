@@ -79,12 +79,15 @@ describe("render во время орфографии", () => {
 
   it("после плашки возвращает choice, отчёты и «Спасибо»", () => {
     state.spellcheckInProgress = false;
+    state.ui.manualReportDetailsOpen = false;
     render();
     expect(app.innerHTML).not.toContain("Проверяю орфографию — пажжите...");
     expect(app.innerHTML).toContain("Выберите вариант");
     expect(app.innerHTML).toContain("Обратите внимание");
     expect(app.innerHTML).toContain("Исправлено автоматически");
     expect(app.innerHTML).toContain("Вы исправили");
+    expect(app.innerHTML).toContain('<details class="manualReportDetails">');
+    expect(app.innerHTML).not.toContain('<details class="manualReportDetails" open>');
     expect(app.innerHTML).toContain("Оставшиеся совпадения");
     expect(app.innerHTML).toContain("Техническая хрень");
     expect(app.innerHTML).toContain("Спасибо, шайтан-машина!");

@@ -9,9 +9,18 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { checkTextForAutofixes } from "../core/autofix-engine";
 import { getAutofixRules } from "../rules/autofix-rules";
 import { applyAllRules, fixesFor } from "./helpers";
+import { formatCharacterCountLabel, countTextCharacters } from "../shared/text-char-count";
+import { formatTextLayersBlockHtml } from "../ui/ui-helpers";
+import { renderOrthographySpellFixRow } from "../ui/ui-render-fix-row";
 import { TITLE_CASE_PAIR_CHOICE_RULE_ID } from "../rules/typography/title-case-pair-choice-rules";
-import { renderReportHtml } from "../ui/ui-render-sections";
-import { state } from "../ui/ui-state";
+import {
+  renderLeftoverCardsHtml,
+  renderManualReportHtml,
+  renderReportHtml,
+  renderTechDetailsHtml,
+  renderTextLayersHtml,
+} from "../ui/ui-render-sections";
+import { applySpellcheckStatus, state } from "../ui/ui-state";
 import { checkSpellingFixes } from "../spell/check-spelling";
 import { applyHunspellDictionaryFromRaw } from "../spell/hunspell-dictionary-store";
 import {
@@ -280,6 +289,39 @@ describe("manual QA checklist verify", () => {
     ).toBe(true);
   });
 
+  it("#37 «Вы исправили» свёрнут по умолчанию", () => {
+    expect(state.ui.manualReportDetailsOpen).toBe(false);
+    state.spellcheckInProgress = false;
+    state.lastManualReport = {
+      summary: { checkedLayers: 1, appliedFixCount: 1, changedLayerCount: 1 },
+      layers: [
+        {
+          nodeId: "1:1",
+          nodeName: "Слой",
+          characterCount: 4,
+          fixes: [
+            {
+              fixId: "m1",
+              ruleId: "orthography-spellcheck",
+              category: "orthography",
+              message: "опечатка",
+              before: "перд",
+              after: "перед",
+              from: 0,
+              to: 4,
+              sourceText: "перд",
+            },
+          ],
+        },
+      ],
+    };
+    const html = renderManualReportHtml();
+    expect(html).toContain("Вы исправили");
+    expect(html).toContain('<details class="manualReportDetails">');
+    expect(html).not.toContain('<details class="manualReportDetails" open>');
+    state.lastManualReport = null;
+  });
+
   it("#38 раскладка ,elbnt / ,elbntg не склеивается с Не", () => {
     for (const latin of [",elbnt", ",elbntg"]) {
       const source = `Не ${latin} медведя!`;
@@ -419,6 +461,89 @@ describe("manual QA checklist verify", () => {
     expect(cards.length).toBeLessThanOrEqual(MAX_SPELL_CARDS_PER_TEXT);
     expect(getSpellSuggestMissCount()).toBeLessThanOrEqual(MAX_SPELL_CARDS_PER_TEXT);
   }, 60_000);
+
+
+  it("#42 аккордеон «Счётчик символов» свёрнут и прячется на плашке", () => {
+    expect(countTextCharacters("Ок")).toBe(2);
+    expect(formatCharacterCountLabel(2)).toBe("2 символа");
+    expect(countTextCharacters("напишите мне")).toBe(12);
+    expect(formatCharacterCountLabel(12)).toBe("12 символов");
+    const html = formatTextLayersBlockHtml(
+      [
+        { nodeId: "1:1", nodeName: "Ок", characterCount: 2 },
+        { nodeId: "1:2", nodeName: "напишите мне", characterCount: 12 },
+      ],
+      false,
+    );
+    expect(html).toContain("Счётчик символов");
+    expect(html).toContain("2 символа");
+    expect(html).toContain("12 символов");
+    expect(html).not.toContain('details class="textLayersDetails" open');
+    state.spellcheckInProgress = false;
+    state.checkedTextLayers = [{ nodeId: "1:1", nodeName: "Ок", characterCount: 2 }];
+    expect(renderTextLayersHtml()).toContain("Счётчик символов");
+    expect(renderTechDetailsHtml()).toContain("Техническая хрень");
+    applySpellcheckStatus(true);
+    expect(renderTextLayersHtml()).toBe("");
+    expect(renderTechDetailsHtml()).toBe("");
+    applySpellcheckStatus(false);
+    state.checkedTextLayers = [];
+  });
+
+  it("#46 пустое поле орфографии дизейблит Исправить", () => {
+    const empty = renderOrthographySpellFixRow(
+      {
+        ruleId: ORTHOGRAPHY_SPELL_RULE_ID,
+        category: "orthography",
+        message: "Возможно, в слове «ъъъаффжж» опечатка или ошибка — проверьте",
+        before: "ъъъаффжж",
+        after: "ъъъаффжж",
+      },
+      0,
+      0,
+    );
+    expect(empty).toContain("Напишите, как исправить");
+    expect(empty).toContain("Введите правильное слово");
+    expect(empty).toContain("disabled");
+    expect(empty).toContain('value=""');
+    const filled = renderOrthographySpellFixRow(
+      {
+        ruleId: ORTHOGRAPHY_SPELL_RULE_ID,
+        category: "orthography",
+        message: "Возможно, в слове «Кватира» опечатка или ошибка — проверьте",
+        before: "Кватира",
+        after: "Квартира",
+      },
+      0,
+      0,
+    );
+    expect(filled).toContain('value="Квартира"');
+    expect(filled).not.toContain(" disabled");
+  });
+
+  it("#45 leftover только если auto не встали", () => {
+    state.cards = [];
+    expect(renderLeftoverCardsHtml()).toBe("");
+    state.cards = [
+      {
+        nodeId: "1:1",
+        nodeName: "Слой",
+        originalText: "ЦИАН и дом",
+        previewText: "ЦИАН и дом",
+        characterCount: 10,
+        fixes: [],
+      },
+    ];
+    const html = renderLeftoverCardsHtml();
+    expect(html).toContain("Оставшиеся совпадения (если есть)");
+    expect(html).toContain("ЦИАН и дом");
+    expect(html).toContain("Текст слоя сейчас");
+    expect(html).toContain("Если снова нужны правки — измените текст или выделение и снова запустите плагин.");
+    applySpellcheckStatus(true);
+    expect(renderLeftoverCardsHtml()).toBe("");
+    applySpellcheckStatus(false);
+    state.cards = [];
+  });
 
   it("#18 auto typography sample", () => {
     const { fixes } = checkTextForAutofixes("да - нет", allRules());
