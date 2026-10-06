@@ -339,10 +339,13 @@ items:
       done: true
     - text: |
         После реализации Cursor создал PR и перевёл задачу в review; merge и перевод в done оставлены человеку
-      done: true
+      done: false
   notes: |
     Конфликты с макетом разрешены человеком в пользу финального дизайна (2026-10-06).
-    Реализация + PR; status review. Merge и done — человеку.
+    Реализация на ветке cursor/tech-1-lexicon-status-ui (запушена). Status review.
+    PR: токен без scope pull_requests — открыть вручную
+    https://github.com/butsena/figma-text-autofix-plugin/pull/new/cursor/tech-1-lexicon-status-ui
+    После создания PR отметить последний check done. Merge и done — человеку.
     Прежний скриншот ниже — исторический контекст шести строк; визуальный источник правды — Figma 550:8.
     Count в UI — только где предусмотрен состояниями выше; иначе count остаётся в данных статуса.
   assets:
