@@ -6,7 +6,6 @@ import {
   formatChoiceHintHtml,
   formatFixCategoryLabel,
   formatLayerTitleHtml,
-  formatLexiconResourceStatusHtml,
   formatTextLayersBlockHtml,
 } from "./ui-helpers";
 
@@ -131,40 +130,5 @@ describe("detailsOpenAttr", () => {
   it("open только при true", () => {
     expect(detailsOpenAttr(true)).toBe(" open");
     expect(detailsOpenAttr(false)).toBe("");
-  });
-});
-
-describe("formatLexiconResourceStatusHtml", () => {
-  const labels = {
-    remoteOk: (n: number) => `remote ${n}`,
-    remoteErr: (n: number) => `err ${n}`,
-    bundledOk: (n: number) => `bundled ${n}`,
-  };
-
-  it("remote ok / err / bundled", () => {
-    expect(
-      formatLexiconResourceStatusHtml(
-        { ok: true, fromRemote: true, count: 3 },
-        labels,
-      ),
-    ).toContain("remote 3");
-    expect(
-      formatLexiconResourceStatusHtml(
-        { ok: false, fromRemote: false, count: 1, errorMessage: "<boom>" },
-        labels,
-      ),
-    ).toContain("err 1");
-    expect(
-      formatLexiconResourceStatusHtml(
-        { ok: false, fromRemote: false, count: 1, errorMessage: "<boom>" },
-        labels,
-      ),
-    ).toContain("&lt;boom&gt;");
-    expect(
-      formatLexiconResourceStatusHtml(
-        { ok: true, fromRemote: false, count: 9 },
-        labels,
-      ),
-    ).toContain("bundled 9");
   });
 });

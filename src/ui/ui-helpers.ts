@@ -1,7 +1,6 @@
 import { getAmbiguousFormChoice } from "../lexicon/ambiguous-form-choices-store";
 import { escapeHtml } from "../shared/escape-html";
 import { formatCharacterCountLabel } from "../shared/text-char-count";
-import type { LexiconResourceLoadStatus } from "../shared/messages";
 
 export function displayText(value: unknown): string {
   if (value == null) return "";
@@ -98,23 +97,4 @@ export function formatFixCategoryLabel(category: string, ruleId?: string): strin
   if (category === "cian_editorial") return "Редполитика";
   if (category === "form_choice") return "Выбор формы";
   return category;
-}
-
-export function formatLexiconResourceStatusHtml(
-  resource: LexiconResourceLoadStatus,
-  labels: {
-    remoteOk: (count: number) => string;
-    remoteErr: (count: number) => string;
-    bundledOk: (count: number) => string;
-  },
-): string {
-  if (resource.fromRemote && resource.ok) {
-    return `<div class="sheetStatus ok">${labels.remoteOk(resource.count)}</div>`;
-  }
-  if (!resource.ok) {
-    return `<div class="sheetStatus err">${labels.remoteErr(resource.count)} ${escapeHtml(
-      displayText(resource.errorMessage),
-    )}</div>`;
-  }
-  return `<div class="sheetStatus ok">${labels.bundledOk(resource.count)}</div>`;
 }

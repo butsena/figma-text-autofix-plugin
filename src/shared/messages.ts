@@ -113,6 +113,8 @@ export type LexiconLoadStatusDto = {
   spellDictionary: LexiconResourceLoadStatus;
   spellSupplement: LexiconResourceLoadStatus;
   spellWhitelist: LexiconResourceLoadStatus;
+  /** Уникальные слова supplement∪whitelist — только для UI-строки «Слова-исключения». */
+  spellExtraUniqueCount?: number;
 };
 
 export type UiToPluginMessage =

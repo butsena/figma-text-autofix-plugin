@@ -5,9 +5,9 @@ import {
   countConfirmFixes,
   detailsOpenAttr,
   formatLayerTitleHtml,
-  formatLexiconResourceStatusHtml,
   formatTextLayersBlockHtml,
 } from "./ui-helpers";
+import { formatTechLexiconStatusBodyHtml } from "./ui-lexicon-status";
 import { isNbspGlueFix, renderNbspGlueSummaryHtml } from "./nbsp-glue-summary";
 import { state } from "./ui-state";
 import { renderChoiceFixRow, renderFixRow } from "./ui-render-fix-row";
@@ -157,45 +157,7 @@ export function renderTechDetailsHtml(): string {
   if (!lex) {
     bodyHtml = '<div class="empty" style="padding:4px 0">Статус загрузки словаря ещё не получен.</div>';
   } else {
-    bodyHtml = [
-      formatLexiconResourceStatusHtml(lex.replacements, {
-        remoteOk: (count) => `Словарь замен — GitHub: <b>${count}</b> правил`,
-        remoteErr: (count) => `Словарь замен — встроенный список (${count} правил).`,
-        bundledOk: (count) => `Словарь замен (встроенный): <b>${count}</b> правил`,
-      }),
-      formatLexiconResourceStatusHtml(lex.boundaryExceptions, {
-        remoteOk: (count) => `Когда не нужна точка — GitHub: <b>${count}</b> фраз`,
-        remoteErr: (count) => `Когда не нужна точка — встроенный список (${count} фраз).`,
-        bundledOk: (count) => `Когда не нужна точка (встроенный): <b>${count}</b> фраз`,
-      }),
-      formatLexiconResourceStatusHtml(lex.ambiguousFormChoices, {
-        remoteOk: (count) => `Формы сложных слов — GitHub: <b>${count}</b> пар`,
-        remoteErr: (count) => `Формы сложных слов — встроенный список (${count} пар).`,
-        bundledOk: (count) => `Формы сложных слов (встроенный): <b>${count}</b> пар`,
-      }),
-      ...(SPELLCHECK_ENABLED
-        ? [
-            formatLexiconResourceStatusHtml(lex.spellDictionary, {
-              remoteOk: (count) => `Орфографический словарь — GitHub: <b>${count}</b> слов`,
-              remoteErr: (count) =>
-                count > 0
-                  ? `Орфографический словарь — ошибка загрузки (сейчас ${count} слов).`
-                  : "Орфографический словарь недоступен (нужен GitHub).",
-              bundledOk: (_count) => "Орфографический словарь не загружен (нужен GitHub).",
-            }),
-            formatLexiconResourceStatusHtml(lex.spellSupplement, {
-              remoteOk: (count) => `Дополнительные слова — GitHub: <b>${count}</b>`,
-              remoteErr: (count) => `Дополнительные слова — встроенный список (${count}).`,
-              bundledOk: (count) => `Дополнительные слова (встроенный): <b>${count}</b>`,
-            }),
-            formatLexiconResourceStatusHtml(lex.spellWhitelist, {
-              remoteOk: (count) => `Не считать ошибкой — GitHub: <b>${count}</b> слов`,
-              remoteErr: (count) => `Не считать ошибкой — встроенный список (${count} слов).`,
-              bundledOk: (count) => `Не считать ошибкой (встроенный): <b>${count}</b> слов`,
-            }),
-          ]
-        : []),
-    ].join("");
+    bodyHtml = formatTechLexiconStatusBodyHtml(lex, SPELLCHECK_ENABLED);
   }
 
   return `

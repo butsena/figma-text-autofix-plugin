@@ -624,14 +624,75 @@
         padding-top: 6px;
         border-top: 1px solid #ececec;
       }
-      .sheetStatus {
-        font-size: 11px;
-        line-height: 1.4;
-        font-weight: 400;
+      .lexStatusRow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 4px;
+        border-bottom: 1px solid #ececec;
       }
-      .sheetStatus.ok {
-        color: #1b6b2a;
+      .lexStatusRow:last-child {
+        border-bottom: none;
+        padding-bottom: 12px;
       }
-      .sheetStatus.err {
-        color: #b00020;
+      .lexStatusDot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        align-self: center;
+        background: #98a2b3;
+      }
+      .lexStatusRow--ok .lexStatusDot {
+        background: #22c55e;
+      }
+      .lexStatusRow--warn .lexStatusDot {
+        background: #f59e0b;
+      }
+      .lexStatusRow--err .lexStatusDot {
+        background: #ef4444;
+      }
+      .lexStatusCopy {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .lexStatusTitle {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.25;
+        color: #111827;
+      }
+      .lexStatusDetail {
+        margin-top: 2px;
+        font-size: 14px;
+        line-height: 1.25;
+        color: #4b5563;
+        word-break: break-word;
+      }
+      .lexStatusBadge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        align-self: center;
+        box-sizing: border-box;
+        padding: 4px 8px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f3f4f6;
+        color: #6b7280;
+      }
+      .lexStatusBadge--err {
+        color: #ef4444;
+      }
+      .lexStatusBadgeSvg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+        display: block;
+      }
+      .lexStatusBadgeLabel {
+        font-size: 12px;
+        line-height: 1.2;
+        white-space: nowrap;
       }
