@@ -70,6 +70,7 @@ describe("ui-state", () => {
       spellDictionary: { ok: true, count: 0, fromRemote: false },
       spellSupplement: { ok: true, count: 0, fromRemote: false },
       spellWhitelist: { ok: true, count: 0, fromRemote: false },
+      spellExtraUniqueCount: 0,
     });
     expect(state.lexiconLoad?.replacements.count).toBe(10);
   });

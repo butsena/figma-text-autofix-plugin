@@ -65,6 +65,7 @@ describe("отчёт, пока орфография грузится", () => {
       spellDictionary: { ok: true, count: 0, fromRemote: false },
       spellSupplement: { ok: true, count: 0, fromRemote: false },
       spellWhitelist: { ok: true, count: 0, fromRemote: false },
+      spellExtraUniqueCount: 0,
     };
     state.lastReport = {
       summary: { checkedLayers: 1, appliedFixCount: 1, changedLayerCount: 1 },

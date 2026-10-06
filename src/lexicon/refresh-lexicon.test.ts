@@ -131,7 +131,18 @@ describe("mergeLexiconLoadStatus", () => {
         fromRemote: true,
         fetchUrl: "https://example.com/spell-whitelist.txt",
       },
+      spellExtraUniqueCount: expect.any(Number),
     });
+    expect(
+      mergeLexiconLoadStatus(
+        replacements,
+        boundary,
+        choices,
+        spellDictionary,
+        spellSupplement,
+        spellWhitelist,
+      ).spellExtraUniqueCount,
+    ).toBeGreaterThanOrEqual(0);
   });
 });
 

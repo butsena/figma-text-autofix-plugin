@@ -566,6 +566,55 @@ describe("manual QA checklist verify", () => {
     state.checkedTextLayers = [];
   });
 
+  it("#50 tech-1: пять строк статусов по макету, без сырого errorMessage", () => {
+    state.spellcheckInProgress = false;
+    state.lexiconLoad = {
+      replacements: { ok: true, count: 124, fromRemote: true },
+      boundaryExceptions: { ok: true, count: 38, fromRemote: true },
+      ambiguousFormChoices: {
+        ok: false,
+        count: 6,
+        fromRemote: false,
+        errorMessage: "Failed to fetch",
+      },
+      spellDictionary: {
+        ok: false,
+        count: 0,
+        fromRemote: false,
+        errorMessage: "dic-offline",
+      },
+      spellSupplement: { ok: true, count: 80, fromRemote: true },
+      spellWhitelist: {
+        ok: false,
+        count: 16,
+        fromRemote: false,
+        errorMessage: "wl-offline",
+      },
+      spellExtraUniqueCount: 90,
+    };
+    const html = renderTechDetailsHtml();
+    expect(html).toContain("Замены");
+    expect(html).toContain("Без точки");
+    expect(html).toContain("Формы слов");
+    expect(html).toContain("Словарь");
+    expect(html).toContain("Слова-исключения");
+    expect(html).toContain("124 правила");
+    expect(html).toContain("Встроенный список (6 пар), GitHub не загрузился");
+    expect(html).toContain("Проверка недоступна");
+    expect(html).toContain("Нет связи со словарём");
+    expect(html).toContain("Не все загрузились");
+    expect(html).toContain("Частично недоступен");
+    expect(html).not.toContain("Словарь замен");
+    expect(html).not.toContain("Дополнительные слова");
+    expect(html).not.toContain("Не считать ошибкой");
+    expect(html).not.toContain("Failed to fetch");
+    expect(html).not.toContain("dic-offline");
+    expect(html).not.toContain("wl-offline");
+    expect(state.lexiconLoad.ambiguousFormChoices.errorMessage).toBe("Failed to fetch");
+    expect(state.lexiconLoad.spellWhitelist.errorMessage).toBe("wl-offline");
+    state.lexiconLoad = null;
+  });
+
   it("#46 пустое поле орфографии дизейблит Исправить", () => {
     const empty = renderOrthographySpellFixRow(
       {

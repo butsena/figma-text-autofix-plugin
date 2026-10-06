@@ -18,6 +18,7 @@ import {
 } from "./refresh-from-remote";
 import { clearHunspellDictionary } from "../spell/hunspell-dictionary-store";
 import { resetSpellCheckerCache } from "../spell/spell-checker";
+import { getAllSpellExtraWords } from "../spell/spell-word-list-store";
 
 let cachedLexiconStatus: LexiconLoadStatusDto | null = null;
 
@@ -74,6 +75,7 @@ export function mergeLexiconLoadStatus(
     spellDictionary: toResourceStatus(spellDictionary),
     spellSupplement: toResourceStatus(spellSupplement),
     spellWhitelist: toResourceStatus(spellWhitelist),
+    spellExtraUniqueCount: getAllSpellExtraWords().length,
   };
 }
 
@@ -186,6 +188,7 @@ export async function refreshSpellLexiconFromRemote(): Promise<LexiconLoadStatus
     spellDictionary: toResourceStatus(spellDictionary),
     spellSupplement: toResourceStatus(spellSupplement),
     spellWhitelist: toResourceStatus(spellWhitelist),
+    spellExtraUniqueCount: getAllSpellExtraWords().length,
   };
   return cachedLexiconStatus;
 }
