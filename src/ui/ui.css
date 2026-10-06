@@ -626,21 +626,21 @@
       }
       .lexStatusRow {
         display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        padding: 8px 0;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 4px;
         border-bottom: 1px solid #ececec;
       }
       .lexStatusRow:last-child {
         border-bottom: none;
-        padding-bottom: 2px;
+        padding-bottom: 12px;
       }
       .lexStatusDot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        margin-top: 5px;
         flex-shrink: 0;
+        align-self: center;
         background: #98a2b3;
       }
       .lexStatusRow--ok .lexStatusDot {
@@ -657,39 +657,42 @@
         min-width: 0;
       }
       .lexStatusTitle {
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 600;
-        line-height: 1.3;
+        line-height: 1.25;
         color: #111827;
       }
       .lexStatusDetail {
         margin-top: 2px;
-        font-size: 11px;
-        line-height: 1.35;
+        font-size: 14px;
+        line-height: 1.25;
         color: #4b5563;
         word-break: break-word;
       }
       .lexStatusBadge {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
         flex-shrink: 0;
-        max-width: 42%;
+        align-self: center;
+        box-sizing: border-box;
+        padding: 4px 8px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f3f4f6;
         color: #6b7280;
       }
       .lexStatusBadge--err {
         color: #ef4444;
       }
       .lexStatusBadgeSvg {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         flex-shrink: 0;
         display: block;
       }
       .lexStatusBadgeLabel {
-        font-size: 10px;
+        font-size: 12px;
         line-height: 1.2;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }

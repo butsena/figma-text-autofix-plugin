@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { LexiconLoadStatusDto, LexiconResourceLoadStatus } from "../shared/messages";
 import {
+  badgeIconForKind,
   buildDictionaryLexStatusRow,
   buildEditorialLexStatusRow,
   buildSpellExceptionsLexStatusRow,
   buildTechLexiconStatusRows,
   collectLexiconErrorMessages,
   formatLexCount,
+  formatLexStatusRowHtml,
   formatTechLexiconStatusBodyHtml,
   formatWordsDetail,
 } from "./ui-lexicon-status";
@@ -150,6 +152,32 @@ describe("buildSpellExceptionsLexStatusRow", () => {
     });
     expect(partialWl).toEqual(partialSup);
     expect(partialSup.detail).not.toMatch(/\d/);
+  });
+});
+
+describe("badgeIconForKind", () => {
+  it("partial и github — Octocat; bundled — база; offline — предупреждение", () => {
+    const githubPath = "M8 0C3.58";
+    const dbShape = "<ellipse";
+    const warnShape = "M8.87 1.5";
+
+    expect(badgeIconForKind("github")).toContain(githubPath);
+    expect(badgeIconForKind("partial")).toContain(githubPath);
+    expect(badgeIconForKind("partial")).not.toContain(dbShape);
+    expect(badgeIconForKind("bundled")).toContain(dbShape);
+    expect(badgeIconForKind("offline")).toContain(warnShape);
+  });
+
+  it("partial в HTML использует GitHub-иконку", () => {
+    const html = formatLexStatusRowHtml({
+      title: "Слова-исключения",
+      detail: "Не все загрузились",
+      tone: "warn",
+      badge: "partial",
+    });
+    expect(html).toContain("Частично недоступен");
+    expect(html).toContain("M8 0C3.58");
+    expect(html).not.toContain("<ellipse");
   });
 });
 

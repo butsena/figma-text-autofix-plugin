@@ -184,8 +184,8 @@ const ICON_DB = `<svg class="lexStatusBadgeSvg" viewBox="0 0 16 16" aria-hidden=
 
 const ICON_WARN = `<svg class="lexStatusBadgeSvg" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8.87 1.5a1 1 0 0 0-1.74 0L1.2 12.2A1 1 0 0 0 2.07 13.7h11.86a1 1 0 0 0 .87-1.5L8.87 1.5zM8 5.2c.35 0 .62.3.6.65l-.25 3.4a.35.35 0 0 1-.7 0l-.25-3.4A.61.61 0 0 1 8 5.2zm0 6.3a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5z"/></svg>`;
 
-function badgeIcon(kind: LexStatusBadgeKind): string {
-  if (kind === "github") return ICON_GITHUB;
+export function badgeIconForKind(kind: LexStatusBadgeKind): string {
+  if (kind === "github" || kind === "partial") return ICON_GITHUB;
   if (kind === "offline") return ICON_WARN;
   return ICON_DB;
 }
@@ -200,7 +200,7 @@ export function formatLexStatusRowHtml(row: LexStatusRowModel): string {
     <div class="lexStatusDetail">${escapeHtml(row.detail)}</div>
   </div>
   <div class="${badgeClass}">
-    ${badgeIcon(row.badge)}
+    ${badgeIconForKind(row.badge)}
     <span class="lexStatusBadgeLabel">${escapeHtml(BADGE_LABEL[row.badge])}</span>
   </div>
 </div>`;
