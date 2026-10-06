@@ -312,7 +312,7 @@ items:
     При необходимости обновить тесты отображения статусов и регрессий, не меняя поведение проверок.
   area: UI / diff
   priority: низкий
-  status: review
+  status: done
   parent: null
   depends_on: []
   checks:
@@ -341,12 +341,11 @@ items:
         После реализации Cursor создал PR и перевёл задачу в review; merge и перевод в done оставлены человеку
       done: true
   notes: |
-    Конфликты с макетом разрешены человеком в пользу финального дизайна (2026-10-06).
-    Реализация на ветке cursor/tech-1-lexicon-status-ui. Status review.
-    PR: https://github.com/butsena/figma-text-autofix-plugin/pull/14
-    Merge и done — человеку.
-    Прежний скриншот ниже — исторический контекст шести строк; визуальный источник правды — Figma 550:8.
-    Count в UI — только где предусмотрен состояниями выше; иначе count остаётся в данных статуса.
+    Принято и смержено: https://github.com/butsena/figma-text-autofix-plugin/pull/14 (2026-10-06).
+    Локальная проверка в Figma пройдена.
+    Отличие шапки и фона блока от макета принято.
+    Работа Hunspell из кэша без интернета ожидаема.
+    Конфликты с макетом ранее разрешены в пользу финального дизайна; count в UI — только где предусмотрен состояниями.
   assets:
     - path: backlog/assets/tech-1/technical-lexicon-status.png
       alt: |
