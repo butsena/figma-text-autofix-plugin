@@ -8,6 +8,7 @@
     "build:replacements": "node scripts/build-text-replacements.mjs",
     "sync:spell-dictionary": "node scripts/sync-spell-dictionary-bundled.mjs",
     "build": "npm run build:yo-curated && node scripts/build-ui-html.mjs && vite build",
+    "build:release": "ANALYTICS=1 npm run build",
     "test": "npm run build:yo-curated && vitest run",
     "test:watch": "npm run build:yo-curated && vitest"
   },
