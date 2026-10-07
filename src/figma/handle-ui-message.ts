@@ -1,3 +1,4 @@
+import { trackPluginError } from "../analytics/pipeline-events";
 import { applyManualFixAndRefresh, skipManualFixAndRefresh } from "./apply-manual-fix";
 import { runAutofixPipeline } from "./autofix-pipeline";
 import { focusLayerById } from "./focus-layer";
@@ -27,11 +28,21 @@ export async function handleUiMessage(
       break;
     }
     case "ui:applyManualFix": {
-      await applyManualFixAndRefresh(message.nodeId, message.fix);
+      try {
+        await applyManualFixAndRefresh(message.nodeId, message.fix);
+      } catch (e) {
+        trackPluginError("manual_apply", e);
+        throw e;
+      }
       break;
     }
     case "ui:skipManualFix": {
-      await skipManualFixAndRefresh(message.nodeId, message.fix);
+      try {
+        await skipManualFixAndRefresh(message.nodeId, message.fix);
+      } catch (e) {
+        trackPluginError("manual_apply", e);
+        throw e;
+      }
       break;
     }
     case "ui:resize": {

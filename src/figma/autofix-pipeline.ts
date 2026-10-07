@@ -1,4 +1,5 @@
 import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
+import { trackAutoFixComplete } from "../analytics/pipeline-events";
 import { SPELLCHECK_ENABLED } from "../config/feature-flags";
 import { applyFixesFromScan } from "./apply-fixes";
 import { buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport, mergeAutoApplyReports } from "./build-auto-apply-report";
@@ -80,6 +81,7 @@ export async function runAutofixAutoPasses(
 /** Сканирование → применение в цикле, пока есть правки; сводный отчёт в UI. */
 export async function runAutofixPipeline(): Promise<void> {
   const selection = figma.currentPage.selection;
+  const autoStartedAt = Date.now();
   // Пока Hunspell не готов, в UI только плашка: choice/confirm/отчёты не показываем.
   if (SPELLCHECK_ENABLED) postSpellcheckStatus(true);
 
@@ -100,6 +102,7 @@ export async function runAutofixPipeline(): Promise<void> {
 
     const { report, finalScan } = await runAutofixAutoPasses(selection);
     setLastAutoApplyReport(report);
+    trackAutoFixComplete(report, finalScan.summary.foundFixes, Date.now() - autoStartedAt);
     // Один отчёт после орфографии: авто, choice и confirm не вспыхивают раньше.
     postCheckResultToUi(selection);
     notifyIfFixesStuck(finalScan, report);
