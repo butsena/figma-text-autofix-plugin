@@ -13,6 +13,13 @@ vi.mock("./figma/apply-manual-fix", () => ({
 }));
 vi.mock("./figma/focus-layer", () => ({ focusLayerById: vi.fn() }));
 vi.mock("./figma/choice-resolution", () => ({ beginPluginRun: vi.fn() }));
+vi.mock("./analytics/track", () => ({
+  beginAnalyticsSession: vi.fn(() => "sess_test12345678"),
+}));
+vi.mock("./analytics/pipeline-events", () => ({
+  trackPluginOpen: vi.fn(),
+  trackPluginError: vi.fn(),
+}));
 
 function installFigma(selection: unknown[]): void {
   vi.stubGlobal("figma", {

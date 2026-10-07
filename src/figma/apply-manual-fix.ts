@@ -1,3 +1,4 @@
+import { trackManualFixFromDto } from "../analytics/pipeline-events";
 import {
   buildAutoApplyReportFromConfirmFix,
   mergeAutoApplyReports,
@@ -40,6 +41,7 @@ export async function applyManualFixAndRefresh(
   const node = await figma.getNodeByIdAsync(nodeId);
   if (!node || node.type !== "TEXT") return;
 
+  trackManualFixFromDto(fix, "applied");
   const sourceText = node.characters;
   const persistResolution = isPersistedManualResolution(fix);
   const textChanges = fix.before !== fix.after;
@@ -94,6 +96,7 @@ export async function skipManualFixAndRefresh(
   const node = await figma.getNodeByIdAsync(nodeId);
   if (!node || node.type !== "TEXT") return;
 
+  trackManualFixFromDto(fix, "skipped");
   if (isOrthographyRuleId(fix.rule.id)) {
     recordSpellSkipOnNode(node, {
       ruleId: fix.rule.id,

@@ -7,7 +7,11 @@
   "main": "dist/main.js",
   "permissions": [],
   "networkAccess": {
-    "allowedDomains": ["https://raw.githubusercontent.com"],
-    "reasoning": "Словари с GitHub: замены, когда не нужна точка, формы сложных слов, орфография и исключения (отдельные public-репозитории)."
+    "allowedDomains": [
+      "https://raw.githubusercontent.com",
+      "https://script.google.com",
+      "https://script.googleusercontent.com"
+    ],
+    "reasoning": "Словари с GitHub; обезличенная продуктовая аналитика через Google Apps Script Web App (POST schema v1, без текста макета)."
   }
 }
