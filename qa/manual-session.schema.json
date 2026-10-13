@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "qa/manual-session.schema.json",
+  "title": "QaManualSession",
+  "type": "object",
+  "required": ["schemaVersion", "exportedAt", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "exportedAt": { "type": "string" },
+    "canvasPath": { "type": "string" },
+    "unsavedSession": {
+      "type": "boolean",
+      "description": "true if export is a local Canvas session not yet written to qa/manual-sessions/"
+    },
+    "entries": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["passed", "failed", "not_run", "needs_retest", "processed_legacy"]
+          },
+          "comment": { "type": "string" },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "relativePath"],
+              "properties": {
+                "id": { "type": "string" },
+                "relativePath": { "type": "string" },
+                "mimeType": { "type": "string" },
+                "dataUrl": {
+                  "type": "string",
+                  "description": "Optional inline data for canvas import; prefer files under qa/attachments/ in git"
+                }
+              }
+            }
+          },
+          "checkedAt": { "type": ["string", "null"] },
+          "checkedCommit": { "type": ["string", "null"] },
+          "history": {
+            "type": "array",
+            "items": { "type": "object" }
+          }
+        }
+      }
+    }
+  }
+}

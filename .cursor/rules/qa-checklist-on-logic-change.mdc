@@ -1,33 +1,49 @@
 ---
-description: После любой правки логики плагина добавлять QA-кейс в чеклист, не только из бэклога
+description: После любой правки логики плагина обновлять переносимый QA (qa/), не только из бэклога
 alwaysApply: true
 ---
 
 # QA-чеклист при правках логики
 
-Чеклист: `/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx`  
-Автопроверка: `src/test/manual-qa-checklist-verify.test.ts`
+Источник определений: `qa/scenarios.json` (+ `qa/agent-results.json`).  
+Canvas UI (не в production bundle): `qa/canvas/manual-qa-checklist.canvas.tsx` → live path через `npm run qa:sync-canvas`.  
+Live Canvas: `/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx`  
+Автопроверка: `src/test/manual-qa-checklist-verify.test.ts`  
+Инструкция: `docs/qa-workflow.md`  
+Бэклог задач — только Google Таблица (область A-007); `backlog.yaml` не обновлять.
 
 ## Когда обязательно
 
-После **любой** правки поведения (правила, орфография, choice, UI-статусы, отчёты, skip, scan, apply) — **в том же ходе**:
+После **любой** правки поведения (правила, орфография, choice, UI-статусы, отчёты, skip, scan, apply) — **в том же ходе**, до передачи на ручную приёмку / review:
 
-1. Добавь или обнови строку в `ITEMS` чеклиста.
-2. Если кейс гоняется без Figma — добавь/обнови тест в `manual-qa-checklist-verify.test.ts`.
-3. Не жди карточку бэклога. Бэклог — один из источников, не единственный.
+1. Добавь или обнови сценарий в `qa/scenarios.json` (и при необходимости запись в `qa/agent-results.json`).
+2. Выполни `npm run qa:sync-canvas` (ITEMS в canvas = JSON, без второго источника).
+3. Если кейс гоняется без Figma — добавь/обнови тест в `manual-qa-checklist-verify.test.ts`.
+4. Затронутые ручные результаты пометь `needs_retest` (история сохраняется); **не** ставь ручной `passed`.
+5. В результате укажи task id, PR (если уже есть), commit, список QA add/change/retest и автопроверки.
 
 Не добавляй кейс только за чистый рефакторинг без смены поведения, опечатки в комментариях, правки тестов/доков.
 
 ## Как писать кейс
 
 - Новый `id` / `n` = max существующих + 1. Не переиспользуй номера.
-- `caseText` — конкретный текст слоя или шаг в Figma.
+- `caseText` — конкретный текст слоя или шаг в Figma / Canvas.
 - `expected` — что видит редактор: auto / confirm / choice / «не трогать» + точная строка.
 - `area`: `Choice` | `Title Case` | `Орфография` | `UI / отчёты` | `Прочее`.
 - `priority`: `быстрый` для регрессии, которую надо кликнуть сразу; иначе `обычный`.
-- `agentStatus`: `ok` если прогнал движок; `ok-code` если только сверка кода; `fixed` если только что починил.
-- Дубликат: не плоди вторую строку — обнови `expected` / `agentNote` у существующей.
+- `taskIds` / `prNumbers` — связи с трекером и PR; неизвестные исторические ссылки — в `legacyTaskIds`, без выдуманных T-ID.
+- В `agent-results.json`: `ok` если прогнал движок; `ok-code` если только сверка кода; `fixed` если только что починил. Это не ручная приёмка.
+- Дубликат: не плоди второй сценарий — обнови `expected` / agent note у существующего.
+
+## Ручная сессия
+
+Состояние `useCanvasState` живёт в IDE. Перенос: **Export session** → `qa/manual-sessions/YYYY-MM-DD.json` → **Import session**.  
+Пока файл не сохранён, экспорт с `unsavedSession: true`. Legacy `done` → `processed_legacy`, не `passed`.
+
+## «В бэклог»
+
+Кнопка пишет в Google Таблицу (A-007) через Sheets MCP. Не трогать improvements-backlog canvas и `backlog.yaml`. Не чистить комментарии/скрины после передачи.
 
 ## Пример
 
-Поменяли копирайт плашки орфографии → обновить кейс №14 (`expected` на новый текст), не заводить отдельный пункт и не оставлять старую фразу.
+Поменяли копирайт плашки орфографии → обновить сценарий №14 в `qa/scenarios.json` (`expected` на новый текст), `npm run qa:sync-canvas`, не заводить отдельный пункт и не оставлять старую фразу.
