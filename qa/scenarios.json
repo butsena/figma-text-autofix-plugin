@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-13",
+  "updatedAt": "2026-10-15",
   "sourceCanvas": "/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx",
   "scenarios": [
     {
@@ -700,7 +700,9 @@
       "taskIds": [
         "T-046"
       ],
-      "prNumbers": [],
+      "prNumbers": [
+        16
+      ],
       "legacyTaskIds": [
         "pipeline-qa"
       ]

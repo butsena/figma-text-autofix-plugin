@@ -490,8 +490,8 @@
     {
       "scenarioId": "55",
       "agentStatus": "ok-code",
-      "agentNote": "T-046: модель + round-trip в src/qa/qa-model.test.ts; живой Export/Import — ручная проверка в Cursor Canvas. История done-v6 не объявлена мигрированной до Export session пользователя.",
-      "checkedAt": "2026-10-13",
+      "agentNote": "T-046 / PR#16: модель + round-trip в src/qa/qa-model.test.ts; живой Export/Import — ручная проверка в Cursor Canvas. История done-v6 не объявлена мигрированной до Export session пользователя.",
+      "checkedAt": "2026-10-15",
       "commit": null,
       "method": "code-review",
       "environmentNote": "Canvas useCanvasState not readable from agent tools; portable path is Export session UI."

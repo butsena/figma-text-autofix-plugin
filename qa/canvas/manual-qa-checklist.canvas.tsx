@@ -739,7 +739,7 @@ const ITEMS: Item[] = [
     expected: "schemaVersion=1; до сохранения файла unsavedSession=true; импорт восстанавливает комментарии и скриншоты; done без бага → processed_legacy (не Passed); агентский столбец не меняется от импорта",
     priority: "быстрый",
     agentStatus: "ok-code",
-    agentNote: "T-046: модель + round-trip в src/qa/qa-model.test.ts; живой Export/Import — ручная проверка в Cursor Canvas. История done-v6 не объявлена мигрированной до Export session пользователя.",
+    agentNote: "T-046 / PR#16: модель + round-trip в src/qa/qa-model.test.ts; живой Export/Import — ручная проверка в Cursor Canvas. История done-v6 не объявлена мигрированной до Export session пользователя.",
   },
 ];
 
