@@ -1,0 +1,500 @@
+{
+  "schemaVersion": 1,
+  "results": [
+    {
+      "scenarioId": "1",
+      "agentStatus": "ok",
+      "agentNote": "Тест: choice находится. Баг в Figma → бэклог qa-1",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "2",
+      "agentStatus": "ok-code",
+      "agentNote": "Покрытие unit-тестами ambiguous-form. Улучшение подсказки → бэклог qa-2",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "3",
+      "agentStatus": "ok",
+      "agentNote": "Choice OK, auto не трогает",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "4",
+      "agentStatus": "ok",
+      "agentNote": "Исключения срабатывают. Копирайт карточки → бэклог qa-4",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "5",
+      "agentStatus": "ok",
+      "agentNote": "Choice OK; confirm на «по запросу Главное» OK. «в Москве» тоже может дать choice (компромисс)",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "6",
+      "agentStatus": "ok",
+      "agentNote": "Регистр только confirm; auto не трогает",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "7",
+      "agentStatus": "ok",
+      "agentNote": "Hunspell ловит «Кватира»; копирайт UI — по тестам render",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "8",
+      "agentStatus": "ok",
+      "agentNote": "Тест spelling OK",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "9",
+      "agentStatus": "ok",
+      "agentNote": "Mixed-script OK",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "10",
+      "agentStatus": "ok",
+      "agentNote": "Figma/online без layout-fix",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "11",
+      "agentStatus": "ok-code",
+      "agentNote": "Подсказка орфографии уже с заглавной в списке; отдельного auto-cap нет",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "12",
+      "agentStatus": "ok",
+      "agentNote": "Whitelist + brand OK (remote whitelist уже с «смс»)",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "13",
+      "agentStatus": "ok-code",
+      "agentNote": "spec S09b: MAX_SPELL_SKIP_COUNT=3 только orthography-*; confirm-точка и choice без вечного skip",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "14",
+      "agentStatus": "ok-code",
+      "agentNote": "Строки в UI/pipeline; нет «Проверка окончена» в src",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "15",
+      "agentStatus": "ok-code",
+      "agentNote": "Порядок в ui-render.ts; leftover = state.cards после auto",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "16",
+      "agentStatus": "ok-code",
+      "agentNote": "lastManualApplyReport в session; Figma вручную",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "17",
+      "agentStatus": "ok-code",
+      "agentNote": "spec: formatFixCategoryLabel; 139* всегда Редполитика",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "18",
+      "agentStatus": "ok-code",
+      "agentNote": "spec S07a; заголовок и диффы — #31 / #35",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "19",
+      "agentStatus": "ok",
+      "agentNote": "Auto: «заполните ваш профиль»; заглавная З — confirm; diff-format.test OK",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "20",
+      "agentStatus": "fixed",
+      "agentNote": "Починил cian-114: схлопывает NBSP/смешанные пробелы; тест + rebuild",
+      "checkedAt": null,
+      "commit": null,
+      "method": "other",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "21",
+      "agentStatus": "ok-code",
+      "agentNote": "Актуально в #33: figma.notify(..., { error: true }), не closePlugin(текст)",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "22",
+      "agentStatus": "ok",
+      "agentNote": "copy-1: плашка «Проверяю орфографию — пажжите...»; ui-render-sections + ui-spellcheck-status.test",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "23",
+      "agentStatus": "ok",
+      "agentNote": "qa-2: bundled + remote text-autofix-word-forms bc0db9b «вы всегда пишете правильно»",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "24",
+      "agentStatus": "ok",
+      "agentNote": "flow-1 сделан: pick-v1 + «В работу» + промпт с выбранными id; задача удалена из бэклога",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "25",
+      "agentStatus": "ok",
+      "agentNote": "ctx-1: окно до 4 слов вокруг правки в auto, confirm, choice и орфографии; NBSP/перенос в окне; короткий слой без «…». → бэклог qa-25",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "26",
+      "agentStatus": "ok",
+      "agentNote": "qa-1: пара в remote text-autofix-word-forms 9bbd511; если remote без пары — bundled «напишите / напишете» не выкидывается",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "27",
+      "agentStatus": "ok",
+      "agentNote": "Текст тоста как в #33. Цвет и пауза 2,5 с — в #33: notify({ error: true }), не closePlugin(текст)",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "28",
+      "agentStatus": "ok",
+      "agentNote": "layout-1: латинская y у пишите/пишете срезается отдельной карточкой раскладки (не y→н), choice формы остаётся; gдоказываем и Figma/online без регрессии",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "29",
+      "agentStatus": "ok",
+      "agentNote": "copy-3 + spell-1: пока плашка крутится, нет «правок нет», «Спасибо» и чужих аккордеонов; choice появляется только после орфографии. Текст плашки как в #14/#34.",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "30",
+      "agentStatus": "fixed",
+      "agentNote": "Комментарий коммитится только на blur, не на первый символ",
+      "checkedAt": null,
+      "commit": null,
+      "method": "other",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "31",
+      "agentStatus": "ok",
+      "agentNote": "copy-2: заголовок auto-отчёта «Исправлено автоматически»; ui-render-sections + ui-manual-report.test",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "32",
+      "agentStatus": "ok",
+      "agentNote": "qa-4: MSG_CHOICE_TITLE_CASE_BOUNDARY без TITLE_CASE_PAIR_HINT; варианты «Слово. Слово» и «Слово слово» те же",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "33",
+      "agentStatus": "ok",
+      "agentNote": "qa-27: figma.notify(«Выделите хотя бы один фрейм», { error: true }), closePlugin через 2,5 с, не сразу",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "34",
+      "agentStatus": "ok",
+      "agentNote": "spell-1: Hunspell до остальных правил; при spellcheckInProgress в UI только плашка, один отчёт после",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "35",
+      "agentStatus": "ok",
+      "agentNote": "Авто-отчёт: space→nbsp в одно саммари на слой; бренд/тире/ё отдельными строками; счётчик шапки не режем",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "36",
+      "agentStatus": "ok",
+      "agentNote": "choice-1: пара в data/ambiguous-form-choices.txt и remote text-autofix-word-forms 696242c, id cian-choice-budite-budete; «будьте» вне пары; заглавная и NBSP после «не» — старые правила, не замена формы",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "37",
+      "agentStatus": "ok",
+      "agentNote": "manualReportDetailsOpen по умолчанию false: «Вы исправили» свёрнут, пока не кликнуть заголовок",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "38",
+      "agentStatus": "fixed",
+      "agentNote": "Запятая = «б»; лишняя латинская клавиша в конце срезается, если без неё слово есть в Hunspell",
+      "checkedAt": null,
+      "commit": null,
+      "method": "other",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "39",
+      "agentStatus": "fixed",
+      "agentNote": "spell-2a: в Figma нет ETag, поэтому повторный запуск в течение суток берёт gzip из clientStorage и не качает .dic. Сборка Hunspell в памяти на каждом запуске остаётся",
+      "checkedAt": null,
+      "commit": null,
+      "method": "other",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "40",
+      "agentStatus": "fixed",
+      "agentNote": "spell-2 + spell-2b + 5c: ≤12 spell; sentence-cap снимаем, если на букву висит орфография без подсказки или раскладка",
+      "checkedAt": null,
+      "commit": null,
+      "method": "other",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "41",
+      "agentStatus": "ok",
+      "agentNote": "ne-1: confirm «неотключите» → «не отключите», не auto; причастия и словарные «ненавидеть» / «нельзя» / «неплохо» / «невысокий» не режем; □ после «не» доклеивает старый cian-095, в саммари неразрывных пробелов сама вставка пробела не попадает",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "42",
+      "agentStatus": "ok-code",
+      "agentNote": "spec-1: textLayersDetailsOpen=false; formatTextLayersBlockHtml; блок прячется на spellcheckInProgress. В живом UI у имени слоя в карточке тоже есть счётчик — в ТЗ его там не рисуем",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "43",
+      "agentStatus": "ok-code",
+      "agentNote": "spec-2: renderResultHeaderHtml; pending = confirm+choice; applied = auto+manual",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "44",
+      "agentStatus": "ok-code",
+      "agentNote": "spec-3: 139a confirm без input; орфография = spellInput; skip неорфографии не пишет skipCount; 139 terminal period — auto",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "45",
+      "agentStatus": "ok-code",
+      "agentNote": "leftover = state.cards после auto; notifyIfFixesStuck в autofix-pipeline",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "46",
+      "agentStatus": "ok-code",
+      "agentNote": "spec S05a/S05b: after===before → пустое поле и disabled; suggested → value и активная кнопка",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "47",
+      "agentStatus": "ok-code",
+      "agentNote": "spec S09a: renderPluginError; не showUI-экран при пустом выделении",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "48",
+      "agentStatus": "fixed",
+      "agentNote": "ui-render: confirmHtml перед choiceHtml; кейс 4c релизного QA-кадра",
+      "checkedAt": null,
+      "commit": null,
+      "method": "other",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "49",
+      "agentStatus": "fixed",
+      "agentNote": "5c: 13-я была sentence-cap на первой букве мусора; dropSentenceCapOverlappingOrthography",
+      "checkedAt": null,
+      "commit": null,
+      "method": "other",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "50",
+      "agentStatus": "ok",
+      "agentNote": "tech-1 + remote-lists без yo-homographs; manual-qa-checklist-verify #50",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "51",
+      "agentStatus": "ok-code",
+      "agentNote": "analytics: vite define __ANALYTICS_ENABLED__; build выкл, build:release вкл",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "52",
+      "agentStatus": "ok",
+      "agentNote": "remote-lists-1b/c: stores + refresh fallback; yo-homographs удалён",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "53",
+      "agentStatus": "ok-code",
+      "agentNote": "Нужен public-repo butsena/text-autofix-curated; wiring уже в LEXICON_REMOTE",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "54",
+      "agentStatus": "ok",
+      "agentNote": "yo-homographs удалён; все/всё в ambiguous-form-choices",
+      "checkedAt": null,
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+    },
+    {
+      "scenarioId": "55",
+      "agentStatus": "ok-code",
+      "agentNote": "T-046 / PR#16: модель + round-trip в src/qa/qa-model.test.ts; живой Export/Import — ручная проверка в Cursor Canvas. История done-v6 не объявлена мигрированной до Export session пользователя.",
+      "checkedAt": "2026-10-15",
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Canvas useCanvasState not readable from agent tools; portable path is Export session UI."
+    }
+  ]
+}
