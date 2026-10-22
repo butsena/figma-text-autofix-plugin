@@ -2,7 +2,13 @@ import type { PluginToUiMessage } from "../shared/messages";
 import { initUiEvents } from "./ui-events";
 import { sendToPlugin } from "./ui-plugin-bridge";
 import { render, renderPluginError } from "./ui-render";
-import { applyCheckResult, applyLexiconConfig, applySpellcheckStatus, resetForError } from "./ui-state";
+import {
+  applyCheckResult,
+  applyLexiconConfig,
+  applySpellcheckPreference,
+  applySpellcheckStatus,
+  resetForError,
+} from "./ui-state";
 
 export function handlePluginMessage(event: MessageEvent): void {
   const msg = event.data && (event.data as { pluginMessage?: PluginToUiMessage }).pluginMessage;
@@ -16,6 +22,9 @@ export function handlePluginMessage(event: MessageEvent): void {
 
   if (msg.type === "plugin:config") {
     applyLexiconConfig(msg.lexiconLoad != null ? msg.lexiconLoad : null);
+    if (typeof msg.spellcheckEnabled === "boolean") {
+      applySpellcheckPreference(msg.spellcheckEnabled);
+    }
     render();
     return;
   }

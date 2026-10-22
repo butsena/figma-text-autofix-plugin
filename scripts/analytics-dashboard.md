@@ -43,6 +43,7 @@
 | 15 | Ошибки | `=COUNTIF(events!F:F;"plugin_error")` |
 | 16 | Auto applied (сумма) | см. ниже |
 | 17 | Auto not_applied (сумма) | см. ниже |
+| 18 | Проверить орфографию | `=COUNTIF(events!F:F;"spellcheck_requested")` |
 
 ### Формулы вложенности (ручные)
 
@@ -218,6 +219,7 @@ H31 — plugin_error + месяц.
 | Выбор | Карточка choice |
 | → Подтвердить / → Пропустить | `confirmed` / `skipped` |
 | Ошибки | `plugin_error` без текста исключения |
+| Проверить орфографию | Клик по кнопке (`spellcheck_requested`), payload `{}`. Один клик — одна строка |
 | Auto applied / not_applied | Сумма правок из payload auto |
 | Месяц / год | Агрегат запусков и правок; пользователей нет |
 

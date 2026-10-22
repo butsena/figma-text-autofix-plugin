@@ -1,0 +1,972 @@
+{
+  "schemaVersion": 1,
+  "exportedAt": "2026-10-22T13:16:24.067Z",
+  "canvasPath": "/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx",
+  "unsavedSession": false,
+  "entries": {
+    "1": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "2": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "3": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "4": {
+      "status": "passed",
+      "comment": "needs_retest: словоформы бренда из исключений («На Циане») тоже без title-case choice",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "history": [],
+          "archivedAt": "2026-10-22",
+          "retestReason": "needs_retest: словоформы бренда из исключений («На Циане») тоже без title-case choice"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: словоформы бренда из исключений («На Циане») тоже без title-case choice",
+          "attachments": [],
+          "checkedAt": "2026-10-22",
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "5": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "6": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "7": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "8": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "9": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "10": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "11": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "12": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "13": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "14": {
+      "status": "passed",
+      "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "15": {
+      "status": "passed",
+      "comment": "needs_retest: таблица слоёв под шапкой; текст длиннее 25 символов заменяется именем фрейма",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-22",
+          "reason": "needs_retest: таблица слоёв под шапкой; текст длиннее 25 символов заменяется именем фрейма"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: таблица слоёв под шапкой; текст длиннее 25 символов заменяется именем фрейма",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "16": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "17": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "18": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "19": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "20": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "21": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "22": {
+      "status": "passed",
+      "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "23": {
+      "status": "passed",
+      "comment": "needs_retest: подтверждение формы слов не прокручивает отчёт наверх",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "needs_retest: подтверждение формы слов не прокручивает отчёт наверх"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: подтверждение формы слов не прокручивает отчёт наверх",
+          "attachments": [],
+          "checkedAt": "2026-10-22",
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "24": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "25": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "26": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "27": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "28": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "29": {
+      "status": "passed",
+      "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "30": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "31": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "32": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "33": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "34": {
+      "status": "passed",
+      "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "35": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "36": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "37": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "38": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "39": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "40": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "41": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "42": {
+      "status": "passed",
+      "comment": "needs_retest: таблица слоёв под шапкой; текст длиннее 25 символов заменяется именем фрейма",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "needs_retest",
+          "comment": "",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-22",
+          "reason": "needs_retest: таблица слоёв под шапкой; текст длиннее 25 символов заменяется именем фрейма"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: таблица слоёв под шапкой; текст длиннее 25 символов заменяется именем фрейма",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "43": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "44": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "45": {
+      "status": "needs_retest",
+      "comment": "needs_retest: leftover после авто-отчёта и до «Спасибо»; таблица слоёв переехала под шапку",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "needs_retest",
+          "comment": "",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-22",
+          "reason": "needs_retest: leftover после авто-отчёта и до «Спасибо»; таблица слоёв переехала под шапку"
+        }
+      ]
+    },
+    "46": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "48": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "49": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "50": {
+      "status": "passed",
+      "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "not_run",
+          "comment": "",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: орфография опциональна (toggle, дефолт выкл), сценарии обновлены под #56",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "52": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "54": {
+      "status": "passed",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": []
+    },
+    "56": {
+      "status": "passed",
+      "comment": "needs_retest: «правок нет» только когда нет карточек confirm/choice, leftover и отчётов",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "not_run",
+          "comment": "",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка «Проверить орфографию» вместо toggle, без памяти между сессиями (#56)",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-20",
+          "reason": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: кнопка орфографии после «правок нет»/отчётов, не в шапке",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "needs_retest: «правок нет» только когда нет карточек confirm/choice, leftover и отчётов"
+        },
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: «правок нет» только когда нет карточек confirm/choice, leftover и отчётов",
+          "attachments": [],
+          "checkedAt": "2026-10-22",
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "57": {
+      "status": "passed",
+      "comment": "needs_retest: смешанная раскладка без словаря — карточка с пустым полем, не тишина и не мусорная подсказка",
+      "attachments": [],
+      "checkedAt": "2026-10-22",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "needs_retest",
+          "comment": "needs_retest: смешанная раскладка без словаря — карточка с пустым полем, не тишина и не мусорная подсказка",
+          "attachments": [],
+          "checkedAt": "2026-10-22",
+          "checkedCommit": null,
+          "archivedAt": "2026-10-22",
+          "retestReason": "отмечено passed после прогона критических сценариев в Figma"
+        }
+      ]
+    },
+    "58": {
+      "status": "needs_retest",
+      "comment": "needs_retest: текст скрытых фреймов не входит в счётчик и в проверку",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "needs_retest",
+          "comment": "",
+          "checkedAt": null,
+          "checkedCommit": null,
+          "markedNeedsRetestAt": "2026-10-22",
+          "reason": "needs_retest: текст скрытых фреймов не входит в счётчик и в проверку"
+        }
+      ]
+    }
+  }
+}

@@ -27,11 +27,16 @@ export const ANALYTICS_CONFIG = {
   timeoutMs: 2500,
 } as const;
 
-export function isAnalyticsConfigured(): boolean {
+/** Чистая проверка: аналитика включена и endpoint — https Web App (/exec). */
+export function isAnalyticsEndpointReady(enabled: boolean, endpointUrl: string): boolean {
   return (
-    ANALYTICS_CONFIG.enabled &&
-    typeof ANALYTICS_CONFIG.endpointUrl === "string" &&
-    ANALYTICS_CONFIG.endpointUrl.startsWith("https://") &&
-    ANALYTICS_CONFIG.endpointUrl.includes("/exec")
+    enabled &&
+    typeof endpointUrl === "string" &&
+    endpointUrl.startsWith("https://") &&
+    endpointUrl.includes("/exec")
   );
+}
+
+export function isAnalyticsConfigured(): boolean {
+  return isAnalyticsEndpointReady(ANALYTICS_CONFIG.enabled, ANALYTICS_CONFIG.endpointUrl);
 }

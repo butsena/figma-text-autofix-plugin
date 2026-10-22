@@ -1,3 +1,4 @@
+import { captureScrollTop, restoreScrollTop } from "./ui-scroll";
 import { schedulePluginResize } from "./ui-resize";
 import { captureUiAccordionState, state } from "./ui-state";
 import {
@@ -8,6 +9,7 @@ import {
   renderReportHtml,
   renderReportThanksHtml,
   renderResultHeaderHtml,
+  renderSpellcheckActionHtml,
   renderSpellcheckStatusHtml,
   renderTechDetailsHtml,
   renderTextLayersHtml,
@@ -19,6 +21,7 @@ export function render(): void {
   if (!app) return;
 
   captureUiAccordionState();
+  captureScrollTop();
 
   if (state.spellcheckInProgress) {
     app.innerHTML = `
@@ -28,6 +31,7 @@ export function render(): void {
       </div>
     </div>
   `;
+    restoreScrollTop();
     schedulePluginResize();
     return;
   }
@@ -41,6 +45,7 @@ export function render(): void {
         ${renderChoiceHtml()}
         ${renderManualReportHtml()}
         ${renderReportHtml()}
+        ${renderSpellcheckActionHtml()}
         ${renderLeftoverCardsHtml()}
         ${renderTextLayersHtml()}
         ${renderReportThanksHtml()}
@@ -49,6 +54,7 @@ export function render(): void {
     </div>
   `;
 
+  restoreScrollTop();
   schedulePluginResize();
 }
 

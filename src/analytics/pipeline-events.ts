@@ -8,6 +8,11 @@ import {
 } from "./schema";
 import { trackAnalytics } from "./track";
 
+/** Кнопка «Проверить орфографию»: один клик, без текста слоёв. */
+export function trackSpellcheckRequested(): void {
+  trackAnalytics("spellcheck_requested", {});
+}
+
 export function trackPluginOpen(hasTextLayers: boolean): void {
   trackAnalytics("plugin_open", { has_text_layers: hasTextLayers });
 }

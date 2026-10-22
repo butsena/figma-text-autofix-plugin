@@ -20,16 +20,6 @@ export function beginPluginRun(): void {
   skippedThisPluginSession.clear();
 }
 
-/** @deprecated больше не используется; оставлен для совместимости экспортов/тестов. */
-export function getCurrentPluginRunId(): number {
-  return 0;
-}
-
-/** Только для тестов. */
-export function resetPluginRunIdForTests(_value = 0): void {
-  skippedThisPluginSession.clear();
-}
-
 export function wasSpellSkippedThisSession(ruleId: string, before: string): boolean {
   return skippedThisPluginSession.has(spellSkipSessionKey(ruleId, before));
 }

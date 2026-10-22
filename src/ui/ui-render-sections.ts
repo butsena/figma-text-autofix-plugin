@@ -1,4 +1,3 @@
-import { SPELLCHECK_ENABLED } from "../config/feature-flags";
 import { escapeHtml } from "../shared/escape-html";
 import type { AutoApplyFixLineDto } from "../shared/messages";
 import {
@@ -6,20 +5,44 @@ import {
   detailsOpenAttr,
   formatLayerTitleHtml,
   formatTextLayersBlockHtml,
+  layerDisplayLabel,
 } from "./ui-helpers";
 import { formatTechLexiconStatusBodyHtml } from "./ui-lexicon-status";
 import { isNbspGlueFix, renderNbspGlueSummaryHtml } from "./nbsp-glue-summary";
 import { state } from "./ui-state";
 import { renderChoiceFixRow, renderFixRow } from "./ui-render-fix-row";
 
+function layerSourceText(layer: {
+  originalText?: string;
+  fixes?: Array<{ sourceText?: string }>;
+}): string | undefined {
+  if (layer.originalText != null) return layer.originalText;
+  return layer.fixes?.find((fix) => fix.sourceText != null)?.sourceText;
+}
+
 function renderLayerBlocksHtml<
-  T extends { nodeId: string; nodeName: string; characterCount: number },
+  T extends {
+    nodeId: string;
+    nodeName: string;
+    characterCount: number;
+    frameName?: string;
+    originalText?: string;
+    fixes?: Array<{ sourceText?: string }>;
+  },
 >(layers: T[], renderFixes: (layer: T, cardIdx: number) => string): string {
   return layers
     .map(
       (layer, cardIdx) => `
         <div class="reportLayer">
-          ${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}
+          ${formatLayerTitleHtml(
+            layer.nodeId,
+            layerDisplayLabel({
+              nodeName: layer.nodeName,
+              text: layerSourceText(layer),
+              frameName: layer.frameName,
+            }),
+            layer.characterCount,
+          )}
           ${renderFixes(layer, cardIdx)}
         </div>
       `,
@@ -123,6 +146,16 @@ export function renderResultHeaderHtml(): string {
   `;
 }
 
+/** После отчёта / «правок нет»: опциональный следующий шаг, не в шапке. */
+export function renderSpellcheckActionHtml(): string {
+  if (state.spellcheckInProgress || !state.summary || state.spellcheckEnabled) return "";
+  return `
+    <div class="spellcheckActionRow">
+      <button id="spellcheckBtn" type="button" class="spellcheckBtn">Проверить орфографию</button>
+    </div>
+  `;
+}
+
 const REPORT_THANKS_HTML =
   '<div class="reportThanksRow">' +
   '<button id="thanksBtn" type="button" class="thanksBtn">Спасибо, шайтан-машина!</button>' +
@@ -146,7 +179,7 @@ export function renderSpellcheckStatusHtml(): string {
 
 export function renderTextLayersHtml(): string {
   if (state.spellcheckInProgress) return "";
-  return formatTextLayersBlockHtml(state.checkedTextLayers, state.ui.textLayersDetailsOpen);
+  return formatTextLayersBlockHtml(state.checkedTextLayers);
 }
 
 export function renderTechDetailsHtml(): string {
@@ -157,7 +190,7 @@ export function renderTechDetailsHtml(): string {
   if (!lex) {
     bodyHtml = '<div class="empty" style="padding:4px 0">Статус загрузки словаря ещё не получен.</div>';
   } else {
-    bodyHtml = formatTechLexiconStatusBodyHtml(lex, SPELLCHECK_ENABLED);
+    bodyHtml = formatTechLexiconStatusBodyHtml(lex, state.spellcheckEnabled);
   }
 
   return `
@@ -172,12 +205,25 @@ export function renderTechDetailsHtml(): string {
   `;
 }
 
+function hasVisibleFixesOutsideAutoReport(): boolean {
+  return (
+    state.confirmCards.length > 0 ||
+    state.choiceCards.length > 0 ||
+    state.cards.length > 0 ||
+    (state.lastManualReport?.layers.length ?? 0) > 0
+  );
+}
+
 export function renderReportHtml(): string {
   if (state.spellcheckInProgress) return "";
   const r = state.lastReport;
   if (!r) return "";
   if (!r.layers.length) {
-    if (state.summary && state.summary.foundFixes === 0 && !state.lastManualReport?.layers.length) {
+    if (
+      state.summary &&
+      state.summary.foundFixes === 0 &&
+      !hasVisibleFixesOutsideAutoReport()
+    ) {
       return '<div class="empty" style="padding:4px 0;margin-bottom:14px">В выделенных слоях правок нет</div>';
     }
     return "";

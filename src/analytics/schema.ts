@@ -11,6 +11,7 @@ export const ANALYTICS_EVENT_NAMES = [
   "auto_fix_complete",
   "manual_fix_complete",
   "choice_resolved",
+  "spellcheck_requested",
   "plugin_error",
 ] as const;
 
@@ -95,6 +96,9 @@ export type ChoiceResolvedPayload = {
   action: "confirmed" | "skipped";
 };
 
+/** Клик «Проверить орфографию». Пустой payload: это сам факт нажатия. */
+export type SpellcheckRequestedPayload = Record<string, never>;
+
 export type PluginErrorPayload = {
   stage: AnalyticsErrorStage;
   code: AnalyticsErrorCode;
@@ -106,6 +110,7 @@ export type AnalyticsPayloadByEvent = {
   auto_fix_complete: AutoFixCompletePayload;
   manual_fix_complete: ManualFixCompletePayload;
   choice_resolved: ChoiceResolvedPayload;
+  spellcheck_requested: SpellcheckRequestedPayload;
   plugin_error: PluginErrorPayload;
 };
 
@@ -216,6 +221,8 @@ function validatePayload(event: AnalyticsEventName, payload: unknown): string | 
     case "choice_resolved":
       if (p.action !== "confirmed" && p.action !== "skipped") return "action";
       return null;
+    case "spellcheck_requested":
+      return null;
     case "plugin_error":
       if (typeof p.stage !== "string" || !STAGE_SET.has(p.stage)) return "stage";
       if (typeof p.code !== "string" || !CODE_SET.has(p.code)) return "code";
@@ -310,6 +317,8 @@ function sanitizePayload<E extends AnalyticsEventName>(
       const p = payload as ChoiceResolvedPayload;
       return { action: p.action } as AnalyticsPayloadByEvent[E];
     }
+    case "spellcheck_requested":
+      return {} as AnalyticsPayloadByEvent[E];
     case "plugin_error": {
       const p = payload as PluginErrorPayload;
       return { stage: p.stage, code: p.code } as AnalyticsPayloadByEvent[E];

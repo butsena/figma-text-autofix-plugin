@@ -6,6 +6,7 @@ import {
   renderReportHtml,
   renderReportThanksHtml,
   renderResultHeaderHtml,
+  renderSpellcheckActionHtml,
   renderSpellcheckStatusHtml,
   renderTechDetailsHtml,
   renderTextLayersHtml,
@@ -30,11 +31,38 @@ describe("renderSpellcheckStatusHtml", () => {
   });
 });
 
+describe("кнопка орфографии после отчёта", () => {
+  beforeEach(() => {
+    state.spellcheckInProgress = false;
+    state.spellcheckEnabled = false;
+    state.summary = { checkedLayers: 1, foundFixes: 0, confirmFixes: 0, choiceFixes: 0 };
+    state.lastReport = null;
+    state.lastManualReport = null;
+    state.confirmCards = [];
+    state.choiceCards = [];
+  });
+
+  it("по умолчанию показывает кнопку в action, не в шапке", () => {
+    expect(renderResultHeaderHtml()).not.toContain("spellcheckBtn");
+    const html = renderSpellcheckActionHtml();
+    expect(html).toContain("Проверить орфографию");
+    expect(html).toContain('id="spellcheckBtn"');
+  });
+
+  it("после включения кнопки нет", () => {
+    state.spellcheckEnabled = true;
+    expect(renderSpellcheckActionHtml()).toBe("");
+  });
+});
+
 describe("отчёт, пока орфография грузится", () => {
   beforeEach(() => {
     state.spellcheckInProgress = false;
     state.summary = { checkedLayers: 1, foundFixes: 0, confirmFixes: 0, choiceFixes: 0 };
     state.lastManualReport = null;
+    state.confirmCards = [];
+    state.choiceCards = [];
+    state.cards = [];
     state.lastReport = {
       summary: { checkedLayers: 1, appliedFixCount: 0, changedLayerCount: 0 },
       layers: [],
@@ -53,6 +81,27 @@ describe("отчёт, пока орфография грузится", () => {
     expect(renderReportHtml()).toContain("В выделенных слоях правок нет");
     expect(renderReportThanksHtml()).toContain("Спасибо, шайтан-машина!");
     expect(renderSpellcheckStatusHtml()).toBe("");
+  });
+
+  it("не пишет «правок нет», пока на экране confirm, choice или leftover", () => {
+    const card = {
+      nodeId: "1:2",
+      nodeName: "Кватира",
+      originalText: "Кватира",
+      previewText: "Кватира",
+      characterCount: 7,
+      fixes: [],
+    };
+    state.confirmCards = [card];
+    expect(renderReportHtml()).not.toContain("В выделенных слоях правок нет");
+
+    state.confirmCards = [];
+    state.choiceCards = [card];
+    expect(renderReportHtml()).not.toContain("В выделенных слоях правок нет");
+
+    state.choiceCards = [];
+    state.cards = [card];
+    expect(renderReportHtml()).not.toContain("В выделенных слоях правок нет");
   });
 
   it("пока идёт проверка, прячет авто-отчёт, choice, confirm, слои и техблок", () => {

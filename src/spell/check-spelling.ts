@@ -78,13 +78,16 @@ function checkMixedScriptFixes(
     if (latinCharsCoveredByFixes(from, word, fixes)) continue;
 
     const suggested = suggestMixedScriptRu(word, known);
-    if (!suggested || suggested === word) continue;
+    const knownSuggestion = suggested && suggested !== word ? suggested : null;
+    // Подсказку пишем только для слова из словаря. Иначе карточка есть, поле пустое:
+    // «лctt» и «kjjклk’;kg» — мусор, готовой замены нет.
+    if (!knownSuggestion && word.replace(/[^A-Za-z]/g, "").length < 2) continue;
 
     fixes.push({
       from,
       to,
       before: word,
-      after: casingForSuggestion(text, from, suggested),
+      after: knownSuggestion ? casingForSuggestion(text, from, knownSuggestion) : word,
       ruleId: ORTHOGRAPHY_LAYOUT_RULE_ID,
       category: "orthography",
       message: orthographyLayoutMessage(word),
@@ -102,17 +105,29 @@ function checkLatinLayoutFixes(
   whitelist: Set<string>,
   existingFixes: readonly TextFix[],
 ): TextFix[] {
-  if (!textHasCyrillic(text)) return [];
-
+  // #region agent log
+  fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "post-fix", hypothesisId: "A", location: "check-spelling.ts:checkLatinLayoutFixes", message: "scan latin layout", data: { hasCyrillic: textHasCyrillic(text), textLen: text.length }, timestamp: Date.now() }) }).catch(() => {});
+  // #endregion
   const fixes: TextFix[] = [];
+  const mixedSpans = extractMixedScriptTokens(text);
 
   for (const token of extractLatinLayoutTokens(text)) {
     const { word, from, to } = token;
-    if (shouldSkipLatinLayoutToken(word)) continue;
+    if (shouldSkipLatinLayoutToken(word)) {
+      // #region agent log
+      fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "C", location: "check-spelling.ts:checkLatinLayoutFixes", message: "skip token", data: { word }, timestamp: Date.now() }) }).catch(() => {});
+      // #endregion
+      continue;
+    }
     if (isWhitelisted(word, whitelist)) continue;
     if (isLikelyUrlOrEmailContext(text, from, to)) continue;
-    if (overlapsExistingFix(from, to, existingFixes)) continue;
-    if (overlapsExistingFix(from, to, fixes)) continue;
+    if (mixedSpans.some((span) => rangesOverlap(from, to, span.from, span.to))) continue;
+    if (overlapsExistingFix(from, to, existingFixes) || overlapsExistingFix(from, to, fixes)) {
+      // #region agent log
+      fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "D", location: "check-spelling.ts:checkLatinLayoutFixes", message: "skip: overlapped by another fix", data: { word }, timestamp: Date.now() }) }).catch(() => {});
+      // #endregion
+      continue;
+    }
 
     const suggestedRu = suggestRuFromLatinLayout(word, (w) => isKnownWord(spell, w));
     if (!suggestedRu) continue;
@@ -155,6 +170,9 @@ export function checkSpellingFixes(text: string, existingFixes: readonly TextFix
   // чтобы орфография не ругалась на кириллические обрывки вокруг латинской буквы.
   const mixedFixes = checkMixedScriptFixes(text, spell, whitelist, existingFixes);
   const spellExisting = [...existingFixes, ...mixedFixes];
+  const mixedSpans = extractMixedScriptTokens(text);
+  const overlapsMixedSpan = (from: number, to: number) =>
+    mixedSpans.some((span) => rangesOverlap(from, to, span.from, span.to));
 
   // Проход 1: только «знает / не знает». suggest — ниже, для уникальных форм и с лимитом карточек.
   const unknown: { word: string; from: number; to: number }[] = [];
@@ -163,6 +181,7 @@ export function checkSpellingFixes(text: string, existingFixes: readonly TextFix
     if (shouldSkipSpellToken(word)) continue;
     if (isWhitelisted(word, whitelist)) continue;
     if (overlapsExistingFix(from, to, spellExisting)) continue;
+    if (overlapsMixedSpan(from, to)) continue;
     if (isKnownWord(spell, word)) continue;
     unknown.push(token);
   }

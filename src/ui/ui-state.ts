@@ -30,6 +30,8 @@ export type UiState = {
   lexiconLoad: LexiconLoadStatusDto | null;
   /** Пока грузится / крутится Hunspell после auto-apply. */
   spellcheckInProgress: boolean;
+  /** Пользовательский преф орфографии (toggle в шапке). */
+  spellcheckEnabled: boolean;
   ui: UiAccordionState;
   /** Выбранный вариант choice-правки: ключ «cardIdx:fixIdx» → индекс опции. */
   choiceSelection: Record<string, number>;
@@ -45,6 +47,7 @@ export const state: UiState = {
   lastManualReport: null,
   lexiconLoad: null,
   spellcheckInProgress: false,
+  spellcheckEnabled: false,
   ui: {
     confirmDetailsOpen: true,
     choiceDetailsOpen: true,
@@ -107,6 +110,10 @@ export function applyCheckResult(result: {
 
 export function applyLexiconConfig(lexiconLoad: LexiconLoadStatusDto | null): void {
   state.lexiconLoad = lexiconLoad;
+}
+
+export function applySpellcheckPreference(enabled: boolean): void {
+  state.spellcheckEnabled = Boolean(enabled);
 }
 
 export function captureUiAccordionState(): void {

@@ -86,6 +86,19 @@
         line-height: 1.2;
         color: #1f1f1f;
       }
+      .spellcheckActionRow {
+        margin: 0 0 14px;
+      }
+      button.spellcheckBtn {
+        width: 100%;
+        border-color: #c8d8f0;
+        background: #f4f8ff;
+        color: #0b57d0;
+      }
+      button.spellcheckBtn:hover {
+        background: #e8f1ff;
+        border-color: #7aa8f0;
+      }
       button {
         appearance: none;
         border: 1px solid #d0d0d0;
@@ -197,69 +210,37 @@
         color: #666;
         font-size: 12px;
       }
-      .textLayersBlock {
-        border: 1px solid #d8e4f8;
-        background: #f8fbff;
-        border-radius: 8px;
-        padding: 8px 10px;
-        margin-bottom: 14px;
-        box-sizing: border-box;
+      .textLayersTable {
+        margin: 2px 0 14px;
       }
-      .textLayersDetails > summary {
-        cursor: pointer;
-        list-style: none;
+      .textLayersTable .textLayerRow {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 6px 10px;
-        padding: 2px 0;
-        user-select: none;
-      }
-      .textLayersDetails > summary::-webkit-details-marker {
-        display: none;
-      }
-      .textLayersDetails > summary::before {
-        content: "▸";
-        color: #0b57d0;
-        font-size: 15px;
-        font-weight: 700;
-        line-height: 1;
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-        margin-right: 4px;
-        border-radius: 6px;
-        background: #d6e6ff;
-        border: 1px solid #7aa8f0;
-        box-sizing: border-box;
-      }
-      .textLayersDetails[open] > summary::before {
-        content: "▾";
-        background: #b8d4ff;
-      }
-      .textLayersDetailsTitle {
-        font-weight: 700;
-        font-size: 13px;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        margin: 0;
+        padding: 7px 0;
         color: #1f1f1f;
+        font-weight: 400;
+        cursor: pointer;
       }
-      .textLayersDetailsBrief {
-        font-size: 11px;
-        color: #555;
+      .textLayersTable .textLayerLabel {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #1f1f1f;
         font-weight: 400;
       }
-      .textLayersDetailsBody {
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid #d8e4f8;
+      .textLayersTable .textLayerRow:hover {
+        text-decoration: none;
       }
-      .textLayerRow {
-        margin: 4px 0;
+      .textLayersTable .textLayerRow:hover .textLayerLabel {
+        text-decoration: underline;
       }
-      .textLayerRow .reportLayerTitle {
-        margin-bottom: 0;
+      .textLayersTable .reportLayerMeta {
+        margin-left: auto;
+        flex-shrink: 0;
       }
       .reportFix {
         padding: 6px 0 6px 8px;

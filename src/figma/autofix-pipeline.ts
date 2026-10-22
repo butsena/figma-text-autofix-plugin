@@ -1,6 +1,9 @@
 import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
 import { trackAutoFixComplete } from "../analytics/pipeline-events";
-import { SPELLCHECK_ENABLED } from "../config/feature-flags";
+import {
+  getCachedSpellcheckActive,
+  loadSpellcheckPreference,
+} from "../config/spellcheck-preference";
 import { applyFixesFromScan } from "./apply-fixes";
 import { buildAutoApplyReportFromApplied, buildEmptyAutoApplyReport, mergeAutoApplyReports } from "./build-auto-apply-report";
 import { postCheckResultToUi, setLastAutoApplyReport } from "./check-result-session";
@@ -82,11 +85,12 @@ export async function runAutofixAutoPasses(
 export async function runAutofixPipeline(): Promise<void> {
   const selection = figma.currentPage.selection;
   const autoStartedAt = Date.now();
+  const spellActive = loadSpellcheckPreference();
   // Пока Hunspell не готов, в UI только плашка: choice/confirm/отчёты не показываем.
-  if (SPELLCHECK_ENABLED) postSpellcheckStatus(true);
+  if (spellActive) postSpellcheckStatus(true);
 
   try {
-    if (SPELLCHECK_ENABLED) {
+    if (spellActive) {
       try {
         await refreshSpellLexiconFromRemote();
         await ensureSpellCheckerReady();
@@ -96,7 +100,7 @@ export async function runAutofixPipeline(): Promise<void> {
     }
 
     const lexiconLoad = await refreshLexiconFromRemote({
-      includeSpell: SPELLCHECK_ENABLED,
+      includeSpell: getCachedSpellcheckActive(),
     });
     postPluginConfigToUi(lexiconLoad);
 
@@ -107,6 +111,6 @@ export async function runAutofixPipeline(): Promise<void> {
     postCheckResultToUi(selection);
     notifyIfFixesStuck(finalScan, report);
   } finally {
-    if (SPELLCHECK_ENABLED) postSpellcheckStatus(false);
+    if (spellActive) postSpellcheckStatus(false);
   }
 }

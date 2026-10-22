@@ -109,7 +109,8 @@ export type MixedScriptToken = {
   to: number;
 };
 
-const LETTER_RUN = /[A-Za-zА-Яа-яЁё]+/gu;
+/** Смешанный кусок: оба алфавита и клавиши ж/э/х/ъ/ё. Запятая и точка остаются границей слова. */
+const LETTER_RUN = /[A-Za-zА-Яа-яЁё\[\]`;'’‘]+/gu;
 
 /** Конвертирует только латинские символы; кириллицу не трогает. */
 export function convertLatinCharsToRuLayout(input: string): string {
@@ -125,10 +126,6 @@ export function convertLatinCharsToRuLayout(input: string): string {
 }
 
 /**
- * Слово смешало латиницу и кириллицу (gдоказываем, пokаз…).
- * Без EN-словаря: раскладка латинских букв или отбрасывание латиницы.
- */
-/**
  * Одна латинская буква с краю («yпишете», «пишитеy»).
  * Если русская основа есть в словаре — срезаем букву, не переводим её по клавише (y→н).
  */
@@ -140,6 +137,11 @@ function stripSingleLatinAffix(word: string, isKnown: (candidate: string) => boo
   return stem;
 }
 
+/**
+ * Смешанная раскладка. Подсказка только если выходит слово из словаря
+ * («yпишете» → «пишете», «gдоказываем» → «доказываем»).
+ * Перевод, которого нет в словаре, не предлагаем: «kjjклk’;kg» так и остаётся мусором.
+ */
 export function suggestMixedScriptRu(
   word: string,
   isKnown: (candidate: string) => boolean,
@@ -149,7 +151,7 @@ export function suggestMixedScriptRu(
   const strippedAffix = stripSingleLatinAffix(word, isKnown);
   if (strippedAffix) return strippedAffix;
 
-  const converted = convertLatinCharsToRuLayout(word);
+  const converted = convertEnLayoutToRu(word);
   if (converted !== word && isKnown(converted)) return converted;
 
   const strippedCyr = word.replace(/[A-Za-z]+/g, "");
@@ -254,15 +256,33 @@ export function suggestRuFromLatinLayout(
   const converted = convertEnLayoutToRu(word);
   if (!converted || converted === word) return null;
   if (![...converted].some((ch) => /[а-яё]/i.test(ch))) return null;
-  if (isKnown(converted)) return converted;
+  if (isKnown(converted)) {
+    // #region agent log
+    fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "B", location: "keyboard-layout.ts:suggestRuFromLatinLayout", message: "hit dictionary", data: { word, converted, path: "known" }, timestamp: Date.now() }) }).catch(() => {});
+    // #endregion
+    return converted;
+  }
 
   for (let drop = 1; drop <= 2; drop++) {
     if (converted.length - drop < 4) break;
     const trimmed = converted.slice(0, -drop);
-    if (isKnown(trimmed)) return trimmed;
+    if (isKnown(trimmed)) {
+      // #region agent log
+      fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "B", location: "keyboard-layout.ts:suggestRuFromLatinLayout", message: "hit dictionary after trim", data: { word, converted, trimmed, path: "trim" }, timestamp: Date.now() }) }).catch(() => {});
+      // #endregion
+      return trimmed;
+    }
   }
 
-  if (looksLikeRuTypedInEnLayout(word)) return converted;
+  if (looksLikeRuTypedInEnLayout(word)) {
+    // #region agent log
+    fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "B", location: "keyboard-layout.ts:suggestRuFromLatinLayout", message: "fallback no-vowel", data: { word, converted, path: "no-vowel" }, timestamp: Date.now() }) }).catch(() => {});
+    // #endregion
+    return converted;
+  }
+  // #region agent log
+  fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "B", location: "keyboard-layout.ts:suggestRuFromLatinLayout", message: "miss: vowel and unknown", data: { word, converted, hasEnVowel: true, path: "null" }, timestamp: Date.now() }) }).catch(() => {});
+  // #endregion
   return null;
 }
 

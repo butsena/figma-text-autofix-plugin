@@ -30,9 +30,9 @@
     },
     {
       "scenarioId": "4",
-      "agentStatus": "ok",
-      "agentNote": "Исключения срабатывают. Копирайт карточки → бэклог qa-4",
-      "checkedAt": null,
+      "agentStatus": "fixed",
+      "agentNote": "Словоформы кириллических исключений тоже без choice: На Циане, для Циана, с Цианом. Латиница и хвосты длиннее окончания (цианид, сбережения) по-прежнему не исключения.",
+      "checkedAt": "2026-10-22",
       "commit": null,
       "method": "engine-test",
       "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
@@ -121,7 +121,7 @@
     {
       "scenarioId": "14",
       "agentStatus": "ok-code",
-      "agentNote": "Строки в UI/pipeline; нет «Проверка окончена» в src",
+      "agentNote": "Строки в UI/pipeline; нет «Проверка окончена» в src Сценарий обновлён: плашка только при орфографии вкл (#56). Предусловие: кнопка «Проверить орфографию» (не toggle, без памяти).",
       "checkedAt": null,
       "commit": null,
       "method": "code-review",
@@ -130,7 +130,7 @@
     {
       "scenarioId": "15",
       "agentStatus": "ok-code",
-      "agentNote": "Порядок в ui-render.ts; leftover = state.cards после auto",
+      "agentNote": "Порядок в ui-render.ts: отчёты и leftover, затем таблица слоёв, затем «Спасибо». Кнопки орфографии после авто-отчёта уже нет.",
       "checkedAt": null,
       "commit": null,
       "method": "code-review",
@@ -193,7 +193,7 @@
     {
       "scenarioId": "22",
       "agentStatus": "ok",
-      "agentNote": "copy-1: плашка «Проверяю орфографию — пажжите...»; ui-render-sections + ui-spellcheck-status.test",
+      "agentNote": "copy-1: плашка «Проверяю орфографию — пажжите...»; ui-render-sections + ui-spellcheck-status.test Предусловие: орфография вкл. Предусловие: кнопка «Проверить орфографию» (не toggle, без памяти).",
       "checkedAt": null,
       "commit": null,
       "method": "engine-test",
@@ -201,9 +201,9 @@
     },
     {
       "scenarioId": "23",
-      "agentStatus": "ok",
-      "agentNote": "qa-2: bundled + remote text-autofix-word-forms bc0db9b «вы всегда пишете правильно»",
-      "checkedAt": null,
+      "agentStatus": "fixed",
+      "agentNote": "qa-2: bundled + remote text-autofix-word-forms bc0db9b «вы всегда пишете правильно». Подтверждение формы не сбрасывает прокрутку отчёта.",
+      "checkedAt": "2026-10-22",
       "commit": null,
       "method": "engine-test",
       "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
@@ -256,7 +256,7 @@
     {
       "scenarioId": "29",
       "agentStatus": "ok",
-      "agentNote": "copy-3 + spell-1: пока плашка крутится, нет «правок нет», «Спасибо» и чужих аккордеонов; choice появляется только после орфографии. Текст плашки как в #14/#34.",
+      "agentNote": "copy-3 + spell-1: пока плашка крутится, нет «правок нет», «Спасибо» и чужих аккордеонов; choice появляется только после орфографии. Текст плашки как в #14/#34. Предусловие: орфография вкл; toggle в шапке после плашки. Предусловие: кнопка «Проверить орфографию» (не toggle, без памяти).",
       "checkedAt": null,
       "commit": null,
       "method": "engine-test",
@@ -301,7 +301,7 @@
     {
       "scenarioId": "34",
       "agentStatus": "ok",
-      "agentNote": "spell-1: Hunspell до остальных правил; при spellcheckInProgress в UI только плашка, один отчёт после",
+      "agentNote": "spell-1: Hunspell до остальных правил; при spellcheckInProgress в UI только плашка, один отчёт после Предусловие: орфография вкл. Предусловие: кнопка «Проверить орфографию» (не toggle, без памяти).",
       "checkedAt": null,
       "commit": null,
       "method": "engine-test",
@@ -346,7 +346,7 @@
     {
       "scenarioId": "39",
       "agentStatus": "fixed",
-      "agentNote": "spell-2a: в Figma нет ETag, поэтому повторный запуск в течение суток берёт gzip из clientStorage и не качает .dic. Сборка Hunspell в памяти на каждом запуске остаётся",
+      "agentNote": "spell-2a: в Figma нет ETag, поэтому повторный запуск в течение суток берёт gzip из clientStorage и не качает .dic. Сборка Hunspell в памяти на каждом запуске остаётся Предусловие: орфография вкл. Предусловие: кнопка «Проверить орфографию» (не toggle, без памяти).",
       "checkedAt": null,
       "commit": null,
       "method": "other",
@@ -355,7 +355,7 @@
     {
       "scenarioId": "40",
       "agentStatus": "fixed",
-      "agentNote": "spell-2 + spell-2b + 5c: ≤12 spell; sentence-cap снимаем, если на букву висит орфография без подсказки или раскладка",
+      "agentNote": "слой из одного «ghbdtn» больше не отбрасывается из-за отсутствия кириллицы; Figma/online по-прежнему не переводятся",
       "checkedAt": null,
       "commit": null,
       "method": "other",
@@ -373,7 +373,7 @@
     {
       "scenarioId": "42",
       "agentStatus": "ok-code",
-      "agentNote": "spec-1: textLayersDetailsOpen=false; formatTextLayersBlockHtml; блок прячется на spellcheckInProgress. В живом UI у имени слоя в карточке тоже есть счётчик — в ТЗ его там не рисуем",
+      "agentNote": "Таблица между последним отчётом и «Спасибо», не аккордеон. layerRowLabel: >25 символов → frameName. Прячется на spellcheckInProgress.",
       "checkedAt": null,
       "commit": null,
       "method": "code-review",
@@ -400,7 +400,7 @@
     {
       "scenarioId": "45",
       "agentStatus": "ok-code",
-      "agentNote": "leftover = state.cards после auto; notifyIfFixesStuck в autofix-pipeline",
+      "agentNote": "leftover после авто-отчёта; таблица слоёв между leftover и «Спасибо».",
       "checkedAt": null,
       "commit": null,
       "method": "code-review",
@@ -445,7 +445,7 @@
     {
       "scenarioId": "50",
       "agentStatus": "ok",
-      "agentNote": "tech-1 + remote-lists без yo-homographs; manual-qa-checklist-verify #50",
+      "agentNote": "tech-1 + remote-lists без yo-homographs; manual-qa-checklist-verify #50 Строки словаря в техблоке только при орфографии вкл. Предусловие: кнопка «Проверить орфографию» (не toggle, без памяти).",
       "checkedAt": null,
       "commit": null,
       "method": "engine-test",
@@ -454,7 +454,7 @@
     {
       "scenarioId": "51",
       "agentStatus": "ok-code",
-      "agentNote": "analytics: vite define __ANALYTICS_ENABLED__; build выкл, build:release вкл",
+      "agentNote": "spellcheck_requested на ui:enableSpellcheck; локальный build enabled=false, в events не пишется",
       "checkedAt": null,
       "commit": null,
       "method": "code-review",
@@ -495,6 +495,33 @@
       "commit": null,
       "method": "code-review",
       "environmentNote": "Canvas useCanvasState not readable from agent tools; portable path is Export session UI."
+    },
+    {
+      "scenarioId": "56",
+      "agentStatus": "fixed",
+      "agentNote": "«В выделенных слоях правок нет» скрывается, если есть confirm, choice, leftover или «Вы исправили». Кнопка орфографии по-прежнему после отчёта, не в шапке.",
+      "checkedAt": "2026-10-22",
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Session-only spellcheck; no persistence across plugin opens."
+    },
+    {
+      "scenarioId": "57",
+      "agentStatus": "fixed",
+      "agentNote": "Смешанный токен без слова в словаре — confirm с пустым полем: kjjклk’;kg и лctt не получают «лоокллэжлп» / «лсее». Известные yпишете и gдоказываем по-прежнему с подсказкой.",
+      "checkedAt": "2026-10-22",
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "vitest check-spelling + keyboard-layout; не ручная приёмка в Figma."
+    },
+    {
+      "scenarioId": "58",
+      "agentStatus": "ok-code",
+      "agentNote": "collectTextNodesFromSelection пропускает FRAME с visible=false и всё внутри, включая вложенный видимый фрейм. Прямое выделение такого текста тоже не считается.",
+      "checkedAt": null,
+      "commit": null,
+      "method": "code-review",
+      "environmentNote": "Юнит без Figma. Ручная приёмка на Onboarding 10 ещё нужна."
     }
   ]
 }

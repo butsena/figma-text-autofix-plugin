@@ -4,6 +4,7 @@ import {
   PLUGIN_UI_WIDTH,
 } from "../shared/plugin-ui-layout";
 import { sendToPlugin } from "./ui-plugin-bridge";
+import { restoreScrollTop, restoreScrollTopSoon } from "./ui-scroll";
 
 const PLUGIN_UI_MAX_HEIGHT_CAPPED = Math.min(
   window.screen && window.screen.availHeight ? window.screen.availHeight - 64 : PLUGIN_UI_MAX_HEIGHT,
@@ -44,6 +45,8 @@ export function schedulePluginResize(): void {
         width: PLUGIN_UI_WIDTH,
         height: targetHeight,
       });
+      restoreScrollTop();
+      restoreScrollTopSoon();
     });
   });
 }

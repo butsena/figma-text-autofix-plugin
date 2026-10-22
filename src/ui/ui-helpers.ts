@@ -46,7 +46,27 @@ export function detailsOpenAttr(isOpen: boolean): string {
   return isOpen ? " open" : "";
 }
 
-/** Заголовок текстового слоя в отчёте: имя + счётчик символов. */
+/** До этой длины в строке показываем сам текст. Дальше — имя фрейма. */
+export const LAYER_TEXT_LABEL_MAX = 25;
+
+export function layerRowLabel(text: string, frameName: string): string {
+  const frame = frameName.trim() || "Без имени";
+  if (text.length > LAYER_TEXT_LABEL_MAX) return frame;
+  const singleLine = text.replace(/\s+/g, " ").trim();
+  return singleLine || frame;
+}
+
+export function layerDisplayLabel(input: {
+  nodeName: string;
+  text?: string;
+  frameName?: string;
+}): string {
+  const frame = input.frameName?.trim() || input.nodeName.trim() || "Без имени";
+  if (input.text == null) return input.nodeName.trim() || frame;
+  return layerRowLabel(input.text, frame);
+}
+
+/** Заголовок текстового слоя в отчёте: подпись + счётчик символов. */
 export function formatLayerTitleHtml(
   nodeId: string,
   nodeName: string,
@@ -63,26 +83,28 @@ export function formatLayerTitleHtml(
 }
 
 export function formatTextLayersBlockHtml(
-  layers: Array<{ nodeId: string; nodeName: string; characterCount: number }>,
-  detailsOpen: boolean,
+  layers: Array<{
+    nodeId: string;
+    nodeName: string;
+    characterCount: number;
+    text?: string;
+    frameName?: string;
+  }>,
 ): string {
   if (!layers.length) return "";
   const rows = layers
-    .map(
-      (layer) =>
-        `<div class="textLayerRow">${formatLayerTitleHtml(layer.nodeId, layer.nodeName, layer.characterCount)}</div>`,
-    )
+    .map((layer) => {
+      const label = escapeHtml(
+        layerDisplayLabel({
+          nodeName: layer.nodeName,
+          text: layer.text,
+          frameName: layer.frameName,
+        }),
+      );
+      return `<div class="textLayerRow reportLayerTitle" data-node-id="${escapeHtml(layer.nodeId)}"><span class="textLayerLabel">${label}</span><span class="reportLayerMeta">${escapeHtml(formatCharacterCountLabel(layer.characterCount))}</span></div>`;
+    })
     .join("");
-  return `
-    <div class="textLayersBlock">
-      <details class="textLayersDetails"${detailsOpenAttr(detailsOpen)}>
-        <summary class="textLayersDetailsSummary">
-          <span class="textLayersDetailsTitle">Счётчик символов</span>
-        </summary>
-        <div class="textLayersDetailsBody">${rows}</div>
-      </details>
-    </div>
-  `;
+  return `<div class="textLayersTable">${rows}</div>`;
 }
 
 const SENTENCE_PERIOD_RULE_IDS: Record<string, true> = {

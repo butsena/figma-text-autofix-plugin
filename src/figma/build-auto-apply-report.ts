@@ -59,6 +59,7 @@ export function mergeAutoApplyReports(
     if (prev) {
       prev.fixes.push(...layer.fixes);
       if (layer.nodeName) prev.nodeName = layer.nodeName;
+      if (layer.frameName) prev.frameName = layer.frameName;
       prev.characterCount = layer.characterCount;
     } else {
       layerMap.set(layer.nodeId, { ...layer, fixes: [...layer.fixes] });
@@ -89,6 +90,7 @@ export function buildAutoApplyReportFromApplied(
     layers.push({
       nodeId,
       nodeName: card?.nodeName ?? "",
+      ...(card?.frameName ? { frameName: card.frameName } : {}),
       characterCount: countTextCharacters(applyTextFixes(sourceText, fixes)),
       fixes: fixes.map((f) => toAutoApplyFixLineFromEngine(nodeId, f, sourceText)),
     });
@@ -111,6 +113,7 @@ export function buildAutoApplyReportFromConfirmFix(
   nodeName: string,
   fix: TextFixDto,
   sourceText: string,
+  frameName?: string,
 ): AutoApplyReportDto {
   const textAfter =
     fix.before !== fix.after
@@ -127,6 +130,7 @@ export function buildAutoApplyReportFromConfirmFix(
       {
         nodeId,
         nodeName,
+        ...(frameName ? { frameName } : {}),
         characterCount: countTextCharacters(textAfter),
         fixes: [toAutoApplyFixLineFromDto(fix, sourceText)],
       },

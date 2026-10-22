@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { capitalizeLike, replacementFromSpellInput } from "./case";
+import { capitalizeLike, foldYoToYe, replacementFromSpellInput } from "./case";
 import { stripUtf8Bom } from "./text-normalize";
 
 describe("capitalizeLike", () => {
@@ -20,6 +20,15 @@ describe("capitalizeLike", () => {
   it("сохраняет ведущий пробел подсказки раскладки", () => {
     expect(replacementFromSpellInput(",elbnt", " будите", " будите")).toBe(" будите");
     expect(replacementFromSpellInput(",elbnt", "будите", "будите")).toBe("будите");
+  });
+});
+
+describe("foldYoToYe", () => {
+  it("меняет только ё и Ё", () => {
+    expect(foldYoToYe("ещё")).toBe("еще");
+    expect(foldYoToYe("Ёлка")).toBe("Елка");
+    expect(foldYoToYe("отчёт и счёт")).toBe("отчет и счет");
+    expect(foldYoToYe("дом")).toBe("дом");
   });
 });
 

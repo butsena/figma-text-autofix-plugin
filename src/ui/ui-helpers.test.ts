@@ -7,6 +7,7 @@ import {
   formatFixCategoryLabel,
   formatLayerTitleHtml,
   formatTextLayersBlockHtml,
+  layerRowLabel,
 } from "./ui-helpers";
 
 describe("formatFixCategoryLabel", () => {
@@ -95,19 +96,27 @@ describe("formatFixCategoryLabel", () => {
   });
 
   it("форматирует блок со всеми текстовыми слоями", () => {
-    const html = formatTextLayersBlockHtml(
-      [
-        { nodeId: "1:1", nodeName: "Заголовок", characterCount: 10 },
-        { nodeId: "1:2", nodeName: "Текст", characterCount: 25 },
-      ],
-      false,
-    );
-    expect(html).toContain("Счётчик символов");
-    expect(html).not.toContain("textLayersDetailsBrief");
-    expect(html).not.toContain("35 символов");
+    const longText = "Квартира свободна уже завтра утром";
+    const html = formatTextLayersBlockHtml([
+      { nodeId: "1:1", nodeName: "Заголовок", characterCount: 10, text: "Заголовок" },
+      {
+        nodeId: "1:2",
+        nodeName: "Текст",
+        characterCount: longText.length,
+        text: longText,
+        frameName: "Карточка объявления",
+      },
+    ]);
+    expect(html).toContain("textLayersTable");
+    expect(html).not.toContain("Счётчик символов");
+    expect(html).not.toContain("textLayersDetails");
     expect(html).toContain("Заголовок");
     expect(html).toContain("10 символов");
-    expect(html).not.toContain('details class="textLayersDetails" open');
+    expect(html).toContain("Карточка объявления");
+    expect(html).not.toContain(longText);
+    expect(layerRowLabel("напишите мне", "Фрейм")).toBe("напишите мне");
+    expect(layerRowLabel("а".repeat(25), "Фрейм")).toBe("а".repeat(25));
+    expect(layerRowLabel("а".repeat(26), "Фрейм")).toBe("Фрейм");
   });
 });
 

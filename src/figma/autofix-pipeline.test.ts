@@ -60,14 +60,18 @@ function installFigma(): void {
 }
 
 describe("runAutofixPipeline", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     order.length = 0;
     messages.length = 0;
     installFigma();
     vi.clearAllMocks();
+    const { resetSpellcheckPreferenceCacheForTests } = await import("../config/spellcheck-preference");
+    resetSpellcheckPreferenceCacheForTests();
   });
 
   it("сначала орфография, один отчёт, чужой UI не уходит раньше плашки", async () => {
+    const { enableSpellcheckForSession } = await import("../config/spellcheck-preference");
+    enableSpellcheckForSession();
     const { runAutofixPipeline } = await import("./autofix-pipeline");
     await runAutofixPipeline();
 
@@ -91,6 +95,8 @@ describe("runAutofixPipeline", () => {
   });
 
   it("если словарь орфографии упал, остальные правила всё равно уходят в UI", async () => {
+    const { enableSpellcheckForSession } = await import("../config/spellcheck-preference");
+    enableSpellcheckForSession();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { refreshSpellLexiconFromRemote } = await import("../lexicon/refresh-lexicon");
     vi.mocked(refreshSpellLexiconFromRemote).mockRejectedValueOnce(new Error("hunspell down"));
@@ -103,5 +109,16 @@ describe("runAutofixPipeline", () => {
     expect(order).toContain("ui:plugin:checkResult");
     expect(messages.at(-1)).toEqual({ type: "plugin:spellcheckStatus", active: false });
     warn.mockRestore();
+  });
+
+  it("по умолчанию не грузит Hunspell и не показывает плашку", async () => {
+    const { runAutofixPipeline } = await import("./autofix-pipeline");
+    await runAutofixPipeline();
+
+    expect(order).not.toContain("spell-lexicon");
+    expect(order).not.toContain("spell-ready");
+    expect(order).not.toContain("ui:plugin:spellcheckStatus:true");
+    expect(order).toContain("editorial-lexicon");
+    expect(order).toContain("ui:plugin:checkResult");
   });
 });

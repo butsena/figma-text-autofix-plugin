@@ -115,6 +115,20 @@ describe("analytics schema v1", () => {
     ).toBe(false);
   });
 
+  it("spellcheck_requested сериализуется пустым payload", () => {
+    const built = buildAnalyticsEnvelope({
+      event: "spellcheck_requested",
+      payload: {},
+      sessionId: "sess_abc12345",
+      pluginVersion: "0.18.0",
+      clientTime: "2026-10-21T12:00:00.000Z",
+    });
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    expect(built.envelope.event).toBe("spellcheck_requested");
+    expect(built.envelope.payload).toEqual({});
+  });
+
   it("мапит неизвестную категорию в other", () => {
     expect(mapRuleCategoryToAnalytics("cian_editorial")).toBe("cian_editorial");
     expect(mapRuleCategoryToAnalytics("weird_new")).toBe("other");

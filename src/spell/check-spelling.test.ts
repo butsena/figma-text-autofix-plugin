@@ -94,6 +94,38 @@ describe("checkSpellingFixes", () => {
     expect(layout?.message).toContain("английской раскладке");
   });
 
+  it("ловит слой, в котором только слово в английской раскладке", () => {
+    const fixes = checkSpellingFixes("ghbdtn");
+    expect(fixes.find((f) => f.before === "ghbdtn")).toMatchObject({
+      after: "привет",
+      ruleId: "orthography-keyboard-layout",
+    });
+    expect(
+      checkSpellingFixes("Figma online").filter((f) => f.ruleId === "orthography-keyboard-layout"),
+    ).toEqual([]);
+  });
+
+  it("ловит смешанную абракадабру без готовой подсказки и не режет её на обрывки", () => {
+    const fixes = checkSpellingFixes("Пункт kjjклk’;kg в списке");
+    expect(fixes.filter((f) => f.ruleId === "orthography-keyboard-layout")).toEqual([
+      expect.objectContaining({
+        before: "kjjклk’;kg",
+        after: "kjjклk’;kg",
+        applyPolicy: "confirm",
+      }),
+    ]);
+    expect(fixes.filter((f) => f.ruleId === "orthography-spellcheck")).toEqual([]);
+    const glued = checkSpellingFixes("Текст kjjклkkg конец");
+    expect(glued.find((f) => f.before === "kjjклkkg")?.after).toBe("kjjклkkg");
+    expect(glued.filter((f) => f.ruleId === "orthography-spellcheck")).toEqual([]);
+  });
+
+  it("ловит «лctt» в строке онбординга без подстановки «лсее»", () => {
+    const fixes = checkSpellingFixes("Ляля-тополя, дикая поляна — это песня лctt меня");
+    const layout = fixes.filter((f) => f.ruleId === "orthography-keyboard-layout");
+    expect(layout.map((f) => [f.before, f.after])).toEqual([["лctt", "лctt"]]);
+  });
+
   it("ловит латинский «мусор» без гласных в русском тексте", () => {
     const fixes = checkSpellingFixes("Пункт 2. kjjklk’;kg в списке");
     const layout = fixes.find((f) => f.before === "kjjklk’;kg");

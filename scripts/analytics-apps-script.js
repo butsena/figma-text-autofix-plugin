@@ -30,6 +30,7 @@ var EVENT_NAMES = {
   auto_fix_complete: true,
   manual_fix_complete: true,
   choice_resolved: true,
+  spellcheck_requested: true,
   plugin_error: true,
 };
 
@@ -137,6 +138,8 @@ function validatePayload_(event, payload) {
       return null;
     case "choice_resolved":
       if (payload.action !== "confirmed" && payload.action !== "skipped") return "payload.action";
+      return null;
+    case "spellcheck_requested":
       return null;
     case "plugin_error":
       if (typeof payload.stage !== "string" || !payload.stage) return "payload.stage";
@@ -265,6 +268,7 @@ function fillSummaryFormulas_(sheet) {
     "B17",
     '=SUM(ARRAYFORMULA(IF(events!F2:F="auto_fix_complete";IFERROR(VALUE(REGEXEXTRACT(events!G2:G;"""not_applied"":(\\d+)"));0);0)))',
   );
+  setDashFormula_(sheet, "B18", '=COUNTIF(events!F:F;"spellcheck_requested")');
 }
 
 function clearLegendBorders_(sheet) {
@@ -334,6 +338,7 @@ function setupDashboard() {
     [15, "Автоправки"],
     [16, "Ошибки"],
     [17, "Автоправки не сработали"],
+    [18, "Проверить орфографию"],
   ];
   for (var i = 0; i < summaryLabels.length; i++) {
     sheet.getRange(summaryLabels[i][0], 1).setValue(summaryLabels[i][1]);
@@ -347,6 +352,7 @@ function setupDashboard() {
   sheet
     .getRange("A20:H20")
     .setValues([["День", "Запуски", "Сканы", "Авто", "Ручн. испр.", "Ручн. skip", "Choice OK", "Ошибки"]]);
+  sheet.getRange("J20").setValue("Проверить орфографию");
 
   var dayOpen =
     '=SUMPRODUCT((events!F2:F="plugin_open")*(LEFT(events!A2:A;10)=TEXT({{DAY}};"yyyy-mm-dd")))';
@@ -362,6 +368,8 @@ function setupDashboard() {
     '=SUMPRODUCT((events!F2:F="choice_resolved")*(LEFT(events!A2:A;10)=TEXT({{DAY}};"yyyy-mm-dd"))*(ISNUMBER(SEARCH("""action"":""confirmed""";events!G2:G))))';
   var dayErr =
     '=SUMPRODUCT((events!F2:F="plugin_error")*(LEFT(events!A2:A;10)=TEXT({{DAY}};"yyyy-mm-dd")))';
+  var daySpell =
+    '=SUMPRODUCT((events!F2:F="spellcheck_requested")*(LEFT(events!A2:A;10)=TEXT({{DAY}};"yyyy-mm-dd")))';
 
   for (var d = 0; d <= 6; d++) {
     var row = 21 + d;
@@ -379,6 +387,7 @@ function setupDashboard() {
     setDashFormula_(sheet, "F" + row, dayManSkip, rep);
     setDashFormula_(sheet, "G" + row, dayChoice, rep);
     setDashFormula_(sheet, "H" + row, dayErr, rep);
+    setDashFormula_(sheet, "J" + row, daySpell, rep);
   }
 
   sheet.getRange("A29").setValue("По месяцам (ключ yyyy-mm, не пользователи)");

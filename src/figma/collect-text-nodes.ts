@@ -1,8 +1,23 @@
-/** Собрать все TextNode внутри выделенных слоёв (без дублей по id). */
+function isHiddenFrame(node: BaseNode): boolean {
+  return node.type === "FRAME" && node.visible === false;
+}
+
+/** Текст внутри фрейма с выключенным глазом на холсте не виден, даже если сам слой не скрыт. */
+function isInsideHiddenFrame(node: BaseNode): boolean {
+  let current: BaseNode | null = node;
+  while (current) {
+    if (isHiddenFrame(current)) return true;
+    current = current.parent;
+  }
+  return false;
+}
+
+/** Собрать все TextNode внутри выделенных слоёв (без дублей по id). Скрытые фреймы не считаем. */
 export function collectTextNodesFromSelection(selection: readonly SceneNode[]): TextNode[] {
   const all: TextNode[] = [];
 
   function walk(node: SceneNode) {
+    if (isInsideHiddenFrame(node)) return;
     if (node.type === "TEXT") {
       all.push(node);
       return;

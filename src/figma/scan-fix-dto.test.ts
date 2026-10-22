@@ -4,6 +4,7 @@ import {
   buildCardForNode,
   buildCheckSummary,
   buildCheckedTextLayers,
+  containingFrameName,
   partitionFixesByPolicy,
   toFixDto,
 } from "./scan-fix-dto";
@@ -61,15 +62,35 @@ describe("buildCheckSummary", () => {
 });
 
 describe("buildCheckedTextLayers", () => {
-  it("считает символы по слоям", () => {
+  it("считает символы и запоминает текст с именем фрейма", () => {
+    const frame = { type: "FRAME", name: "Карточка", parent: null };
+    const longText = "а".repeat(26);
     const nodes = [
-      { id: "1:1", name: "A", characters: "привет" },
-      { id: "1:2", name: "B", characters: "мир" },
+      { id: "1:1", name: "A", characters: "привет", parent: frame },
+      {
+        id: "1:2",
+        name: "B",
+        characters: longText,
+        parent: { type: "PAGE", name: "Page 1", parent: null },
+      },
     ] as unknown as TextNode[];
     expect(buildCheckedTextLayers(nodes)).toEqual([
-      { nodeId: "1:1", nodeName: "A", characterCount: 6 },
-      { nodeId: "1:2", nodeName: "B", characterCount: 3 },
+      {
+        nodeId: "1:1",
+        nodeName: "A",
+        characterCount: 6,
+        text: "привет",
+        frameName: "Карточка",
+      },
+      {
+        nodeId: "1:2",
+        nodeName: "B",
+        characterCount: 26,
+        text: longText,
+        frameName: "B",
+      },
     ]);
+    expect(containingFrameName(nodes[0]!)).toBe("Карточка");
   });
 });
 

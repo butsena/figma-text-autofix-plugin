@@ -18,6 +18,7 @@ import {
   trackAutoFixComplete,
   trackManualFixFromDto,
   trackPluginError,
+  trackSpellcheckRequested,
 } from "./pipeline-events";
 
 describe("pipeline-events", () => {
@@ -117,6 +118,11 @@ describe("pipeline-events", () => {
       categories: { cian_branding: 1, typography: 1 },
     });
     expect(JSON.stringify(trackAnalytics.mock.calls[0])).not.toMatch(/nodeName|sourceText|before/);
+  });
+
+  it("spellcheck_requested — пустой payload", () => {
+    trackSpellcheckRequested();
+    expect(trackAnalytics).toHaveBeenCalledWith("spellcheck_requested", {});
   });
 
   it("plugin_error не шлёт message/stack", () => {

@@ -75,11 +75,34 @@ export function partitionFixesByPolicy(fixes: TextFix[]): {
   return { auto, confirm, choice };
 }
 
+const TEXT_CONTAINER_TYPES = new Set(["FRAME", "COMPONENT", "COMPONENT_SET", "INSTANCE"]);
+
+type NamedParent = {
+  type: string;
+  name: string;
+  parent?: NamedParent | null;
+};
+
+/** Имя ближайшего фрейма или компонента. Если текста лежит прямо на странице — имя самого слоя. */
+export function containingFrameName(node: { name: string; parent?: NamedParent | null }): string {
+  let current = node.parent ?? null;
+  while (current) {
+    if (TEXT_CONTAINER_TYPES.has(current.type)) {
+      const name = current.name.trim();
+      if (name) return name;
+    }
+    current = current.parent ?? null;
+  }
+  return node.name.trim() || "Без имени";
+}
+
 export function buildCheckedTextLayers(textNodes: TextNode[]): CheckedTextLayerDto[] {
   return textNodes.map((node) => ({
     nodeId: node.id,
     nodeName: node.name,
     characterCount: countTextCharacters(node.characters),
+    text: node.characters,
+    frameName: containingFrameName(node),
   }));
 }
 
@@ -110,6 +133,7 @@ export function buildCardForNode(
     originalText,
     previewText,
     characterCount: countTextCharacters(originalText),
+    frameName: containingFrameName(node),
     fixes: toFixDto(node.id, fixes),
   };
 }

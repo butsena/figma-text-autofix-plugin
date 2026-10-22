@@ -11,6 +11,7 @@ import { getAutofixRules } from "../rules/autofix-rules";
 import { applyAllRules, fixesFor } from "./helpers";
 import { formatCharacterCountLabel, countTextCharacters } from "../shared/text-char-count";
 import { formatTextLayersBlockHtml } from "../ui/ui-helpers";
+import { collectTextNodesFromSelection } from "../figma/collect-text-nodes";
 import { renderOrthographySpellFixRow } from "../ui/ui-render-fix-row";
 import { TITLE_CASE_PAIR_CHOICE_RULE_ID } from "../rules/typography/title-case-pair-choice-rules";
 import {
@@ -19,6 +20,8 @@ import {
   renderLeftoverCardsHtml,
   renderManualReportHtml,
   renderReportHtml,
+  renderResultHeaderHtml,
+  renderSpellcheckActionHtml,
   renderTechDetailsHtml,
   renderTextLayersHtml,
 } from "../ui/ui-render-sections";
@@ -100,6 +103,9 @@ describe("manual QA checklist verify", () => {
   it("#4 title-case exceptions", () => {
     expect(fixesFor("Ждите нас", allRules()).filter((f) => f.ruleId === TITLE_CASE_PAIR_CHOICE_RULE_ID)).toHaveLength(0);
     expect(fixesFor("На Циан сегодня", allRules()).filter((f) => f.ruleId === TITLE_CASE_PAIR_CHOICE_RULE_ID)).toHaveLength(0);
+    expect(fixesFor("На Циане сегодня", allRules()).filter((f) => f.ruleId === TITLE_CASE_PAIR_CHOICE_RULE_ID)).toHaveLength(0);
+    expect(fixesFor("для Циана", allRules()).filter((f) => f.ruleId === TITLE_CASE_PAIR_CHOICE_RULE_ID)).toHaveLength(0);
+    expect(fixesFor("с Цианом", allRules()).filter((f) => f.ruleId === TITLE_CASE_PAIR_CHOICE_RULE_ID)).toHaveLength(0);
     expect(
       fixesFor("партнёр «Яндекс Фокус» подтвердил", allRules()).filter(
         (f) => f.ruleId === TITLE_CASE_PAIR_CHOICE_RULE_ID,
@@ -503,6 +509,13 @@ describe("manual QA checklist verify", () => {
     expect(checkSpellingFixes("Наберите ghbdtn в чат").find((f) => f.before === "ghbdtn")?.after).toBe(
       "привет",
     );
+    expect(checkSpellingFixes("ghbdtn").find((f) => f.before === "ghbdtn")?.after).toBe("привет");
+    expect(
+      checkSpellingFixes("Пункт kjjклk’;kg в списке").find((f) => f.before === "kjjклk’;kg"),
+    ).toMatchObject({ after: "kjjклk’;kg", ruleId: "orthography-keyboard-layout" });
+    expect(
+      checkSpellingFixes("песня лctt меня").find((f) => f.before === "лctt"),
+    ).toMatchObject({ after: "лctt", ruleId: "orthography-keyboard-layout" });
     const mixed = checkSpellingFixes("Заполните ваш yпишете или yпишите, псина!");
     expect(mixed.filter((f) => f.before === "yпишете" || f.before === "yпишите").map((f) => f.after)).toEqual([
       "пишете",
@@ -539,25 +552,46 @@ describe("manual QA checklist verify", () => {
   }, 60_000);
 
 
-  it("#42 аккордеон «Счётчик символов» свёрнут и прячется на плашке", () => {
+  it("#42 таблица слоёв под шапкой: короткий текст или имя фрейма", () => {
     expect(countTextCharacters("Ок")).toBe(2);
     expect(formatCharacterCountLabel(2)).toBe("2 символа");
     expect(countTextCharacters("напишите мне")).toBe(12);
     expect(formatCharacterCountLabel(12)).toBe("12 символов");
-    const html = formatTextLayersBlockHtml(
-      [
-        { nodeId: "1:1", nodeName: "Ок", characterCount: 2 },
-        { nodeId: "1:2", nodeName: "напишите мне", characterCount: 12 },
-      ],
-      false,
-    );
-    expect(html).toContain("Счётчик символов");
+    const longText = "этот текст длиннее двадцати пяти символов";
+    const html = formatTextLayersBlockHtml([
+      { nodeId: "1:1", nodeName: "Ок", characterCount: 2, text: "Ок", frameName: "Шапка" },
+      {
+        nodeId: "1:2",
+        nodeName: "напишите мне",
+        characterCount: 12,
+        text: "напишите мне",
+        frameName: "Форма",
+      },
+      {
+        nodeId: "1:3",
+        nodeName: "Текст",
+        characterCount: longText.length,
+        text: longText,
+        frameName: "Карточка",
+      },
+    ]);
+    expect(html).toContain("textLayersTable");
+    expect(html).not.toContain("Счётчик символов");
+    expect(html).not.toContain("textLayersDetails");
+    expect(html).toContain("Ок");
     expect(html).toContain("2 символа");
+    expect(html).toContain("напишите мне");
     expect(html).toContain("12 символов");
-    expect(html).not.toContain('details class="textLayersDetails" open');
+    expect(html).toContain("Карточка");
+    expect(html).not.toContain(longText);
     state.spellcheckInProgress = false;
-    state.checkedTextLayers = [{ nodeId: "1:1", nodeName: "Ок", characterCount: 2 }];
-    expect(renderTextLayersHtml()).toContain("Счётчик символов");
+    state.checkedTextLayers = [
+      { nodeId: "1:1", nodeName: "Ок", characterCount: 2, text: "Ок", frameName: "Шапка" },
+    ];
+    const rendered = renderTextLayersHtml();
+    expect(rendered).toContain("textLayersTable");
+    expect(rendered).toContain("Ок");
+    expect(rendered.indexOf("textLayersTable")).toBeGreaterThan(-1);
     expect(renderTechDetailsHtml()).toContain("Техническая хрень");
     applySpellcheckStatus(true);
     expect(renderTextLayersHtml()).toBe("");
@@ -566,8 +600,34 @@ describe("manual QA checklist verify", () => {
     state.checkedTextLayers = [];
   });
 
+  it("#58 текст скрытого фрейма не попадает в проверку", () => {
+    const visible = { id: "vis", type: "TEXT", characters: "Покупайте наших псов", parent: null };
+    const hiddenText = { id: "hid", type: "TEXT", characters: "12%", parent: null };
+    const hidden = {
+      id: "hidden",
+      type: "FRAME",
+      visible: false,
+      parent: null,
+      children: [hiddenText],
+    };
+    hiddenText.parent = hidden;
+    const root = {
+      id: "root",
+      type: "FRAME",
+      visible: true,
+      parent: null,
+      children: [visible, hidden],
+    };
+    visible.parent = root;
+    hidden.parent = root;
+
+    const ids = collectTextNodesFromSelection([root] as unknown as SceneNode[]).map((n) => n.id);
+    expect(ids).toEqual(["vis"]);
+  });
+
   it("#50 tech-1: пять строк статусов по макету, без сырого errorMessage", () => {
     state.spellcheckInProgress = false;
+    state.spellcheckEnabled = true;
     state.lexiconLoad = {
       replacements: { ok: true, count: 124, fromRemote: true },
       boundaryExceptions: { ok: true, count: 38, fromRemote: true },
@@ -613,6 +673,7 @@ describe("manual QA checklist verify", () => {
     expect(state.lexiconLoad.ambiguousFormChoices.errorMessage).toBe("Failed to fetch");
     expect(state.lexiconLoad.spellWhitelist.errorMessage).toBe("wl-offline");
     state.lexiconLoad = null;
+    state.spellcheckEnabled = false;
   });
 
   it("#46 пустое поле орфографии дизейблит Исправить", () => {
@@ -673,5 +734,47 @@ describe("manual QA checklist verify", () => {
   it("#18 auto typography sample", () => {
     const { fixes } = checkTextForAutofixes("да - нет", allRules());
     expect(fixes.some((f) => f.applyPolicy === "auto")).toBe(true);
+  });
+
+  it("#56 кнопка орфографии после отчёта: дефолт есть, после вкл пропадает", () => {
+    state.spellcheckInProgress = false;
+    state.spellcheckEnabled = false;
+    state.summary = { checkedLayers: 1, foundFixes: 0, confirmFixes: 0, choiceFixes: 0 };
+    state.lastReport = null;
+    state.lastManualReport = null;
+    state.confirmCards = [];
+    state.choiceCards = [];
+    expect(renderResultHeaderHtml()).not.toContain("spellcheckBtn");
+    expect(renderSpellcheckActionHtml()).toContain('id="spellcheckBtn"');
+    expect(renderSpellcheckActionHtml()).toContain("Проверить орфографию");
+
+    state.spellcheckEnabled = true;
+    expect(renderSpellcheckActionHtml()).toBe("");
+
+    state.lastReport = {
+      summary: { checkedLayers: 1, appliedFixCount: 0, changedLayerCount: 0 },
+      layers: [],
+    };
+    state.confirmCards = [];
+    state.choiceCards = [];
+    state.cards = [];
+    expect(renderReportHtml()).toContain("В выделенных слоях правок нет");
+
+    state.confirmCards = [
+      {
+        nodeId: "1:2",
+        nodeName: "Кватира",
+        originalText: "Кватира",
+        previewText: "Кватира",
+        characterCount: 7,
+        fixes: [],
+      },
+    ];
+    expect(renderReportHtml()).not.toContain("В выделенных слоях правок нет");
+
+    state.summary = null;
+    state.spellcheckEnabled = false;
+    state.confirmCards = [];
+    state.lastReport = null;
   });
 });

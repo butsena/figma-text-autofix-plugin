@@ -10,7 +10,12 @@ import {
 } from "./ui-event-actions";
 import { sendToPlugin } from "./ui-plugin-bridge";
 import { schedulePluginResize } from "./ui-resize";
-import { syncAccordionStateFromElement } from "./ui-state";
+import { render } from "./ui-render";
+import {
+  applySpellcheckPreference,
+  state,
+  syncAccordionStateFromElement,
+} from "./ui-state";
 
 function handleAppClick(event: Event): void {
   const target = event.target;
@@ -69,6 +74,21 @@ function handleAppClick(event: Event): void {
     const parts = parseKey(choiceConfirm.getAttribute("data-choice-confirm"), 2);
     if (!parts) return;
     confirmChoiceSelection(parts[0], parts[1]);
+    return;
+  }
+
+  const spellcheckBtn = target.closest("#spellcheckBtn");
+  if (spellcheckBtn) {
+    applySpellcheckPreference(true);
+    // Пока пайплайн перезапускается — без старых карточек.
+    state.summary = null;
+    state.confirmCards = [];
+    state.choiceCards = [];
+    state.cards = [];
+    state.lastReport = null;
+    state.lastManualReport = null;
+    render();
+    sendToPlugin({ type: "ui:enableSpellcheck" });
     return;
   }
 

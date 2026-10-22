@@ -3,12 +3,7 @@ export type {
   ChoiceResolution,
 } from "./choice-resolution-core";
 
-export {
-  beginPluginRun,
-  getCurrentPluginRunId,
-  MAX_SPELL_SKIP_COUNT,
-  resetPluginRunIdForTests,
-} from "./choice-skip-session";
+export { beginPluginRun, MAX_SPELL_SKIP_COUNT } from "./choice-skip-session";
 
 export {
   buildChoiceAnchors,

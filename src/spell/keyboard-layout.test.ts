@@ -42,6 +42,17 @@ describe("mixed script", () => {
     expect(suggestMixedScriptRu("yпишите", (w) => known.has(w.toLowerCase()))).toBe("пишите");
   });
 
+  it("держит ; и ’ внутри смешанного слова и не переводит абракадабру", () => {
+    expect(extractMixedScriptTokens("Пункт kjjклk’;kg в списке")).toEqual([
+      { word: "kjjклk’;kg", from: 6, to: 16 },
+    ]);
+    expect(extractMixedScriptTokens("слово, ещё")).toEqual([]);
+    expect(extractMixedScriptTokens("ghbdtn,привет")).toEqual([]);
+    const unknown = () => false;
+    expect(suggestMixedScriptRu("kjjклk’;kg", unknown)).toBeNull();
+    expect(suggestMixedScriptRu("kjjклkkg", unknown)).toBeNull();
+  });
+
   it("латиница внутри слова конвертируется по раскладке, если получается известное слово", () => {
     expect(convertLatinCharsToRuLayout("cиан")).toBe("сиан");
     expect(suggestMixedScriptRu("cиан", (w) => w.toLowerCase() === "сиан")).toBe("сиан");

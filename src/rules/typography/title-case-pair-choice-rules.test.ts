@@ -38,8 +38,11 @@ describe("buildTitleCasePairChoiceRules", () => {
     expect(fixesFor("Ждите нас", rules)).toHaveLength(0);
   });
 
-  it("не срабатывает на брендах из исключений", () => {
+  it("не срабатывает на брендах из исключений и их словоформах", () => {
     expect(fixesFor("На Циан сегодня", rules)).toHaveLength(0);
+    expect(fixesFor("На Циане сегодня", rules)).toHaveLength(0);
+    expect(fixesFor("для Циана", rules)).toHaveLength(0);
+    expect(fixesFor("с Цианом", rules)).toHaveLength(0);
   });
 
   it("не срабатывает внутри кавычек", () => {

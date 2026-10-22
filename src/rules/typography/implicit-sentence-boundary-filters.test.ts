@@ -53,6 +53,12 @@ describe("isValidImplicitSentenceBoundary", () => {
     expect(isValidImplicitSentenceBoundary(text, index)).toBe(false);
   });
 
+  it("пропускает словоформу фразы из списка исключений", () => {
+    const text = "подключите сервис Яндексе для уведомлений";
+    const index = boundaryIndex(text);
+    expect(isValidImplicitSentenceBoundary(text, index)).toBe(false);
+  });
+
   it("пропускает русское сокращение из списка исключений", () => {
     const text = "подключите модуль ИИ для поиска";
     const index = boundaryIndex(text);

@@ -26,4 +26,24 @@ describe("matchesBoundaryExceptionAt", () => {
   it("не путает префикс с полной фразой", () => {
     expect(matchesBoundaryExceptionAt("Knightliness", 0, phrases)).toBe(false);
   });
+
+  it("принимает падеж кириллической фразы", () => {
+    const brands = ["Циан", "Яндекс", "Сбер", "Сбербанк"];
+    expect(matchesBoundaryExceptionAt("На Циане сегодня", 3, brands)).toBe(true);
+    expect(matchesBoundaryExceptionAt("для Циана", 4, brands)).toBe(true);
+    expect(matchesBoundaryExceptionAt("с Цианом", 2, brands)).toBe(true);
+    expect(matchesBoundaryExceptionAt("о Яндексе", 2, brands)).toBe(true);
+    expect(matchesBoundaryExceptionAt("со Сбербанком", 3, brands)).toBe(true);
+  });
+
+  it("не принимает хвост длиннее окончания", () => {
+    const brands = ["Циан", "Сбер", "ИИ"];
+    expect(matchesBoundaryExceptionAt("цианид", 0, brands)).toBe(false);
+    expect(matchesBoundaryExceptionAt("сбережения", 0, brands)).toBe(false);
+    expect(matchesBoundaryExceptionAt("ИИшка", 0, brands)).toBe(false);
+  });
+
+  it("не склоняет латинскую фразу", () => {
+    expect(matchesBoundaryExceptionAt("Knight Frankа", 0, phrases)).toBe(false);
+  });
 });

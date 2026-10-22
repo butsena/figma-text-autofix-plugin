@@ -1,4 +1,5 @@
-import { trackPluginError } from "../analytics/pipeline-events";
+import { trackPluginError, trackSpellcheckRequested } from "../analytics/pipeline-events";
+import { enableSpellcheckForSession } from "../config/spellcheck-preference";
 import { applyManualFixAndRefresh, skipManualFixAndRefresh } from "./apply-manual-fix";
 import { runAutofixPipeline } from "./autofix-pipeline";
 import { focusLayerById } from "./focus-layer";
@@ -43,6 +44,11 @@ export async function handleUiMessage(
         trackPluginError("manual_apply", e);
         throw e;
       }
+      break;
+    }
+    case "ui:enableSpellcheck": {
+      if (enableSpellcheckForSession()) trackSpellcheckRequested();
+      await runAutofixPipeline();
       break;
     }
     case "ui:resize": {

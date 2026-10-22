@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-12",
+  "spreadsheetId": "1g3RsDa4Wx7utOprVxp3f0SV1nmCIgbHXjL3CcSyRda8",
+  "mapping": {
+    "dict-1": "E-011",
+    "analytics-1": "E-012",
+    "remote-lists-1": "E-013",
+    "ne-1": "T-077",
+    "spell-2c": "T-078",
+    "spell-3": "T-079",
+    "dict-1a": "T-080",
+    "dict-1b": "T-081",
+    "dict-1c": "T-082",
+    "dict-1d": "T-083",
+    "dict-1e": "T-084",
+    "tech-1": "T-085",
+    "layout-2": "T-086",
+    "copy-4": "T-087",
+    "analytics-1a": "T-088",
+    "analytics-1b": "T-089",
+    "analytics-1c": "T-090",
+    "analytics-1d": "T-091",
+    "analytics-1e": "T-092",
+    "analytics-1f": "T-093",
+    "remote-lists-1a": "T-094",
+    "remote-lists-1b": "T-095",
+    "remote-lists-1c": "T-096",
+    "remote-lists-1d": "T-097",
+    "lexicon-1": "T-098",
+    "lexicon-2": "T-099",
+    "tov-1": "T-100",
+    "tov-2": "T-101",
+    "tov-3": "T-102",
+    "tov-4": "T-103",
+    "tov-5": "T-104",
+    "tov-6": "T-105",
+    "pipeline-backlog-ui": [
+      "T-044",
+      "T-045"
+    ],
+    "pipeline-qa": "T-046"
+  }
+}

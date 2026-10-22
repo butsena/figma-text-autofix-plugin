@@ -3,6 +3,7 @@ import {
   buildAutoApplyReportFromConfirmFix,
   mergeAutoApplyReports,
 } from "./build-auto-apply-report";
+import { containingFrameName } from "./scan-fix-dto";
 import { runAutofixAutoPasses } from "./autofix-pipeline";
 import { applyTextFixesToTextNode } from "./apply-fixes";
 import { recordChoiceResolutionOnNode, recordSpellSkipOnNode } from "./choice-resolution";
@@ -65,7 +66,13 @@ export async function applyManualFixAndRefresh(
     setLastManualApplyReport(
       mergeAutoApplyReports(
         getLastManualApplyReport(),
-        buildAutoApplyReportFromConfirmFix(node.id, node.name, fix, sourceText),
+        buildAutoApplyReportFromConfirmFix(
+          node.id,
+          node.name,
+          fix,
+          sourceText,
+          containingFrameName(node),
+        ),
       ),
     );
   }

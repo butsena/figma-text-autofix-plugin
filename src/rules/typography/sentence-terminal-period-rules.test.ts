@@ -3,6 +3,8 @@ import { applyAllRules, applyProposedFixes, fixesFor } from "../../test/helpers"
 import { getAutofixRules } from "../autofix-rules";
 import {
   ensureSentenceTerminalPeriods,
+  isListItemLine,
+  isListOnlyLayer,
   normalizeSpaceAfterSentenceEnd,
   splitIntoSentenceFragments,
 } from "./sentence-split";

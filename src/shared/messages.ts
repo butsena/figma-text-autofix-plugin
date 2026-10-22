@@ -37,6 +37,8 @@ export type TextNodeCardDto = {
   previewText: string;
   /** Длина текста слоя на момент сканирования. */
   characterCount: number;
+  /** Ближайший фрейм (или компонент), в котором лежит текст. */
+  frameName?: string;
   fixes: TextFixDto[];
 };
 
@@ -45,6 +47,10 @@ export type CheckedTextLayerDto = {
   nodeId: string;
   nodeName: string;
   characterCount: number;
+  /** Текст слоя: в таблице показываем его, пока он не длиннее 25 символов. */
+  text?: string;
+  /** Ближайший фрейм (или компонент), в котором лежит текст. */
+  frameName?: string;
 };
 
 /** Одна применённая замена (для отчёта после автоприменения). */
@@ -66,6 +72,8 @@ export type AutoApplyLayerReportDto = {
   nodeName: string;
   /** Длина текста слоя после применённых правок в этом отчёте. */
   characterCount: number;
+  /** Ближайший фрейм (или компонент), в котором лежит текст. */
+  frameName?: string;
   fixes: AutoApplyFixLineDto[];
 };
 
@@ -135,11 +143,17 @@ export type UiToPluginMessage =
       type: "ui:resize";
       width: number;
       height: number;
-    };
+    }
+  | { type: "ui:enableSpellcheck" };
 
 export type PluginToUiMessage =
   | { type: "plugin:checkResult"; result: CheckResultDto }
   | { type: "plugin:error"; message: string }
-  | { type: "plugin:config"; lexiconLoad?: LexiconLoadStatusDto | null }
+  | {
+      type: "plugin:config";
+      lexiconLoad?: LexiconLoadStatusDto | null;
+      /** Пользовательский преф орфографии (для toggle). */
+      spellcheckEnabled?: boolean;
+    }
   | { type: "plugin:spellcheckStatus"; active: boolean };
 
