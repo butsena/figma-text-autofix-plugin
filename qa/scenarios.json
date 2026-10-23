@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-22",
+  "updatedAt": "2026-10-23",
   "sourceCanvas": "/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx",
   "scenarios": [
     {
@@ -693,12 +693,13 @@
       "id": "55",
       "n": 55,
       "area": "UI / отчёты",
-      "caseText": "QA-канвас: Export session → сохранить JSON в qa/manual-sessions/ → Import session (чистая/другая сессия)",
-      "expected": "schemaVersion=1; до сохранения файла unsavedSession=true; импорт восстанавливает комментарии и скриншоты; done без бага → processed_legacy (не Passed); агентский столбец не меняется от импорта",
+      "caseText": "QA-канвас: импортировать сессию со всеми 5 статусами, датой, commit, history, комментарием и вложениями (relativePath без dataUrl и со встроенным dataUrl) → Export session → Import session в чистом Canvas; отдельно not_run поверх passed",
+      "expected": "Поля каждой записи, все 5 статусов и вложения сохраняются без потерь; not_run полностью заменяет переданную запись, отсутствующие ID сохраняются; неверный импорт не меняет состояние. Старый done=true → processed_legacy только при миграции; passed — только после явного действия человека. До сохранения JSON unsavedSession=true; агентский столбец не меняется. Вложение без dataUrl видно путём без предпросмотра.",
       "priority": "быстрый",
-      "definitionVersion": 1,
+      "definitionVersion": 2,
       "taskIds": [
-        "T-046"
+        "T-046",
+        "T-139"
       ],
       "prNumbers": [
         16

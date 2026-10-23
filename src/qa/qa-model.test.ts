@@ -27,7 +27,7 @@ describe("qa portable model (T-046)", () => {
     assertStableIdsUnique(scenariosFile.scenarios);
     expect(nextScenarioNumber(scenariosFile.scenarios)).toBe(59);
     const portable = scenariosFile.scenarios.find((s) => s.id === "55");
-    expect(portable?.taskIds).toEqual(["T-046"]);
+    expect(portable?.taskIds).toEqual(["T-046", "T-139"]);
     expect(portable?.legacyTaskIds).toContain("pipeline-qa");
   });
 
