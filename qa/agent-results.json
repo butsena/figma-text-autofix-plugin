@@ -490,9 +490,9 @@
     {
       "scenarioId": "55",
       "agentStatus": "fixed",
-      "agentNote": "T-139: канонические ручные записи; общий адаптер встроен в Canvas. Целевые тесты проверяют все статусы, дату/commit/history/attachments, not_run и реальные обработчики import/export. Ручной прогон в IDE не выполнен.",
+      "agentNote": "T-139 / PR#17: канонические ручные записи; общий адаптер встроен в Canvas. Полный Vitest: 112 файлов / 705 тестов; сборка и строгая проверка типов QA source пройдены. Проверяются все статусы, дата/commit/history/attachments, not_run, реальные обработчики import/export и передача текущих failed. Ручной прогон в IDE не выполнен.",
       "checkedAt": "2026-10-23",
-      "commit": null,
+      "commit": "42c6dfac6846210d697e66bbece098249e3bbb1a",
       "method": "vitest-adapter-and-canvas-handlers",
       "environmentNote": "Canvas handlers executed with in-memory useCanvasState; live Cursor Canvas / screenshots require manual retest. No manual passed assigned."
     },
