@@ -489,12 +489,12 @@
     },
     {
       "scenarioId": "55",
-      "agentStatus": "ok-code",
-      "agentNote": "T-046 / PR#16: модель + round-trip в src/qa/qa-model.test.ts; живой Export/Import — ручная проверка в Cursor Canvas. История done-v6 не объявлена мигрированной до Export session пользователя.",
-      "checkedAt": "2026-10-15",
-      "commit": null,
-      "method": "code-review",
-      "environmentNote": "Canvas useCanvasState not readable from agent tools; portable path is Export session UI."
+      "agentStatus": "fixed",
+      "agentNote": "T-139 / PR#17: канонические ручные записи; общий адаптер встроен в Canvas. Полный Vitest: 112 файлов / 705 тестов; сборка и строгая проверка типов QA source пройдены. Проверяются все статусы, дата/commit/history/attachments, not_run, реальные обработчики import/export и передача текущих failed. Ручной прогон в IDE не выполнен.",
+      "checkedAt": "2026-10-23",
+      "commit": "42c6dfac6846210d697e66bbece098249e3bbb1a",
+      "method": "vitest-adapter-and-canvas-handlers",
+      "environmentNote": "Canvas handlers executed with in-memory useCanvasState; live Cursor Canvas / screenshots require manual retest. No manual passed assigned."
     },
     {
       "scenarioId": "56",

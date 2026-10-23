@@ -1,11 +1,7 @@
 /** Portable QA model (T-046). Kept in src/ so vitest can import without extra config. */
 
-export type QaManualStatus =
-  | "passed"
-  | "failed"
-  | "not_run"
-  | "needs_retest"
-  | "processed_legacy";
+import type { QaManualSession, QaManualStatus } from "./qa-session-adapter";
+export type { QaManualAttachment, QaManualEntry, QaManualSession, QaManualStatus } from "./qa-session-adapter";
 
 export type QaAgentStatus = "ok" | "ok-code" | "fixed" | "partial";
 
@@ -30,23 +26,6 @@ export type QaAgentResult = {
   commit: string | null;
   method: string;
   environmentNote?: string;
-};
-
-export type QaManualEntry = {
-  status: QaManualStatus;
-  comment?: string;
-  attachments?: Array<{ id: string; relativePath: string; dataUrl?: string }>;
-  checkedAt?: string | null;
-  checkedCommit?: string | null;
-  history?: unknown[];
-};
-
-export type QaManualSession = {
-  schemaVersion: 1;
-  exportedAt: string;
-  canvasPath?: string;
-  unsavedSession?: boolean;
-  entries: Record<string, QaManualEntry>;
 };
 
 export type QaScenariosFile = {

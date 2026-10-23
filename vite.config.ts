@@ -16,7 +16,7 @@ export default defineConfig({
     __ANALYTICS_ENABLED__: JSON.stringify(analyticsEnabled),
   },
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.test.mjs"],
   },
   build: {
     target: "es2017",

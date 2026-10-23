@@ -1,4 +1,4 @@
-# QA workflow (T-046)
+# QA workflow (T-046, T-139)
 
 Google Таблица — единственный бэклог задач. QA хранится отдельно в репозитории плагина (`qa/`), не как копия очереди.
 
@@ -18,27 +18,32 @@ Google Таблица — единственный бэклог задач. QA �
 Live Canvas UI (IDE):  
 `/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx`  
 
-Canvas **не может** импортировать файлы репозитория. `npm run qa:sync-canvas` обновляет ITEMS в `qa/canvas/` и зеркалит файл в live path.
+Canvas **не может** импортировать файлы репозитория. `npm run qa:sync-canvas` обновляет ITEMS и встраивает тот же адаптер `src/qa/qa-session-adapter.ts`, который проверяется тестами, в `qa/canvas/`, затем зеркалит файл в live path. Не править генерируемый блок адаптера вручную. В изолированном checkout используйте `--repo-only`, чтобы не перезаписать live Canvas и чужие локальные изменения.
 
 ## Команды
 
 ```bash
 npm run qa:extract-canvas   # TSX ITEMS → qa/scenarios.json (+ agent-results)
-npm run qa:sync-canvas      # qa/*.json → ITEMS в canvas TSX
-npm run test -- src/qa/qa-model.test.ts
+npm run qa:sync-canvas      # qa/*.json + адаптер → Canvas и live path
+npm run qa:sync-canvas -- --repo-only # только repo Canvas, без записи в IDE
+npm run test -- src/qa/qa-model.test.ts src/qa/qa-session-adapter.test.mjs
 ```
 
-## Ручная сессия (done / комментарии / скриншоты)
+`src/qa/qa-session-adapter.test.mjs` содержит проверки адаптера и Node-harness реальных обработчиков Canvas; Vitest обнаруживает также `src/**/*.test.mjs`. Node API теста не попадают в TypeScript-проверку плагина. Сам адаптер остаётся в `qa-session-adapter.ts` и проверяется отдельно как TypeScript.
 
-Состояние `useCanvasState` (`done-v6`, `broken-v1`, `shots-v1`) живёт только в IDE.
+## Ручная сессия
 
-1. Открой QA-канвас.
-2. **Export session** — скопируй JSON.
-3. Сохрани как `qa/manual-sessions/YYYY-MM-DD.json` (агент или человек).
-4. На другом окружении: **Import session** — вставь JSON.
+Канонические записи `QaManualEntry` живут в `useCanvasState("manual-entries-v1")`: статус, комментарий, вложения, дата, commit и история. Старые ключи `done-v6`, `broken-v1`, `shots-v1` читаются только для миграции записей, которых ещё нет в каноническом состоянии. `done=true` без бага становится `processed_legacy`, **не** `passed`; существующая запись, включая `not_run`, всегда имеет приоритет над legacy.
 
-Пока файл в `qa/manual-sessions/` не сохранён, экспорт помечен `unsavedSession: true`.  
-`done=true` из старого канваса при импорте → статус `processed_legacy`, **не** `passed`.
+1. Открой QA-канвас. Выбирай один из пяти ручных статусов: `not_run`, `passed`, `failed`, `needs_retest`, `processed_legacy`. `passed` ставит только человек после проверки в Figma. Комментарий и скриншот не определяют статус автоматически.
+2. При необходимости укажи SHA проверяемой сборки. Поле применяется при следующем выборе статуса; без него прежний `checkedCommit` сохраняется. Изменение статуса сохраняет прежнюю запись в `history` и ставит дату действия. Комментарии и вложения сохраняются.
+3. **Export session** — скопируй JSON. Экспорт сохраняет все записи и их поля; меняет служебные `exportedAt`, `canvasPath`, `unsavedSession`.
+4. Сохрани как `qa/manual-sessions/YYYY-MM-DD.json` (агент или человек). Только после записи файла пометь сохранённый JSON `unsavedSession: false`. Экспорт из живого Canvas всегда `true`: Canvas не проверяет факт записи на диск.
+5. На другом окружении: **Import session** — вставь JSON. Каждая переданная запись заменяется целиком, поэтому `not_run` сбрасывает предыдущий результат; отсутствующие ID остаются. Сначала проверяется весь импорт: ошибка не меняет ни одной записи. Определения сценариев и агентские результаты не импортируются.
+
+Вложения сохраняют `id`, `relativePath`, необязательные `mimeType` и `dataUrl`. При наличии `dataUrl` виден предпросмотр. Без него Canvas показывает относительный путь, не удаляя вложение. Для переноса самой картинки без `dataUrl` файл под `qa/attachments/` нужно сохранить и перенести отдельно: один путь не создаёт файл. Новые скриншоты экспортируются со встроенным `dataUrl` и остаются переносимыми вместе с JSON.
+
+Сценарий #55 / T-139 проверяет реальные обработчики Canvas: все статусы, метаданные, историю, оба вида вложений, `not_run` поверх результата и отклонение неверного импорта. Старый JSON-only round-trip не считается проверкой этих обработчиков. Живой Canvas и работа вложений в IDE требуют ручной проверки; агент не ставит её `passed`.
 
 ## Обновление после правки поведения
 

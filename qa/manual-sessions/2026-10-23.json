@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "exportedAt": "2026-10-23T12:47:12.000Z",
+  "unsavedSession": false,
+  "entries": {
+    "55": {
+      "status": "needs_retest",
+      "comment": "T-139: изменён реальный import/export Canvas. Нужен ручной прогон сценария #55 в IDE: все статусы, history/date/commit, оба вида вложений и not_run поверх предыдущего результата. Целевые автопроверки не заменяют ручную приёмку.",
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    }
+  }
+}

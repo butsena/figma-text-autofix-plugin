@@ -1,7 +1,6 @@
 import {
   Button,
   Callout,
-  Checkbox,
   H1,
   H2,
   IconButton,
@@ -29,7 +28,9 @@ const TRANSFER_BUGS_PROMPT = `Перенеси баги из этого QA-ка�
 Лист «Бэклог». Пиши через авторизованный Google Sheets MCP (read_range / write_range / append_rows). Не обновляй backlog.yaml и не трогай improvements-backlog.canvas.tsx.
 
 Правила:
-- Бери только строки с комментарием и/или скриншотом (фильтр «Есть баги»).
+- Бери только строки с текущим ручным статусом failed (фильтр «Есть баги»), даже если комментарий и вложения пока отсутствуют.
+- Комментарий и вложения — подтверждения и контекст, а не признак актуального бага. Не переноси passed, needs_retest, not_run или processed_legacy как новый баг без явного failed либо отдельного решения человека о переносе конкретного случая.
+- Если у failed недостаточно деталей для постановки, уточни наблюдаемый результат и шаги у человека; не выдумывай факт, причину или доказательства.
 - Сформулируй понятный title; не копируй сырой комментарий в название.
 - Укажи номер QA (id/n), ожидание vs факт, исходную задачу/PR если известны, ссылки на вложения.
 - ID задачи — по правилам таблицы (T-…), не qa-N.
@@ -738,11 +739,11 @@ const ITEMS: Item[] = [
     id: "55",
     n: 55,
     area: "UI / отчёты",
-    caseText: "QA-канвас: Export session → сохранить JSON в qa/manual-sessions/ → Import session (чистая/другая сессия)",
-    expected: "schemaVersion=1; до сохранения файла unsavedSession=true; импорт восстанавливает комментарии и скриншоты; done без бага → processed_legacy (не Passed); агентский столбец не меняется от импорта",
+    caseText: "QA-канвас: импортировать сессию со всеми 5 статусами, датой, commit, history, комментарием и вложениями (relativePath без dataUrl и со встроенным dataUrl) → Export session → Import session в чистом Canvas; отдельно not_run поверх passed",
+    expected: "Поля каждой записи, все 5 статусов и вложения сохраняются без потерь; not_run полностью заменяет переданную запись, отсутствующие ID сохраняются; неверный импорт не меняет состояние. Старый done=true → processed_legacy только при миграции; passed — только после явного действия человека. До сохранения JSON unsavedSession=true; агентский столбец не меняется. Вложение без dataUrl видно путём без предпросмотра.",
     priority: "быстрый",
-    agentStatus: "ok-code",
-    agentNote: "T-046 / PR#16: модель + round-trip в src/qa/qa-model.test.ts; живой Export/Import — ручная проверка в Cursor Canvas. История done-v6 не объявлена мигрированной до Export session пользователя.",
+    agentStatus: "fixed",
+    agentNote: "T-139 / PR#17: канонические ручные записи; общий адаптер встроен в Canvas. Полный Vitest: 112 файлов / 705 тестов; сборка и строгая проверка типов QA source пройдены. Проверяются все статусы, дата/commit/history/attachments, not_run, реальные обработчики import/export и передача текущих failed. Ручной прогон в IDE не выполнен.",
   },
   {
     id: "56",
@@ -793,7 +794,7 @@ const FILTERS: { id: Filter; label: string }[] = [
 
 const QUICK_IDS = ["1", "3", "5", "6", "7", "8", "9", "12", "13", "14", "15", "16", "17", "22", "23", "24", "25", "26", "27", "28", "29", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "46", "48"];
 
-type Shot = { id: string; src: string };
+type Shot = { id: string; src?: string; relativePath: string; mimeType?: string };
 
 type ClipboardLike = {
   items?: ArrayLike<{ type: string; getAsFile: () => File | null }>;
@@ -848,7 +849,12 @@ function ScreenshotField({
           if (prev.some((shot) => shot.src === src)) return prev;
           return [
             ...prev,
-            { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, src },
+            {
+              id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+              src,
+              relativePath: `qa/attachments/${fieldId}-${Date.now()}.${file.type.split("/")[1]?.replace("jpeg", "jpg") || "png"}`,
+              mimeType: file.type,
+            },
           ];
         });
       };
@@ -955,7 +961,7 @@ function ScreenshotField({
       />
       {shots.map((shot) => (
         <Stack key={shot.id} gap={4}>
-          <img
+          {shot.src ? <img
             src={shot.src}
             alt="Скриншот кейса"
             style={{
@@ -966,7 +972,7 @@ function ScreenshotField({
               height: "auto",
               objectFit: "contain",
             }}
-          />
+          /> : <Text size="small" tone="secondary">{shot.relativePath} (без предпросмотра)</Text>}
           <IconButton
             title="Удалить скриншот"
             size="sm"
@@ -980,6 +986,151 @@ function ScreenshotField({
   );
 }
 
+// BEGIN GENERATED QA SESSION ADAPTER
+/** Standalone source embedded into the Canvas by qa:sync-canvas. No runtime imports. */
+type QaManualStatus =
+  | "passed"
+  | "failed"
+  | "not_run"
+  | "needs_retest"
+  | "processed_legacy";
+
+type QaManualAttachment = {
+  id: string;
+  relativePath: string;
+  mimeType?: string;
+  dataUrl?: string;
+};
+
+type QaManualEntry = {
+  status: QaManualStatus;
+  comment?: string;
+  attachments?: QaManualAttachment[];
+  checkedAt?: string | null;
+  checkedCommit?: string | null;
+  history?: unknown[];
+};
+
+type QaManualSession = {
+  schemaVersion: 1;
+  exportedAt: string;
+  canvasPath?: string;
+  unsavedSession?: boolean;
+  entries: Record<string, QaManualEntry>;
+};
+
+const QA_MANUAL_STATUSES: readonly QaManualStatus[] = [
+  "passed", "failed", "not_run", "needs_retest", "processed_legacy",
+];
+
+function isQaRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function cloneQaValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+/** Validate all entries before applying any of them. Keep optional metadata intact. */
+function parseQaManualSession(raw: string): QaManualSession {
+  const parsed: unknown = JSON.parse(raw);
+  if (!isQaRecord(parsed) || parsed.schemaVersion !== 1 ||
+      typeof parsed.exportedAt !== "string" || !isQaRecord(parsed.entries)) {
+    throw new Error("Нужны schemaVersion=1, exportedAt и объект entries.");
+  }
+  for (const [id, entry] of Object.entries(parsed.entries)) {
+    if (!isQaRecord(entry) ||
+        !QA_MANUAL_STATUSES.includes(entry.status as QaManualStatus)) {
+      throw new Error(`Сценарий ${id}: неизвестный статус.`);
+    }
+    if ((entry.comment !== undefined && typeof entry.comment !== "string") ||
+        (entry.checkedAt !== undefined && entry.checkedAt !== null && typeof entry.checkedAt !== "string") ||
+        (entry.checkedCommit !== undefined && entry.checkedCommit !== null && typeof entry.checkedCommit !== "string") ||
+        (entry.history !== undefined && (!Array.isArray(entry.history) || !entry.history.every(isQaRecord)))) {
+      throw new Error(`Сценарий ${id}: неверные метаданные проверки.`);
+    }
+    if (entry.attachments !== undefined && (!Array.isArray(entry.attachments) ||
+        !entry.attachments.every((a) => isQaRecord(a) && typeof a.id === "string" &&
+          typeof a.relativePath === "string" &&
+          (a.dataUrl === undefined || typeof a.dataUrl === "string") &&
+          (a.mimeType === undefined || typeof a.mimeType === "string")))) {
+      throw new Error(`Сценарий ${id}: неверные вложения.`);
+    }
+  }
+  return parsed as QaManualSession;
+}
+
+/** Incoming entries replace those IDs, including not_run; omitted IDs stay intact. */
+function importQaManualSession(
+  current: Record<string, QaManualEntry>,
+  session: QaManualSession,
+): Record<string, QaManualEntry> {
+  return cloneQaValue({ ...current, ...session.entries });
+}
+
+function exportQaManualSession(
+  entries: Record<string, QaManualEntry>,
+  exportedAt: string,
+  canvasPath?: string,
+): QaManualSession {
+  return cloneQaValue({
+    schemaVersion: 1 as const,
+    exportedAt,
+    ...(canvasPath ? { canvasPath } : {}),
+    unsavedSession: true,
+    entries,
+  });
+}
+
+/** Existing canonical entries win. Legacy maps never manufacture a manual passed. */
+function migrateLegacyQaEntries(
+  entries: Record<string, QaManualEntry>,
+  done: Record<string, boolean>,
+  comments: Record<string, string>,
+  shots: Record<string, Array<{ id: string; src: string }>>,
+): Record<string, QaManualEntry> {
+  const next = { ...entries };
+  const ids = new Set([...Object.keys(done), ...Object.keys(comments), ...Object.keys(shots)]);
+  for (const id of ids) {
+    if (Object.prototype.hasOwnProperty.call(next, id)) continue;
+    const comment = comments[id] ?? "";
+    const attachments = (shots[id] ?? []).map((shot) => ({
+      id: shot.id,
+      relativePath: `qa/attachments/${id}-${shot.id}.png`,
+      dataUrl: shot.src,
+    }));
+    next[id] = {
+      status: comment.trim() || attachments.length ? "failed" : done[id] ? "processed_legacy" : "not_run",
+      comment,
+      attachments,
+      checkedAt: null,
+      checkedCommit: null,
+      history: [],
+    };
+  }
+  return next;
+}
+
+/** Called only by an explicit status action in the Canvas. */
+function setQaManualStatus(
+  previous: QaManualEntry | undefined,
+  status: QaManualStatus,
+  checkedAt: string,
+  checkedCommit?: string | null,
+): QaManualEntry {
+  const current = previous ?? { status: "not_run" as const };
+  if (current.status === status) return current;
+  const { history = [], ...snapshot } = current;
+  return {
+    ...current,
+    status,
+    checkedAt,
+    checkedCommit: checkedCommit === undefined ? current.checkedCommit ?? null : checkedCommit,
+    history: previous ? [...history, { ...snapshot, archivedAt: checkedAt }] : history,
+  };
+}
+// END GENERATED QA SESSION ADAPTER
+
 const AGENT_STATUS_LABEL: Record<AgentStatus, string> = {
   ok: "OK · тест",
   "ok-code": "OK · код",
@@ -990,13 +1141,20 @@ const AGENT_STATUS_LABEL: Record<AgentStatus, string> = {
 export default function ManualQaChecklist() {
   const theme = useHostTheme();
   const dispatch = useCanvasAction();
-  const [done, setDone] = useCanvasState<Record<string, boolean>>("done-v6", {});
-  const [broken, setBroken] = useCanvasState<Record<string, string>>("broken-v1", {});
-  const [commentEditingId, setCommentEditingId] = useCanvasState<string>(
-    "comment-editing-v1",
-    "",
-  );
-  const [shots, setShots] = useCanvasState<Record<string, Shot[]>>("shots-v1", {});
+  // Read old keys for one-way migration; canonical entries always win afterwards.
+  const [legacyDone] = useCanvasState<Record<string, boolean>>("done-v6", {});
+  const [legacyBroken] = useCanvasState<Record<string, string>>("broken-v1", {});
+  const [legacyShots] = useCanvasState<Record<string, Array<{ id: string; src: string }>>>("shots-v1", {});
+  const [storedEntries, setStoredEntries] = useCanvasState<Record<string, QaManualEntry>>("manual-entries-v1", {});
+  const entries = migrateLegacyQaEntries(storedEntries, legacyDone, legacyBroken, legacyShots);
+  const [checkedCommit, setCheckedCommit] = useCanvasState<string>("manual-checked-commit-v1", "");
+  const entryFor = (id: string): QaManualEntry => entries[id] ?? { status: "not_run" };
+  const updateEntry = (id: string, update: (entry: QaManualEntry) => QaManualEntry) => {
+    setStoredEntries((prev) => {
+      const next = migrateLegacyQaEntries(prev, legacyDone, legacyBroken, legacyShots);
+      return { ...next, [id]: update(next[id] ?? { status: "not_run" }) };
+    });
+  };
   const [armedShot, setArmedShot] = useCanvasState<string>("shot-armed-v1", "");
   const [filter, setFilter] = useCanvasState<Filter>("filter-v6", "all");
   const [sessionPanel, setSessionPanel] = useCanvasState<"hidden" | "export" | "import">(
@@ -1006,12 +1164,9 @@ export default function ManualQaChecklist() {
   const [importText, setImportText] = useCanvasState<string>("session-import-v1", "");
   const [sessionMessage, setSessionMessage] = useCanvasState<string>("session-msg-v1", "");
 
-  const hasCommittedComment = (id: string) =>
-    commentEditingId !== id && (broken[id] ?? "").trim().length > 0;
-  const hasShot = (id: string) => (shots[id] ?? []).length > 0;
-  const hasBugs = (id: string) => hasCommittedComment(id) || hasShot(id);
-  const isProcessed = (id: string) => !!done[id] || hasBugs(id);
-  const needsAction = (id: string) => !done[id] && !hasShot(id) && !hasCommittedComment(id);
+  const hasBugs = (id: string) => entryFor(id).status === "failed";
+  const isProcessed = (id: string) => ["passed", "failed", "processed_legacy"].includes(entryFor(id).status);
+  const needsAction = (id: string) => ["not_run", "needs_retest"].includes(entryFor(id).status);
 
   const doneCount = ITEMS.filter((i) => isProcessed(i.id)).length;
   const priorityItems = ITEMS.filter((i) => i.priority === "быстрый");
@@ -1020,114 +1175,41 @@ export default function ManualQaChecklist() {
     (i) => i.agentStatus === "ok" || i.agentStatus === "ok-code" || i.agentStatus === "fixed",
   ).length;
   const agentFixed = ITEMS.filter((i) => i.agentStatus === "fixed").length;
-  const brokenCount = ITEMS.filter((i) => hasCommittedComment(i.id)).length;
-  const shotCount = ITEMS.filter((i) => (shots[i.id] ?? []).length > 0).length;
+  const brokenCount = ITEMS.filter((i) => hasBugs(i.id)).length;
+  const shotCount = ITEMS.filter((i) => (entryFor(i.id).attachments ?? []).length > 0).length;
 
   const visible = ITEMS.filter((item) => {
-    const checked = !!done[item.id];
     if (filter === "all") return true;
     if (filter === "проверено") return isProcessed(item.id);
     if (filter === "обработать") return needsAction(item.id);
     if (filter === "баги") return hasBugs(item.id);
-    if (checked) return false;
+    if (isProcessed(item.id)) return false;
     if (filter === "быстрый") return item.priority === "быстрый";
     return item.area === filter;
   });
 
-  const toggle = (id: string, checked: boolean) => {
-    setDone((prev) => ({ ...prev, [id]: checked }));
+  const setStatus = (id: string, status: QaManualStatus) => {
+    updateEntry(id, (entry) => setQaManualStatus(entry, status, new Date().toISOString(), checkedCommit.trim() || undefined));
   };
 
-  const setBrokenNote = (id: string, value: string) => {
-    setBroken((prev) => ({ ...prev, [id]: value }));
-  };
-
-  const buildSessionExport = () => {
-    const entries: Record<
-      string,
-      {
-        status: "processed_legacy" | "failed" | "not_run";
-        comment: string;
-        attachments: Array<{ id: string; relativePath: string; dataUrl: string }>;
-        checkedAt: null;
-        checkedCommit: null;
-        history: [];
-      }
-    > = {};
-    for (const item of ITEMS) {
-      const comment = (broken[item.id] ?? "").trim();
-      const itemShots = shots[item.id] ?? [];
-      const markedDone = !!done[item.id];
-      if (!markedDone && !comment && itemShots.length === 0) continue;
-      let status: "processed_legacy" | "failed" | "not_run" = "not_run";
-      if (comment || itemShots.length > 0) status = "failed";
-      else if (markedDone) status = "processed_legacy";
-      entries[item.id] = {
-        status,
-        comment,
-        attachments: itemShots.map((s) => ({
-          id: s.id,
-          relativePath: `qa/attachments/${item.id}-${s.id}.png`,
-          dataUrl: s.src,
-        })),
-        checkedAt: null,
-        checkedCommit: null,
-        history: [],
-      };
-    }
-    return {
-      schemaVersion: 1 as const,
-      exportedAt: new Date().toISOString(),
-      canvasPath:
-        "/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx",
-      unsavedSession: true,
-      entries,
-    };
-  };
+  const buildSessionExport = () => exportQaManualSession(
+    entries,
+    new Date().toISOString(),
+    "/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx",
+  );
 
   const applySessionImport = (raw: string) => {
     try {
-      const parsed = JSON.parse(raw) as {
-        schemaVersion?: number;
-        entries?: Record<
-          string,
-          {
-            status?: string;
-            comment?: string;
-            attachments?: Array<{ id: string; dataUrl?: string }>;
-          }
-        >;
-      };
-      if (parsed.schemaVersion !== 1 || !parsed.entries) {
-        setSessionMessage("Импорт отклонён: нужен schemaVersion=1 и поле entries.");
-        return;
-      }
-      const nextDone: Record<string, boolean> = { ...done };
-      const nextBroken: Record<string, string> = { ...broken };
-      const nextShots: Record<string, Shot[]> = { ...shots };
-      for (const [id, entry] of Object.entries(parsed.entries)) {
-        if (entry.status === "processed_legacy" || entry.status === "passed") {
-          nextDone[id] = true;
-        }
-        if (entry.status === "failed" || entry.status === "needs_retest") {
-          nextDone[id] = true;
-        }
-        if (typeof entry.comment === "string") nextBroken[id] = entry.comment;
-        if (Array.isArray(entry.attachments)) {
-          nextShots[id] = entry.attachments
-            .filter((a) => typeof a.dataUrl === "string" && a.dataUrl.length > 0)
-            .map((a) => ({ id: a.id || `${Date.now()}`, src: a.dataUrl as string }));
-        }
-      }
-      setDone(nextDone);
-      setBroken(nextBroken);
-      setShots(nextShots);
+      const parsed = parseQaManualSession(raw);
+      setStoredEntries((prev) => importQaManualSession(
+        migrateLegacyQaEntries(prev, legacyDone, legacyBroken, legacyShots), parsed,
+      ));
       setSessionMessage(
-        `Импорт применён (${Object.keys(parsed.entries).length} записей). Это локальная сессия Canvas, пока JSON не сохранён в qa/manual-sessions/.`,
+        `Импорт применён (${Object.keys(parsed.entries).length} записей). Статусы, история и вложения сохранены; отсутствующие сценарии не изменены. До сохранения JSON это локальная сессия Canvas.`,
       );
       setSessionPanel("hidden");
-    } catch {
-      setSessionMessage("Импорт отклонён: невалидный JSON.");
+    } catch (error) {
+      setSessionMessage(`Импорт отклонён: ${error instanceof Error ? error.message : "невалидный JSON"}`);
     }
   };
 
@@ -1138,39 +1220,40 @@ export default function ManualQaChecklist() {
   };
 
   const rows = visible.map((item) => [
-    <Checkbox
-      checked={!!done[item.id]}
-      onChange={(c) => toggle(item.id, c)}
-      label={String(item.n)}
-    />,
-    <div
-      onFocus={() => setCommentEditingId(item.id)}
-      onBlur={() => setCommentEditingId((cur) => (cur === item.id ? "" : cur))}
-    >
+    <Stack gap={4}>
+      <Text size="small">{item.n}</Text>
+      <select
+        aria-label={`Статус сценария ${item.n}`}
+        value={entryFor(item.id).status}
+        onChange={(event: { target: HTMLSelectElement }) => setStatus(item.id, event.target.value as QaManualStatus)}
+      >
+        <option value="not_run">Не проверено</option>
+        <option value="passed">Пройдено вручную</option>
+        <option value="failed">Не работает</option>
+        <option value="needs_retest">Перепроверить</option>
+        <option value="processed_legacy">Обработано ранее</option>
+      </select>
+      {entryFor(item.id).checkedAt ? <Text size="small" tone="secondary">{entryFor(item.id).checkedAt}</Text> : null}
+      {entryFor(item.id).checkedCommit ? <Text size="small" tone="secondary">{entryFor(item.id).checkedCommit}</Text> : null}
+    </Stack>,
     <TextArea
-      value={broken[item.id] ?? ""}
-        onChange={(value) => {
-          setCommentEditingId(item.id);
-          setBrokenNote(item.id, value);
-        }}
-      placeholder="Что сломалось…"
+      value={entryFor(item.id).comment ?? ""}
+      onChange={(comment) => updateEntry(item.id, (entry) => ({ ...entry, comment }))}
+      placeholder="Комментарий к проверке…"
       rows={2}
-      style={{
-        minWidth: 220,
-        width: "100%",
-        whiteSpace: "pre-wrap",
-        overflowWrap: "break-word",
-      }}
-      />
-    </div>,
+      style={{ minWidth: 220, width: "100%", whiteSpace: "pre-wrap", overflowWrap: "break-word" }}
+    />,
     <ScreenshotField
       fieldId={item.id}
       armed={armedShot === item.id}
       onArm={setArmedShot}
-      shots={shots[item.id] ?? []}
-      onChange={(updater) =>
-        setShots((prev) => ({ ...prev, [item.id]: updater(prev[item.id] ?? []) }))
-      }
+      shots={(entryFor(item.id).attachments ?? []).map((a) => ({ ...a, src: a.dataUrl }))}
+      onChange={(updater) => updateEntry(item.id, (entry) => ({
+        ...entry,
+        attachments: updater((entry.attachments ?? []).map((a) => ({ ...a, src: a.dataUrl }))).map(
+          ({ src, ...attachment }) => ({ ...attachment, ...(src ? { dataUrl: src } : {}) }),
+        ),
+      }))}
     />,
     <Text as="span" size="small" weight="medium" style={{ display: "block", minWidth: 120, whiteSpace: "nowrap" }}>
       {item.area}
@@ -1211,7 +1294,7 @@ export default function ManualQaChecklist() {
   ]);
 
   const rowTone = visible.map((item) =>
-    done[item.id] ? ("success" as const) : undefined,
+    entryFor(item.id).status === "passed" ? ("success" as const) : undefined,
   );
 
   return (
@@ -1222,7 +1305,8 @@ export default function ManualQaChecklist() {
           Колонка «Агент» — итог автопроверки по коду/тестам (не ручная приёмка). Определения
           сценариев версионируются в qa/scenarios.json; ручные отметки — в локальном состоянии
           Canvas до Export session → qa/manual-sessions/. Скриншот: клик по полю, затем Cmd+V /
-          Ctrl+V.
+          Ctrl+V. Статус «Пройдено вручную» выбирайте только после проверки в Figma;
+          комментарий и скриншот сами по себе не меняют статус.
         </Text>
       </Stack>
 
@@ -1258,6 +1342,13 @@ export default function ManualQaChecklist() {
       </Row>
 
       <Stack gap={10}>
+        <Text size="small" tone="secondary">Коммит проверяемой сборки (необязательно; применяется при следующем выборе статуса)</Text>
+        <input
+          aria-label="Коммит проверяемой сборки"
+          value={checkedCommit}
+          onChange={(event: { target: HTMLInputElement }) => setCheckedCommit(event.target.value)}
+          placeholder="SHA из проверяемой сборки"
+        />
         <H2>Фильтр</H2>
         <Row gap={8} wrap>
           {FILTERS.map((f) => (
@@ -1270,7 +1361,7 @@ export default function ManualQaChecklist() {
           <Spacer />
           <Button
             variant="primary"
-            disabled={brokenCount + shotCount === 0}
+            disabled={brokenCount === 0}
             onClick={() =>
               dispatch({
                 type: "newComposerChat",
@@ -1298,11 +1389,6 @@ export default function ManualQaChecklist() {
           >
             Import session
           </Button>
-          {ITEMS.some((i) => done[i.id]) ? (
-            <Pill onClick={() => setDone({})} title="Сбросить все отметки">
-              Сбросить отметки
-            </Pill>
-          ) : null}
         </Row>
         {sessionPanel === "export" ? (
           <Stack gap={8}>
@@ -1334,12 +1420,12 @@ export default function ManualQaChecklist() {
           <Stack gap={8}>
             <Text size="small" tone="secondary">
               Вставьте JSON сессии (`processed_legacy` ≠ Passed). Данные применятся к локальному
-              Canvas; определения сценариев не меняются.
+              Canvas: переданные записи заменяются целиком, отсутствующие остаются. Определения сценариев не меняются.
             </Text>
             <TextArea
               value={importText}
               onChange={setImportText}
-              placeholder='{"schemaVersion":1,"entries":{...}}'
+              placeholder='{"schemaVersion":1,"exportedAt":"…","entries":{...}}'
               rows={10}
               style={{ width: "100%", fontFamily: "ui-monospace, monospace", fontSize: 11 }}
             />
@@ -1358,7 +1444,7 @@ export default function ManualQaChecklist() {
       <Stack gap={8}>
         <H2>Чеклист</H2>
         <Table
-          headers={["#", "Что не работает", "Скриншоты", "Область", "Кейс", "Ожидание", "Приоритет", "Агент"]}
+          headers={["# / ручной статус", "Комментарий", "Скриншоты", "Область", "Кейс", "Ожидание", "Приоритет", "Агент"]}
           columnAlign={["left", "left", "left", "left", "left", "left", "left", "left"]}
           rows={rows}
           rowTone={rowTone}

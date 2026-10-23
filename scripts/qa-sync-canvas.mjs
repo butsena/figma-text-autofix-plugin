@@ -57,17 +57,35 @@ const body = items
   })
   .join(",\n");
 
+const ADAPTER_START = "// BEGIN GENERATED QA SESSION ADAPTER";
+const ADAPTER_END = "// END GENERATED QA SESSION ADAPTER";
+const adapter = fs.readFileSync(path.join(ROOT, "src/qa/qa-session-adapter.ts"), "utf8")
+  .replace(/^export /gm, "");
+const adapterBlock = `${ADAPTER_START}\n${adapter.trimEnd()}\n${ADAPTER_END}`;
+let canvas = fs.readFileSync(REPO_CANVAS, "utf8");
+if (canvas.includes(ADAPTER_START)) {
+  const start = canvas.indexOf(ADAPTER_START);
+  const endMarker = canvas.indexOf(ADAPTER_END, start);
+  if (endMarker < 0) throw new Error("QA adapter end marker not found");
+  const end = endMarker + ADAPTER_END.length;
+  canvas = canvas.slice(0, start) + adapterBlock + canvas.slice(end);
+} else {
+  canvas = canvas.replace("const AGENT_STATUS_LABEL:", `${adapterBlock}\n\nconst AGENT_STATUS_LABEL:`);
+}
+fs.writeFileSync(REPO_CANVAS, canvas);
 const changed = writeItems(REPO_CANVAS, body);
 console.log(
   `[qa-sync-canvas] ${changed ? "wrote" : "unchanged"} ${items.length} ITEMS → ${REPO_CANVAS}`,
 );
 
-try {
-  fs.mkdirSync(path.dirname(LIVE_CANVAS), { recursive: true });
-  fs.copyFileSync(REPO_CANVAS, LIVE_CANVAS);
-  console.log(`[qa-sync-canvas] mirrored → ${LIVE_CANVAS}`);
-} catch (err) {
-  console.warn(
-    `[qa-sync-canvas] live canvas mirror skipped (${err.code || err.message}). Repo copy is authoritative; copy manually if needed.`,
-  );
+if (!process.argv.includes("--repo-only")) {
+  try {
+    fs.mkdirSync(path.dirname(LIVE_CANVAS), { recursive: true });
+    fs.copyFileSync(REPO_CANVAS, LIVE_CANVAS);
+    console.log(`[qa-sync-canvas] mirrored → ${LIVE_CANVAS}`);
+  } catch (err) {
+    console.warn(
+      `[qa-sync-canvas] live canvas mirror skipped (${err.code || err.message}). Repo copy is authoritative; copy manually if needed.`,
+    );
+  }
 }
