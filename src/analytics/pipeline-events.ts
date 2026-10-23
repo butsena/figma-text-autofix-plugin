@@ -44,6 +44,10 @@ export function trackAutoFixComplete(
   });
 }
 
+/**
+ * `applied` вызывать только после подтверждённого результата.
+ * Choice становится `choice_resolved`, а не вторым `manual_fix_complete`.
+ */
 export function trackManualFixFromDto(fix: TextFixDto, action: "applied" | "skipped"): void {
   if (isChoicePolicy(fix.rule.applyPolicy)) {
     trackAnalytics("choice_resolved", {

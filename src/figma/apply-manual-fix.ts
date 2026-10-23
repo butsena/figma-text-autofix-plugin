@@ -1,4 +1,5 @@
 import { trackManualFixFromDto } from "../analytics/pipeline-events";
+import { isChoicePolicy } from "../core/apply-policy";
 import {
   buildAutoApplyReportFromConfirmFix,
   mergeAutoApplyReports,
@@ -6,7 +7,12 @@ import {
 import { containingFrameName } from "./scan-fix-dto";
 import { runAutofixAutoPasses } from "./autofix-pipeline";
 import { applyTextFixesToTextNode } from "./apply-fixes";
-import { recordChoiceResolutionOnNode, recordSpellSkipOnNode } from "./choice-resolution";
+import {
+  readChoiceResolutions,
+  recordChoiceResolutionOnNode,
+  recordSpellSkipOnNode,
+} from "./choice-resolution";
+import { classifyManualApplySuccess, hasSavedChoiceDecision } from "./manual-apply-success";
 import {
   getLastAutoApplyReport,
   getLastManualApplyReport,
@@ -42,18 +48,37 @@ export async function applyManualFixAndRefresh(
   const node = await figma.getNodeByIdAsync(nodeId);
   if (!node || node.type !== "TEXT") return;
 
-  trackManualFixFromDto(fix, "applied");
   const sourceText = node.characters;
   const persistResolution = isPersistedManualResolution(fix);
   const textChanges = fix.before !== fix.after;
+  const alreadySavedDecision =
+    isChoicePolicy(fix.rule.applyPolicy) &&
+    !textChanges &&
+    hasSavedChoiceDecision(sourceText, readChoiceResolutions(node), fix);
 
-  const applied = textChanges
-    ? await applyTextFixesToTextNode(node, [textFixDtoToEngineFix(fix)])
-    : [];
+  let applied: Awaited<ReturnType<typeof applyTextFixesToTextNode>> = [];
+  let resolutionSaved = false;
+  // Исключение до этой точки не доходит до учёта успеха: клик ещё не результат.
+  applied = textChanges ? await applyTextFixesToTextNode(node, [textFixDtoToEngineFix(fix)]) : [];
 
   // Даже если выбрана та же форма (ищите→ищите) — записать resolution, иначе choice всплывёт снова.
   if (persistResolution) {
     recordChoiceResolutionAfterApply(node, fix);
+    resolutionSaved = true;
+  }
+
+  const success = classifyManualApplySuccess(fix, {
+    layerFound: true,
+    threw: false,
+    layerTextBefore: sourceText,
+    appliedCount: applied.length,
+    resolutionSaved,
+    alreadySavedDecision,
+  });
+  // Choice уходит в choice_resolved, обычная замена — в manual_fix_complete.
+  // Второй счётчик на ту же правку не отправляется.
+  if (success.track !== "none") {
+    trackManualFixFromDto(fix, "applied");
   }
 
   if (!textChanges) {
@@ -103,7 +128,6 @@ export async function skipManualFixAndRefresh(
   const node = await figma.getNodeByIdAsync(nodeId);
   if (!node || node.type !== "TEXT") return;
 
-  trackManualFixFromDto(fix, "skipped");
   if (isOrthographyRuleId(fix.rule.id)) {
     recordSpellSkipOnNode(node, {
       ruleId: fix.rule.id,
@@ -112,6 +136,8 @@ export async function skipManualFixAndRefresh(
       before: fix.before,
     });
   }
+  // Пропуск — не исправление: action skipped, не applied.
+  trackManualFixFromDto(fix, "skipped");
 
   postCheckResultToUi(figma.currentPage.selection);
 }
