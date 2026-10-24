@@ -67,11 +67,11 @@ const ITEMS: Item[] = [
     id: "1",
     n: 1,
     area: "Choice",
-    caseText: "напишите мне",
-    expected: "Choice с подсказками; оба варианта (напишите / напишете)",
+    caseText: "напишите мне. Затем выбрать исходное «напишите». Отдельно: слой уже «напишете мне», а карточка всё ещё предлагает заменить «напишите».",
+    expected: "Choice с подсказками; оба варианта (напишите / напишете). Выбор исходной «напишите» оставляет текст и больше не спрашивает эту форму. Подтверждение устаревшей карточки, когда в слое уже «напишете мне», текст не меняет и вопрос не прячет.",
     priority: "быстрый",
-    agentStatus: "ok",
-    agentNote: "Тест: choice находится. Баг в Figma → бэклог qa-1",
+    agentStatus: "fixed",
+    agentNote: "T-141: исходная форма сохраняется и скрывает вопрос; устаревшая замена решение не пишет. Проверено настоящим applyTextFixesToTextNode.",
   },
   {
     id: "2",
@@ -698,12 +698,14 @@ const ITEMS: Item[] = [
     area: "Прочее",
     caseText: "1) npm run build → Reload → слой «напишите мне». Смотрите лист events. 2) npm run build:release → Reload → тот же прогон + «Кватира» Исправить + «ЦИАН и дом». 3) На этом же release-build нажмите «Проверить орфографию».",
     expected: `1) После обычного build новые строки в events не появляются (локалка не пишет).
-2) После build:release (ANALYTICS=1) за сессию: plugin_open; scan_complete; auto_fix_complete; manual_fix_complete; choice_resolved. payload без текста слоёв / stack.
+2) После build:release (ANALYTICS=1) за сессию: plugin_open; scan_complete; auto_fix_complete; manual_fix_complete; choice_resolved. payload без текста слоёв / stack. В колонке версии \`0.22.0\` — как Version 22 в Community, не \`0.18.0\` и не \`0.19.0\`. Старые строки листа остаются со своим номером.
 3) Клик «Проверить орфографию» добавляет одну строку spellcheck_requested с payload {}. Других полей нет.
-4) Плагин без «Ошибка плагина» и без задержек.`,
-    priority: "обычный",
-    agentStatus: "ok-code",
-    agentNote: "spellcheck_requested на ui:enableSpellcheck; локальный build enabled=false, в events не пишется",
+4) Плагин без «Ошибка плагина» и без задержек.
+5) Повторный «Исправить» на «Кватира», пока первая замена ещё идёт: в слое один раз «Квартира», не «Квартираа»; в events одна manual_fix_complete applied. Пустой или устаревший результат applied не добавляет.
+6) Choice исходной формы — одна choice_resolved confirmed, без manual_fix_complete. Устаревшая замена «напишите → напишете» при уже стоящем «напишете» не пишет confirmed и не прячет вопрос. Ошибка сохранения исходной формы не пишет confirmed.`,
+    priority: "быстрый",
+    agentStatus: "fixed",
+    agentNote: "Community уже v22, а pluginVersion с запуска аналитики оставался 0.18.0. Release-сборка шлёт 0.22.0. Обычный build в events не пишет. T-141: повторный клик даёт одну замену и один applied; пустой, устаревший результат и ошибка сохранения успех не пишут; исходная форма — один choice_resolved confirmed.",
   },
   {
     id: "52",

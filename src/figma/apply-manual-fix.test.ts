@@ -28,7 +28,7 @@ vi.mock("./check-result-session", async () => {
 
 import { applyTextFixesToTextNode } from "./apply-fixes";
 import { runAutofixAutoPasses } from "./autofix-pipeline";
-import { applyManualFixAndRefresh, skipManualFixAndRefresh } from "./apply-manual-fix";
+import { applyManualFixAndRefresh, resetManualApplyInFlightForTests, skipManualFixAndRefresh } from "./apply-manual-fix";
 
 vi.mock("./apply-fixes", () => ({
   applyTextFixesToTextNode: vi.fn(),
@@ -117,6 +117,7 @@ function installNode(node: FakeTextNode | null): void {
 describe("applyManualFixAndRefresh", () => {
   beforeEach(() => {
     trackAnalytics.mockClear();
+    resetManualApplyInFlightForTests();
     vi.mocked(applyTextFixesToTextNode).mockReset();
     vi.mocked(runAutofixAutoPasses).mockClear();
   });

@@ -1,11 +1,448 @@
 {
   "schemaVersion": 1,
-  "exportedAt": "2026-10-23T12:47:12.000Z",
+  "exportedAt": "2026-10-23T14:26:48.096Z",
+  "canvasPath": "/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx",
   "unsavedSession": false,
   "entries": {
+    "1": {
+      "status": "needs_retest",
+      "comment": "T-141: выбор исходной формы и устаревшая карточка choice. Ручной passed не ставить до проверки в Figma.",
+      "attachments": [],
+      "checkedAt": "2026-10-24T06:45:00.000Z",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "history": [],
+          "archivedAt": "2026-10-24T06:45:00.000Z",
+          "retestReason": "T-141: выбор исходной формы и устаревшая карточка choice. Ручной passed не ставить до проверки в Figma."
+        }
+      ]
+    },
+    "2": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "3": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "4": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "5": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "6": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "7": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "8": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "9": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "10": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "11": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "12": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "13": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "14": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "15": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "16": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "17": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "18": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "19": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "20": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "21": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "22": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "23": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "24": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "25": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "26": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "27": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "28": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "29": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "30": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "31": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "32": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "33": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "34": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "35": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "36": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "37": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "38": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "39": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "40": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "41": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "42": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "43": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "44": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "46": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "48": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "49": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "50": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "51": {
+      "status": "needs_retest",
+      "comment": "T-141: повторный «Исправить», пустой результат и аналитика choice. Ручной passed не ставить до проверки в Figma.",
+      "attachments": [],
+      "checkedAt": "2026-10-24T06:45:00.000Z",
+      "checkedCommit": null,
+      "history": []
+    },
+    "52": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "54": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
     "55": {
       "status": "needs_retest",
       "comment": "T-139: изменён реальный import/export Canvas. Нужен ручной прогон сценария #55 в IDE: все статусы, history/date/commit, оба вида вложений и not_run поверх предыдущего результата. Целевые автопроверки не заменяют ручную приёмку.",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "56": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
+    },
+    "57": {
+      "status": "processed_legacy",
+      "comment": "",
+      "attachments": [],
       "checkedAt": null,
       "checkedCommit": null,
       "history": []

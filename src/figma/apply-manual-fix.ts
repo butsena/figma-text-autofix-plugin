@@ -12,7 +12,7 @@ import {
   recordChoiceResolutionOnNode,
   recordSpellSkipOnNode,
 } from "./choice-resolution";
-import { classifyManualApplySuccess, hasSavedChoiceDecision } from "./manual-apply-success";
+import { classifyManualApplySuccess, hasSavedChoiceDecision, shouldPersistManualResolution } from "./manual-apply-success";
 import {
   getLastAutoApplyReport,
   getLastManualApplyReport,
@@ -24,7 +24,6 @@ import type { TextFixDto } from "../shared/messages";
 import { textFixDtoToEngineFix } from "../shared/text-fix-mapping";
 import { isOrthographyRuleId } from "../rules/orthography-spell-rules";
 import {
-  isPersistedManualResolution,
   resolveChosenWordRangeAfterApply,
 } from "./apply-manual-fix-helpers";
 
@@ -41,15 +40,39 @@ function recordChoiceResolutionAfterApply(node: TextNode, fix: TextFixDto): void
   });
 }
 
-export async function applyManualFixAndRefresh(
-  nodeId: string,
-  fix: TextFixDto,
-): Promise<void> {
+const inFlightManualOps = new Map<string, Promise<void>>();
+
+/** Одна и та же ручная операция. Другая правка или другой слой — другой ключ. */
+export function manualOperationKey(nodeId: string, fix: TextFixDto): string {
+  return [nodeId, fix.rule.id, String(fix.from), String(fix.to), fix.before, fix.after].join("\u0000");
+}
+
+export function resetManualApplyInFlightForTests(): void {
+  inFlightManualOps.clear();
+}
+
+export async function applyManualFixAndRefresh(nodeId: string, fix: TextFixDto): Promise<void> {
+  const key = manualOperationKey(nodeId, fix);
+  const pending = inFlightManualOps.get(key);
+  if (pending) {
+    await pending.catch(() => undefined);
+    return;
+  }
+
+  const run = applyManualFixOnce(nodeId, fix);
+  inFlightManualOps.set(key, run);
+  try {
+    await run;
+  } finally {
+    if (inFlightManualOps.get(key) === run) inFlightManualOps.delete(key);
+  }
+}
+
+async function applyManualFixOnce(nodeId: string, fix: TextFixDto): Promise<void> {
   const node = await figma.getNodeByIdAsync(nodeId);
   if (!node || node.type !== "TEXT") return;
 
   const sourceText = node.characters;
-  const persistResolution = isPersistedManualResolution(fix);
   const textChanges = fix.before !== fix.after;
   const alreadySavedDecision =
     isChoicePolicy(fix.rule.applyPolicy) &&
@@ -57,14 +80,15 @@ export async function applyManualFixAndRefresh(
     hasSavedChoiceDecision(sourceText, readChoiceResolutions(node), fix);
 
   let applied: Awaited<ReturnType<typeof applyTextFixesToTextNode>> = [];
-  let resolutionSaved = false;
-  // Исключение до этой точки не доходит до учёта успеха: клик ещё не результат.
   applied = textChanges ? await applyTextFixesToTextNode(node, [textFixDtoToEngineFix(fix)]) : [];
 
-  // Даже если выбрана та же форма (ищите→ищите) — записать resolution, иначе choice всплывёт снова.
-  if (persistResolution) {
+  const resolutionSaved = shouldPersistManualResolution(fix, {
+    appliedCount: applied.length,
+    layerTextBefore: sourceText,
+  });
+  // Исходная форма (ищите→ищите) сохраняется без замены. Устаревшая замена — нет.
+  if (resolutionSaved) {
     recordChoiceResolutionAfterApply(node, fix);
-    resolutionSaved = true;
   }
 
   const success = classifyManualApplySuccess(fix, {
@@ -105,8 +129,8 @@ export async function applyManualFixAndRefresh(
   // После ручной правки (орфография и т.п.) сразу добираем auto: капитализация списка, NBSP…
   let { report } = await runAutofixAutoPasses(selection, getLastAutoApplyReport());
 
-  // Автоправки сдвигают текст — перезаписать якоря resolution, затем ещё один быстрый проход.
-  if (persistResolution) {
+  // Автоправки сдвигают текст — перезаписать якоря только уже сохранённого решения.
+  if (resolutionSaved) {
     const refreshed = await figma.getNodeByIdAsync(nodeId);
     if (refreshed && refreshed.type === "TEXT") {
       recordChoiceResolutionAfterApply(refreshed, fix);

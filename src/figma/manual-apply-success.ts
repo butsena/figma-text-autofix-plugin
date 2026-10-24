@@ -3,6 +3,7 @@ import { isOrthographyRuleId } from "../rules/orthography-spell-rules";
 import { capitalizeLike } from "../shared/case";
 import type { TextFixDto } from "../shared/messages";
 import { rangesOverlap } from "../shared/ranges-overlap";
+import { isPersistedManualResolution } from "./apply-manual-fix-helpers";
 import {
   findResolutionPositions,
   type ChoiceResolution,
@@ -94,6 +95,27 @@ function unchangedOrStaleOrEmpty(
   if (slice !== fix.before) return { track: "none", reason: "stale" };
   if (fix.before === fix.after) return { track: "none", reason: "unchanged" };
   return { track: "none", reason: "empty" };
+}
+
+/**
+ * Решение пишем только после подтверждённого результата.
+ * Исходная допустимая форма choice сохраняется без изменения текста.
+ * Устаревшая или неприменённая замена подтверждение не записывает.
+ */
+export function shouldPersistManualResolution(
+  fix: TextFixDto,
+  observation: Pick<ManualApplyObservation, "appliedCount" | "layerTextBefore">,
+): boolean {
+  if (!isPersistedManualResolution(fix)) return false;
+  if (isChoicePolicy(fix.rule.applyPolicy)) {
+    if (!isAllowedChosenForm(fix)) return false;
+    if (fix.before === fix.after) {
+      if (observation.layerTextBefore == null) return false;
+      return fragmentAt(observation.layerTextBefore, fix.from, fix.to) === fix.before;
+    }
+    return observation.appliedCount > 0;
+  }
+  return observation.appliedCount > 0;
 }
 
 /**

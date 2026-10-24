@@ -6,6 +6,20 @@ import { textFixDtoToEngineFix } from "../shared/text-fix-mapping";
 import { isCaseOnlyChange } from "./apply-fixes-helpers";
 import { applyCharStyleAt, captureRangeStyles, restoreRangeStyles } from "./text-style-snapshot";
 
+/** true — фрагмент уже не тот, правку писать нельзя. */
+function fragmentIsStale(textNode: TextNode, fix: TextFix): boolean {
+  const current = textNode.characters.slice(fix.from, fix.to);
+  if (current === fix.before && fix.before !== fix.after) return false;
+  if (current !== fix.before) {
+    console.warn(
+      "[text-autofix] skip fix: text changed",
+      fix.ruleId,
+      JSON.stringify({ expected: fix.before, actual: current, from: fix.from, to: fix.to }),
+    );
+  }
+  return true;
+}
+
 async function loadFontName(font: FontName): Promise<void> {
   await figma.loadFontAsync(font);
 }
@@ -71,19 +85,11 @@ export async function applyTextFixesToTextNode(
   const applied: TextFix[] = [];
   for (const fix of orderFixesForApply(fixes)) {
     try {
-      const current = textNode.characters.slice(fix.from, fix.to);
-      if (current !== fix.before || fix.before === fix.after) {
-        if (current !== fix.before) {
-          console.warn(
-            "[text-autofix] skip fix: text changed",
-            fix.ruleId,
-            JSON.stringify({ expected: fix.before, actual: current, from: fix.from, to: fix.to }),
-          );
-        }
-        continue;
-      }
+      if (fragmentIsStale(textNode, fix)) continue;
 
       await loadFontsForRange(textNode, fix.from, fix.to);
+      // Пока грузился шрифт, параллельный клик мог уже записать тот же фрагмент.
+      if (fragmentIsStale(textNode, fix)) continue;
 
       const capturedStyles = captureRangeStyles(textNode, fix.from, fix.to);
       const caseOnly = isCaseOnlyChange(fix.before, fix.after);

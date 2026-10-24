@@ -4,6 +4,7 @@ import { createChoiceResolution } from "./choice-resolution-core";
 import {
   classifyManualApplySuccess,
   hasSavedChoiceDecision,
+  shouldPersistManualResolution,
   type ManualApplyObservation,
 } from "./manual-apply-success";
 
@@ -126,6 +127,28 @@ describe("classifyManualApplySuccess", () => {
         observed({ appliedCount: 1, resolutionSaved: true }),
       ),
     ).toEqual({ track: "none", reason: "not_allowed" });
+  });
+});
+
+describe("shouldPersistManualResolution", () => {
+  it("сохраняет исходную форму и не сохраняет устаревшую замену", () => {
+    const kept = fix({ policy: "choice", before: "напишите", after: "напишите" });
+    const stale = fix({ policy: "choice", before: "напишите", after: "напишете" });
+    expect(
+      shouldPersistManualResolution(kept, { appliedCount: 0, layerTextBefore: "напишите мне" }),
+    ).toBe(true);
+    expect(
+      shouldPersistManualResolution(stale, { appliedCount: 0, layerTextBefore: "напишете мне" }),
+    ).toBe(false);
+    expect(
+      shouldPersistManualResolution(stale, { appliedCount: 1, layerTextBefore: "напишите мне" }),
+    ).toBe(true);
+    expect(
+      shouldPersistManualResolution(
+        fix({ ruleId: "orthography-spellcheck", before: "Кватира", after: "Квартира", to: 7 }),
+        { appliedCount: 0, layerTextBefore: "Кватира" },
+      ),
+    ).toBe(false);
   });
 });
 
