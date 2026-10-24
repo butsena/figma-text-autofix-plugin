@@ -23,9 +23,10 @@ describe("qa portable model (T-046)", () => {
   ) as { map: Record<string, string | string[]> };
 
   it("keeps stable unique id/n from migration", () => {
-    expect(scenariosFile.scenarios.length).toBe(58);
+    expect(scenariosFile.scenarios.length).toBe(59);
     assertStableIdsUnique(scenariosFile.scenarios);
-    expect(nextScenarioNumber(scenariosFile.scenarios)).toBe(59);
+    expect(nextScenarioNumber(scenariosFile.scenarios)).toBe(60);
+    expect(scenariosFile.scenarios.find((s) => s.id === "59")?.taskIds).toEqual(["T-140"]);
     const portable = scenariosFile.scenarios.find((s) => s.id === "55");
     expect(portable?.taskIds).toEqual(["T-046", "T-139"]);
     expect(portable?.legacyTaskIds).toContain("pipeline-qa");
@@ -86,7 +87,9 @@ describe("qa portable model (T-046)", () => {
     const agent = JSON.parse(readFileSync(resolve(ROOT, "qa/agent-results.json"), "utf8")) as {
       results: Array<{ scenarioId: string; agentStatus: string }>;
     };
-    expect(agent.results).toHaveLength(58);
+    expect(agent.results.map((r) => r.scenarioId).sort()).toEqual(
+      scenariosFile.scenarios.map((s) => s.id).sort(),
+    );
     expect(agent.results.every((r) => r.scenarioId && r.agentStatus)).toBe(true);
     // file must not claim manual Passed
     const raw = readFileSync(resolve(ROOT, "qa/agent-results.json"), "utf8");

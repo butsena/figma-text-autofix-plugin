@@ -23,6 +23,22 @@ var SCHEMA_VERSION = 1;
 var MAX_BODY_CHARS = 4000;
 var MAX_SESSION_LEN = 64;
 var MAX_VERSION_LEN = 32;
+// Номер реализации приёмника; это не номер версии плагина или deployment в Apps Script.
+var COLLECTOR_REVISION = "T-140-1";
+
+// Держать в соответствии с src/analytics/schema.ts. Новые поля — только по явному контракту.
+var FIX_CATEGORIES = [
+  "cian_branding", "cian_declension_context", "cian_editorial", "form_choice",
+  "numeric_formatting", "phone_formatting", "punctuation_typography", "sheet_text",
+  "text_formatting", "typography", "yo_spelling", "orthography", "other",
+];
+var ERROR_STAGES = [
+  "open", "scan", "auto_apply", "manual_apply", "choice", "lexicon", "spell", "ui", "unknown",
+];
+var ERROR_CODES = [
+  "empty_selection", "font_load_failed", "node_missing", "apply_failed",
+  "lexicon_load_failed", "spell_load_failed", "timeout", "unknown",
+];
 
 var EVENT_NAMES = {
   plugin_open: true,
@@ -47,10 +63,15 @@ var EVENT_HEADERS = [
 function doPost(e) {
   try {
     var raw = (e && e.postData && e.postData.contents) || "";
-    if (!raw || raw.length > MAX_BODY_CHARS) {
+    if (typeof raw !== "string" || !raw || raw.length > MAX_BODY_CHARS) {
       return jsonResponse_(400, { ok: false, error: "body" });
     }
-    var body = JSON.parse(raw);
+    var body;
+    try {
+      body = JSON.parse(raw);
+    } catch (err) {
+      return jsonResponse_(400, { ok: false, error: "json" });
+    }
     var validated = validateEnvelope_(body);
     if (!validated.ok) {
       return jsonResponse_(400, { ok: false, error: validated.error });
@@ -64,7 +85,10 @@ function doPost(e) {
 
 /** Health-check из браузера. */
 function doGet() {
-  return jsonResponse_(200, { ok: true, service: "text-autofix-analytics", schema_version: SCHEMA_VERSION });
+  return jsonResponse_(200, {
+    ok: true, service: "text-autofix-analytics", schema_version: SCHEMA_VERSION,
+    collector_revision: COLLECTOR_REVISION,
+  });
 }
 
 function onceSetup() {
@@ -78,22 +102,28 @@ function onceSetup() {
 }
 
 function validateEnvelope_(body) {
-  if (!body || typeof body !== "object") return { ok: false, error: "envelope" };
+  if (!isRecord_(body)) return { ok: false, error: "envelope" };
   if (body.schema_version !== SCHEMA_VERSION) return { ok: false, error: "schema_version" };
-  if (typeof body.event !== "string" || !EVENT_NAMES[body.event]) {
+  if (typeof body.event !== "string" || !Object.prototype.hasOwnProperty.call(EVENT_NAMES, body.event)) {
     return { ok: false, error: "event" };
   }
   if (typeof body.session_id !== "string" || body.session_id.length < 8 || body.session_id.length > MAX_SESSION_LEN) {
     return { ok: false, error: "session_id" };
   }
   if (!/^[A-Za-z0-9_-]+$/.test(body.session_id)) return { ok: false, error: "session_id" };
-  if (typeof body.plugin_version !== "string" || !body.plugin_version || body.plugin_version.length > MAX_VERSION_LEN) {
+  // Старый явный smoke-маркер сохраняется; свободный текст и формулы не допускаются.
+  if (typeof body.plugin_version !== "string" || body.plugin_version.length > MAX_VERSION_LEN ||
+      (body.plugin_version !== "smoke" &&
+       !/^\d+\.\d+\.\d+(?:-[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*)?(?:\+[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*)?$/.test(body.plugin_version))) {
     return { ok: false, error: "plugin_version" };
   }
-  if (typeof body.client_time !== "string" || body.client_time.length > 40) {
+  // Клиент отправляет Date.toISOString(): проверяем также календарную дату, не только форму строки.
+  if (typeof body.client_time !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(body.client_time) ||
+      !isFinite(Date.parse(body.client_time)) || new Date(body.client_time).toISOString() !== body.client_time) {
     return { ok: false, error: "client_time" };
   }
-  if (!body.payload || typeof body.payload !== "object") return { ok: false, error: "payload" };
+  if (!isRecord_(body.payload)) return { ok: false, error: "payload" };
 
   var payloadError = validatePayload_(body.event, body.payload);
   if (payloadError) return { ok: false, error: payloadError };
@@ -106,14 +136,19 @@ function validateEnvelope_(body) {
       session_id: body.session_id,
       plugin_version: body.plugin_version,
       event: body.event,
-      payload: body.payload,
+      // Не сохраняем исходный объект: лишние поля отбрасываются и нигде не логируются.
+      payload: sanitizePayload_(body.event, body.payload),
     },
   };
 }
 
+function isRecord_(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 function validatePayload_(event, payload) {
   function intOk(v) {
-    return typeof v === "number" && isFinite(v) && v >= 0 && Math.floor(v) === v;
+    return Number.isSafeInteger(v) && v >= 0;
   }
   switch (event) {
     case "plugin_open":
@@ -130,7 +165,20 @@ function validatePayload_(event, payload) {
       })) {
         return "payload.auto";
       }
-      if (!payload.categories || typeof payload.categories !== "object") return "payload.categories";
+      if (payload.applied > payload.found || payload.not_applied !== payload.found - payload.applied) {
+        return "payload.auto_totals";
+      }
+      if (!isRecord_(payload.categories)) return "payload.categories";
+      var categoryKeys = Object.keys(payload.categories);
+      var categoryTotal = 0;
+      for (var i = 0; i < categoryKeys.length; i++) {
+        var category = categoryKeys[i];
+        var count = payload.categories[category];
+        if (FIX_CATEGORIES.indexOf(category) === -1 || !intOk(count)) return "payload.categories";
+        categoryTotal += count;
+        if (categoryTotal > payload.applied) return "payload.category_total";
+      }
+      if (categoryTotal !== payload.applied) return "payload.category_total";
       return null;
     case "manual_fix_complete":
       if (payload.action !== "applied" && payload.action !== "skipped") return "payload.action";
@@ -142,16 +190,55 @@ function validatePayload_(event, payload) {
     case "spellcheck_requested":
       return null;
     case "plugin_error":
-      if (typeof payload.stage !== "string" || !payload.stage) return "payload.stage";
-      if (typeof payload.code !== "string" || !payload.code) return "payload.code";
-      if (payload.message != null || payload.stack != null) return "payload.forbidden";
+      if (ERROR_STAGES.indexOf(payload.stage) === -1) return "payload.stage";
+      if (ERROR_CODES.indexOf(payload.code) === -1) return "payload.code";
       return null;
     default:
       return "event";
   }
 }
 
+/** Белые списки полей, включая пустой payload у spellcheck_requested. */
+function sanitizePayload_(event, payload) {
+  switch (event) {
+    case "plugin_open":
+      return { has_text_layers: payload.has_text_layers };
+    case "scan_complete":
+      return {
+        checked_layers: payload.checked_layers, found_fixes: payload.found_fixes,
+        confirm_fixes: payload.confirm_fixes, choice_fixes: payload.choice_fixes,
+        duration_ms: payload.duration_ms,
+      };
+    case "auto_fix_complete":
+      var categories = {};
+      Object.keys(payload.categories).forEach(function (key) {
+        if (payload.categories[key] > 0) categories[key] = payload.categories[key];
+      });
+      return {
+        found: payload.found, applied: payload.applied, not_applied: payload.not_applied,
+        duration_ms: payload.duration_ms, categories: categories,
+      };
+    case "manual_fix_complete":
+      return { action: payload.action, kind: payload.kind };
+    case "choice_resolved":
+      return { action: payload.action };
+    case "spellcheck_requested":
+      return {};
+    case "plugin_error":
+      return { stage: payload.stage, code: payload.code };
+  }
+}
+
+/** Дополнительная защита ячеек, даже если разрешённые строки впоследствии расширят. */
+function safeSheetString_(value) {
+  return /^[\s\uFEFF]*[=+\-@]/.test(value) || /^[\t\r\n]/.test(value) ? "'" + value : value;
+}
+
 function appendEvent_(envelope) {
+  // Включая прямой вызов из smokeAppend: до получения блокировки и любой записи.
+  var validated = validateEnvelope_(envelope);
+  if (!validated.ok) throw new Error("Invalid analytics envelope");
+  envelope = validated.envelope;
   var lock = LockService.getScriptLock();
   lock.waitLock(5000);
   try {
@@ -163,12 +250,12 @@ function appendEvent_(envelope) {
     }
     sheet.appendRow([
       new Date().toISOString(),
-      envelope.client_time,
+      safeSheetString_(envelope.client_time),
       envelope.schema_version,
-      envelope.session_id,
-      envelope.plugin_version,
-      envelope.event,
-      JSON.stringify(envelope.payload),
+      safeSheetString_(envelope.session_id),
+      safeSheetString_(envelope.plugin_version),
+      safeSheetString_(envelope.event),
+      safeSheetString_(JSON.stringify(envelope.payload)),
     ]);
   } finally {
     lock.releaseLock();

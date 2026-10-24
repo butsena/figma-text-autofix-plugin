@@ -105,29 +105,16 @@ function checkLatinLayoutFixes(
   whitelist: Set<string>,
   existingFixes: readonly TextFix[],
 ): TextFix[] {
-  // #region agent log
-  fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "post-fix", hypothesisId: "A", location: "check-spelling.ts:checkLatinLayoutFixes", message: "scan latin layout", data: { hasCyrillic: textHasCyrillic(text), textLen: text.length }, timestamp: Date.now() }) }).catch(() => {});
-  // #endregion
   const fixes: TextFix[] = [];
   const mixedSpans = extractMixedScriptTokens(text);
 
   for (const token of extractLatinLayoutTokens(text)) {
     const { word, from, to } = token;
-    if (shouldSkipLatinLayoutToken(word)) {
-      // #region agent log
-      fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "C", location: "check-spelling.ts:checkLatinLayoutFixes", message: "skip token", data: { word }, timestamp: Date.now() }) }).catch(() => {});
-      // #endregion
-      continue;
-    }
+    if (shouldSkipLatinLayoutToken(word)) continue;
     if (isWhitelisted(word, whitelist)) continue;
     if (isLikelyUrlOrEmailContext(text, from, to)) continue;
     if (mixedSpans.some((span) => rangesOverlap(from, to, span.from, span.to))) continue;
-    if (overlapsExistingFix(from, to, existingFixes) || overlapsExistingFix(from, to, fixes)) {
-      // #region agent log
-      fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "D", location: "check-spelling.ts:checkLatinLayoutFixes", message: "skip: overlapped by another fix", data: { word }, timestamp: Date.now() }) }).catch(() => {});
-      // #endregion
-      continue;
-    }
+    if (overlapsExistingFix(from, to, existingFixes) || overlapsExistingFix(from, to, fixes)) continue;
 
     const suggestedRu = suggestRuFromLatinLayout(word, (w) => isKnownWord(spell, w));
     if (!suggestedRu) continue;

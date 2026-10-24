@@ -522,6 +522,15 @@
       "commit": null,
       "method": "code-review",
       "environmentNote": "Юнит без Figma. Ручная приёмка на Onboarding 10 ещё нужна."
+    },
+    {
+      "scenarioId": "59",
+      "agentStatus": "ok",
+      "agentNote": "T-140: контракт семи событий, удаление лишних данных, неверный ввод, формульные строки, блокировка и отказ записи проверяются локально в collector.test.mjs. Это не ручной прогон Figma и не тестовый POST в рабочую таблицу. Отладочные запросы со словами удалены; отсутствие передачи проверено поведенческими тестами орфографии и раскладки.",
+      "checkedAt": "2026-10-24",
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Local Apps Script VM with stubbed spreadsheet/lock/content services; no production network or writes. Exact checked SHA is recorded in the T-140 pull request."
     }
   ]
 }

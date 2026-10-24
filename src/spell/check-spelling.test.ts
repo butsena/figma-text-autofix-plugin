@@ -50,6 +50,17 @@ describe("checkSpellingFixes", () => {
     expect(spell).not.toBeNull();
   }, 30_000);
 
+  it("локальная проверка раскладки не передаёт слова или текст слоя в сеть", () => {
+    const request = vi.spyOn(globalThis, "fetch").mockResolvedValue({ ok: true } as Response);
+    try {
+      const fixes = checkSpellingFixes("Наберите ghbdtn в чат Figma online");
+      expect(fixes.some((fix) => fix.before === "ghbdtn" && fix.after === "привет")).toBe(true);
+      expect(request).not.toHaveBeenCalled();
+    } finally {
+      request.mockRestore();
+    }
+  });
+
   it("находит опечатку с предложением исправления", () => {
     const fixes = checkSpellingFixes("Кватира в центре");
     expect(fixes).toHaveLength(1);
