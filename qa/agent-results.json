@@ -6,7 +6,7 @@
       "agentStatus": "fixed",
       "agentNote": "T-141: исходная форма сохраняется и скрывает вопрос; устаревшая замена решение не пишет. Проверено настоящим applyTextFixesToTextNode.",
       "checkedAt": "2026-10-24",
-      "commit": null,
+      "commit": "448c20bdbb91b436816404d580b02fb728e57203",
       "method": "engine-test",
       "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
     },
@@ -456,7 +456,7 @@
       "agentStatus": "fixed",
       "agentNote": "Community уже v22, а pluginVersion с запуска аналитики оставался 0.18.0. Release-сборка шлёт 0.22.0. Обычный build в events не пишет. T-141: повторный клик даёт одну замену и один applied; пустой, устаревший результат и ошибка сохранения успех не пишут; исходная форма — один choice_resolved confirmed.",
       "checkedAt": "2026-10-24",
-      "commit": null,
+      "commit": "448c20bdbb91b436816404d580b02fb728e57203",
       "method": "engine-test",
       "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
     },
