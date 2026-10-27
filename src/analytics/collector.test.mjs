@@ -95,6 +95,15 @@ describe("Apps Script collector: совместимость schema v1", () => {
     },
   );
 
+  it("принимает дельту auto после ручного действия", () => {
+    const c = collector();
+    const payload = {
+      found: 3, applied: 1, not_applied: 2, duration_ms: 15, categories: { typography: 1 },
+    };
+    expect(c.post(envelope("auto_fix_complete", payload))).toEqual({ ok: true });
+    expect(JSON.parse(c.rows[0][6])).toEqual(payload);
+  });
+
   it("принимает нулевой auto и все разрешённые категории", () => {
     const c = collector();
     expect(c.post(envelope("auto_fix_complete", {

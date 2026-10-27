@@ -81,6 +81,10 @@ export type AutoFixCompletePayload = {
   found: number;
   applied: number;
   not_applied: number;
+  /**
+   * Длительность этого автоэтапа, мс. Для добора после ручного действия
+   * это только сам добор: не время человека и не слагаемое модельных часов.
+   */
   duration_ms: number;
   /** Сколько применённых auto-правок по категориям. */
   categories: Partial<Record<AnalyticsFixCategory, number>>;

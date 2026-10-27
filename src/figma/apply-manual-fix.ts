@@ -1,3 +1,4 @@
+import { trackFollowUpAutoFixes } from "../analytics/follow-up-auto";
 import { trackManualFixFromDto } from "../analytics/pipeline-events";
 import { isChoicePolicy } from "../core/apply-policy";
 import {
@@ -126,22 +127,36 @@ async function applyManualFixOnce(nodeId: string, fix: TextFixDto): Promise<void
     );
   }
 
-  // После ручной правки (орфография и т.п.) сразу добираем auto: капитализация списка, NBSP…
-  let { report } = await runAutofixAutoPasses(selection, getLastAutoApplyReport());
-
-  // Автоправки сдвигают текст — перезаписать якоря только уже сохранённого решения.
-  if (resolutionSaved) {
-    const refreshed = await figma.getNodeByIdAsync(nodeId);
-    if (refreshed && refreshed.type === "TEXT") {
-      recordChoiceResolutionAfterApply(refreshed, fix);
+  // После ручной правки добираем auto. В аналитику уходит только дельта этого добора.
+  const beforeAutoReport = getLastAutoApplyReport();
+  const followUpStartedAt = Date.now();
+  let { report, finalScan } = await runAutofixAutoPasses(selection, beforeAutoReport);
+  let followUpError: unknown = null;
+  try {
+    // Автоправки сдвигают текст — перезаписать якоря только уже сохранённого решения.
+    if (resolutionSaved) {
+      const refreshed = await figma.getNodeByIdAsync(nodeId);
+      if (refreshed && refreshed.type === "TEXT") {
+        recordChoiceResolutionAfterApply(refreshed, fix);
+      }
     }
+
+    const second = await runAutofixAutoPasses(selection, report);
+    report = second.report;
+    finalScan = second.finalScan;
+  } catch (error) {
+    followUpError = error;
   }
 
-  const second = await runAutofixAutoPasses(selection, report);
-  report = second.report;
-
   setLastAutoApplyReport(report);
+  trackFollowUpAutoFixes(
+    beforeAutoReport,
+    report,
+    finalScan.summary.foundFixes,
+    Date.now() - followUpStartedAt,
+  );
   postCheckResultToUi(selection);
+  if (followUpError) throw followUpError;
 }
 
 /** «Пропустить» орфографию: макет не меняем, считаем показ (макс. 3 запуска). */

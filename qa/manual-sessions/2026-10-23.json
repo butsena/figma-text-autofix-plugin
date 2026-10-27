@@ -401,11 +401,22 @@
     },
     "51": {
       "status": "needs_retest",
-      "comment": "T-141: повторный «Исправить», пустой результат и аналитика choice. Ручной passed не ставить до проверки в Figma.",
+      "comment": "T-142: дельта auto после ручного исправления. Ручной passed не ставить до проверки в Figma.",
       "attachments": [],
-      "checkedAt": "2026-10-24T06:45:00.000Z",
+      "checkedAt": "2026-10-27T14:20:00.000Z",
       "checkedCommit": null,
-      "history": []
+      "history": [
+        {
+          "status": "needs_retest",
+          "comment": "T-141: повторный «Исправить», пустой результат и аналитика choice. Ручной passed не ставить до проверки в Figma.",
+          "attachments": [],
+          "checkedAt": "2026-10-24T06:45:00.000Z",
+          "checkedCommit": null,
+          "history": [],
+          "archivedAt": "2026-10-27T14:20:00.000Z",
+          "retestReason": "T-142: дельта auto после ручного исправления. Ручной passed не ставить до проверки в Figma."
+        }
+      ]
     },
     "52": {
       "status": "processed_legacy",
