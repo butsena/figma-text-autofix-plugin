@@ -14,11 +14,12 @@ vi.mock("../analytics/track", () => ({
 }));
 
 vi.mock("./autofix-pipeline", () => ({
-  runAutofixAutoPasses: vi.fn(async () => ({
-    report: {
+  runAutofixAutoPasses: vi.fn(async (_selection: unknown, existing: unknown) => ({
+    report: existing ?? {
       summary: { checkedLayers: 0, appliedFixCount: 0, changedLayerCount: 0 },
       layers: [],
     },
+    finalScan: { summary: { foundFixes: 0 } },
   })),
 }));
 

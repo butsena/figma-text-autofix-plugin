@@ -10,11 +10,12 @@ vi.mock("../analytics/track", () => ({
 }));
 
 vi.mock("./autofix-pipeline", () => ({
-  runAutofixAutoPasses: vi.fn(async () => ({
-    report: {
+  runAutofixAutoPasses: vi.fn(async (_selection: unknown, existing: unknown) => ({
+    report: existing ?? {
       summary: { checkedLayers: 0, appliedFixCount: 0, changedLayerCount: 0 },
       layers: [],
     },
+    finalScan: { summary: { foundFixes: 0 } },
   })),
 }));
 
@@ -26,9 +27,11 @@ vi.mock("./check-result-session", async () => {
   };
 });
 
+import type { AutoApplyReportDto } from "../shared/messages";
 import { applyTextFixesToTextNode } from "./apply-fixes";
 import { runAutofixAutoPasses } from "./autofix-pipeline";
 import { applyManualFixAndRefresh, resetManualApplyInFlightForTests, skipManualFixAndRefresh } from "./apply-manual-fix";
+import { setLastAutoApplyReport, setLastManualApplyReport } from "./check-result-session";
 
 vi.mock("./apply-fixes", () => ({
   applyTextFixesToTextNode: vi.fn(),
@@ -107,6 +110,41 @@ function choiceFix(after: string): TextFixDto {
   };
 }
 
+function emptyAutoReport(): AutoApplyReportDto {
+  return {
+    summary: { checkedLayers: 0, appliedFixCount: 0, changedLayerCount: 0 },
+    layers: [],
+  };
+}
+
+function autoReport(fixes: ReadonlyArray<{ fixId: string; category: string }>): AutoApplyReportDto {
+  return {
+    summary: {
+      checkedLayers: 1,
+      appliedFixCount: fixes.length,
+      changedLayerCount: fixes.length > 0 ? 1 : 0,
+    },
+    layers: [
+      {
+        nodeId: "1:2",
+        nodeName: "Слой",
+        characterCount: 8,
+        fixes: fixes.map((fix) => ({
+          fixId: fix.fixId,
+          ruleId: "auto-rule",
+          category: fix.category,
+          message: "m",
+          before: "секретный текст",
+          after: "ещё секрет",
+          from: 0,
+          to: 1,
+          sourceText: "секретный текст",
+        })),
+      },
+    ],
+  };
+}
+
 function installNode(node: FakeTextNode | null): void {
   vi.stubGlobal("figma", {
     getNodeByIdAsync: vi.fn(async () => node),
@@ -118,8 +156,14 @@ describe("applyManualFixAndRefresh", () => {
   beforeEach(() => {
     trackAnalytics.mockClear();
     resetManualApplyInFlightForTests();
+    setLastAutoApplyReport(null);
+    setLastManualApplyReport(null);
     vi.mocked(applyTextFixesToTextNode).mockReset();
-    vi.mocked(runAutofixAutoPasses).mockClear();
+    vi.mocked(runAutofixAutoPasses).mockReset();
+    vi.mocked(runAutofixAutoPasses).mockImplementation(async (_selection: unknown, existing: unknown) => ({
+      report: (existing ?? emptyAutoReport()) as AutoApplyReportDto,
+      finalScan: { summary: { foundFixes: 0 } },
+    }) as Awaited<ReturnType<typeof runAutofixAutoPasses>>);
   });
 
   it("обычная замена без изменения текста не считается успехом", async () => {
@@ -228,5 +272,134 @@ describe("applyManualFixAndRefresh", () => {
       action: "skipped",
       kind: "orthography",
     });
+  });
+
+  it("после ручной правки считает только новые auto за несколько проходов", async () => {
+    const node = fakeTextNode("Кватира");
+    installNode(node);
+    const before = autoReport([{ fixId: "old", category: "cian_branding" }]);
+    setLastAutoApplyReport(before);
+    const afterFirstPass = autoReport([
+      { fixId: "old", category: "cian_branding" },
+      { fixId: "nbsp", category: "typography" },
+    ]);
+    const afterSecondPass = autoReport([
+      { fixId: "old", category: "cian_branding" },
+      { fixId: "nbsp", category: "typography" },
+      { fixId: "group", category: "numeric_formatting" },
+    ]);
+    vi.mocked(applyTextFixesToTextNode).mockImplementation(async () => {
+      node.characters = "Квартира";
+      return [{} as never];
+    });
+    vi.mocked(runAutofixAutoPasses)
+      .mockResolvedValueOnce({
+        report: afterFirstPass,
+        finalScan: { summary: { foundFixes: 1 } },
+      } as Awaited<ReturnType<typeof runAutofixAutoPasses>>)
+      .mockResolvedValueOnce({
+        report: afterSecondPass,
+        finalScan: { summary: { foundFixes: 2 } },
+      } as Awaited<ReturnType<typeof runAutofixAutoPasses>>);
+
+    await applyManualFixAndRefresh(node.id, spellFix());
+
+    const autoCall = trackAnalytics.mock.calls.find((call) => call[0] === "auto_fix_complete");
+    expect(autoCall?.[1]).toMatchObject({
+      found: 4,
+      applied: 2,
+      not_applied: 2,
+      categories: { typography: 1, numeric_formatting: 1 },
+    });
+    expect(autoCall?.[1].duration_ms).toEqual(expect.any(Number));
+    expect(autoCall?.[1].duration_ms).toBeGreaterThanOrEqual(0);
+    expect(JSON.stringify(autoCall)).not.toMatch(/секретный текст|Кватира|1:2/);
+    expect(trackAnalytics).toHaveBeenCalledWith("manual_fix_complete", {
+      action: "applied",
+      kind: "orthography",
+    });
+    expect(trackAnalytics.mock.calls.filter((call) => call[0] === "auto_fix_complete")).toHaveLength(1);
+  });
+
+  it("нулевая дельта и повторный клик не отправляют накопленный отчёт", async () => {
+    const node = fakeTextNode("Кватира");
+    installNode(node);
+    const accumulated = autoReport([{ fixId: "old", category: "typography" }]);
+    setLastAutoApplyReport(accumulated);
+    vi.mocked(applyTextFixesToTextNode)
+      .mockImplementationOnce(async () => {
+        node.characters = "Квартира";
+        return [{} as never];
+      })
+      .mockResolvedValueOnce([]);
+
+    await applyManualFixAndRefresh(node.id, spellFix());
+    await applyManualFixAndRefresh(node.id, spellFix());
+
+    expect(trackAnalytics).toHaveBeenCalledTimes(1);
+    expect(trackAnalytics).toHaveBeenCalledWith("manual_fix_complete", {
+      action: "applied",
+      kind: "orthography",
+    });
+    expect(trackAnalytics.mock.calls.some((call) => call[0] === "auto_fix_complete")).toBe(false);
+  });
+
+  it("ошибка второго прохода сохраняет уже выполненную дельту и не повторяет старый отчёт", async () => {
+    const node = fakeTextNode("Кватира");
+    installNode(node);
+    setLastAutoApplyReport(autoReport([{ fixId: "old", category: "cian_branding" }]));
+    vi.mocked(applyTextFixesToTextNode).mockImplementation(async () => {
+      node.characters = "Квартира";
+      return [{} as never];
+    });
+    vi.mocked(runAutofixAutoPasses)
+      .mockResolvedValueOnce({
+        report: autoReport([
+          { fixId: "old", category: "cian_branding" },
+          { fixId: "nbsp", category: "typography" },
+        ]),
+        finalScan: { summary: { foundFixes: 1 } },
+      } as Awaited<ReturnType<typeof runAutofixAutoPasses>>)
+      .mockRejectedValueOnce(new Error("auto pass failed"));
+
+    await expect(applyManualFixAndRefresh(node.id, spellFix())).rejects.toThrow("auto pass failed");
+
+    const autoCalls = trackAnalytics.mock.calls.filter((call) => call[0] === "auto_fix_complete");
+    expect(autoCalls).toHaveLength(1);
+    expect(autoCalls[0][1]).toMatchObject({
+      found: 2,
+      applied: 1,
+      not_applied: 1,
+      categories: { typography: 1 },
+    });
+    expect(JSON.stringify(autoCalls)).not.toContain("cian_branding");
+  });
+
+  it("повтор того же клика, пока первый ещё идёт, не шлёт вторую auto-дельту", async () => {
+    const node = fakeTextNode("Кватира");
+    installNode(node);
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.mocked(applyTextFixesToTextNode).mockImplementation(async () => {
+      await gate;
+      node.characters = "Квартира";
+      return [{} as never];
+    });
+    vi.mocked(runAutofixAutoPasses).mockImplementation(async () => ({
+      report: autoReport([{ fixId: "nbsp", category: "typography" }]),
+      finalScan: { summary: { foundFixes: 0 } },
+    }) as Awaited<ReturnType<typeof runAutofixAutoPasses>>);
+
+    const first = applyManualFixAndRefresh(node.id, spellFix());
+    const second = applyManualFixAndRefresh(node.id, spellFix());
+    release();
+    await first;
+    await second;
+
+    expect(vi.mocked(runAutofixAutoPasses)).toHaveBeenCalledTimes(2);
+    expect(trackAnalytics.mock.calls.filter((call) => call[0] === "auto_fix_complete")).toHaveLength(1);
+    expect(trackAnalytics.mock.calls.filter((call) => call[0] === "manual_fix_complete")).toHaveLength(1);
   });
 });
