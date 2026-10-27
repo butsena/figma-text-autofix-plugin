@@ -87,12 +87,23 @@ export type AutoFixCompletePayload = {
 };
 
 export type ManualFixCompletePayload = {
+  /**
+   * applied — текст уже изменён этой правкой.
+   * skipped — человек пропустил карточку; это не исправление.
+   * Клик «Исправить» без изменения текста applied не создаёт.
+   * Записи до 2026-10-23 (Community v22 и раньше) так не различали и не пересчитываются.
+   */
   action: "applied" | "skipped";
   /** confirm = «Обратите внимание»; orthography = поле «как исправить». */
   kind: "confirm" | "orthography";
 };
 
 export type ChoiceResolvedPayload = {
+  /**
+   * confirmed — решение о форме сохранено, в том числе когда выбрана исходная форма и текст не менялся.
+   * Это не изменение текста и не ошибка. skipped — пропуск, не исправление.
+   * Старые confirmed до 2026-10-23 остаются попытками и не переписываются.
+   */
   action: "confirmed" | "skipped";
 };
 
