@@ -3,6 +3,7 @@
  * Запуск: npx vitest run src/test/manual-qa-checklist-verify.test.ts
  */
 import fs from "node:fs";
+import vm from "node:vm";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -54,6 +55,40 @@ vi.mock("../config/feature-flags", () => ({
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const nbsp = "\u00a0";
 const allRules = () => getAutofixRules();
+
+describe("manual QA collector #59", () => {
+  it("сохраняет только безопасные поля и целиком отклоняет неверную запись", () => {
+    const rows: unknown[][] = [];
+    const scope = vm.createContext({
+      SpreadsheetApp: { getActiveSpreadsheet: () => ({
+        getSheetByName: (name: string) => {
+          expect(name).toBe("events");
+          return { appendRow: (row: unknown[]) => rows.push(Array.from(row)) };
+        },
+      }) },
+      LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
+      ContentService: { MimeType: { JSON: "json" }, createTextOutput: (text: string) => ({
+        text, setMimeType() { return this; },
+      }) },
+    });
+    vm.runInContext(fs.readFileSync(path.join(root, "scripts/analytics-apps-script.js"), "utf8"), scope);
+    const body = {
+      schema_version: 1, client_time: "2026-10-24T08:00:00.000Z", session_id: "sess_qa59_local",
+      plugin_version: "smoke", event: "manual_fix_complete",
+      payload: { action: "applied", kind: "orthography", before: "PRIVATE_TEXT", after: "PRIVATE_TEXT" },
+    };
+    const post = (value: unknown) => JSON.parse(scope.doPost({ postData: { contents: JSON.stringify(value) } }).text);
+    expect(post(body)).toEqual({ ok: true });
+    expect(rows).toHaveLength(1);
+    expect(JSON.parse(rows[0][6] as string)).toEqual({ action: "applied", kind: "orthography" });
+    expect(JSON.stringify(rows)).not.toContain("PRIVATE_TEXT");
+    expect(post({ ...body, plugin_version: "=1+1" }).ok).toBe(false);
+    expect(post({ ...body, event: "auto_fix_complete", payload: {
+      found: 1, applied: 1, not_applied: 0, duration_ms: 0, categories: {},
+    } }).ok).toBe(false);
+    expect(rows).toHaveLength(1);
+  });
+});
 
 function loadTestDictionary(): void {
   const candidates = [

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   casingForSuggestion,
   convertEnLayoutToRu,
@@ -72,6 +72,19 @@ describe("extractLatinLayoutTokens", () => {
 });
 
 describe("suggestRuFromLatinLayout", () => {
+  it("не отправляет исходные слова и варианты исправления в сеть", () => {
+    const request = vi.spyOn(globalThis, "fetch").mockResolvedValue({ ok: true } as Response);
+    try {
+      expect(suggestRuFromLatinLayout("ghbdtn", (word) => word === "привет")).toBe("привет");
+      expect(suggestRuFromLatinLayout(",elbntg", (word) => word === "будите")).toBe("будите");
+      suggestRuFromLatinLayout("kjjklk’;kg", () => false);
+      expect(suggestRuFromLatinLayout("online", () => false)).toBeNull();
+      expect(request).not.toHaveBeenCalled();
+    } finally {
+      request.mockRestore();
+    }
+  });
+
   it("«ghbdtn» и «,elbnt» даёт известное слово", () => {
     const known = (w: string) => ["привет", "будите"].includes(w.toLowerCase());
     expect(suggestRuFromLatinLayout("ghbdtn", known)).toBe("привет");

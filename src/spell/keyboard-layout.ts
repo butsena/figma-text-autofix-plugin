@@ -256,33 +256,15 @@ export function suggestRuFromLatinLayout(
   const converted = convertEnLayoutToRu(word);
   if (!converted || converted === word) return null;
   if (![...converted].some((ch) => /[а-яё]/i.test(ch))) return null;
-  if (isKnown(converted)) {
-    // #region agent log
-    fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "B", location: "keyboard-layout.ts:suggestRuFromLatinLayout", message: "hit dictionary", data: { word, converted, path: "known" }, timestamp: Date.now() }) }).catch(() => {});
-    // #endregion
-    return converted;
-  }
+  if (isKnown(converted)) return converted;
 
   for (let drop = 1; drop <= 2; drop++) {
     if (converted.length - drop < 4) break;
     const trimmed = converted.slice(0, -drop);
-    if (isKnown(trimmed)) {
-      // #region agent log
-      fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "B", location: "keyboard-layout.ts:suggestRuFromLatinLayout", message: "hit dictionary after trim", data: { word, converted, trimmed, path: "trim" }, timestamp: Date.now() }) }).catch(() => {});
-      // #endregion
-      return trimmed;
-    }
+    if (isKnown(trimmed)) return trimmed;
   }
 
-  if (looksLikeRuTypedInEnLayout(word)) {
-    // #region agent log
-    fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "B", location: "keyboard-layout.ts:suggestRuFromLatinLayout", message: "fallback no-vowel", data: { word, converted, path: "no-vowel" }, timestamp: Date.now() }) }).catch(() => {});
-    // #endregion
-    return converted;
-  }
-  // #region agent log
-  fetch("http://127.0.0.1:7520/ingest/998942c3-cbef-47ae-ab61-6b043d611d42", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "cb30d9" }, body: JSON.stringify({ sessionId: "cb30d9", runId: "probe", hypothesisId: "B", location: "keyboard-layout.ts:suggestRuFromLatinLayout", message: "miss: vowel and unknown", data: { word, converted, hasEnVowel: true, path: "null" }, timestamp: Date.now() }) }).catch(() => {});
-  // #endregion
+  if (looksLikeRuTypedInEnLayout(word)) return converted;
   return null;
 }
 
