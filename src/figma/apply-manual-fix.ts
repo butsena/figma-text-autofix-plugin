@@ -1,4 +1,5 @@
 import { trackFollowUpAutoFixes } from "../analytics/follow-up-auto";
+import type { AnalyticsSpellingSource } from "../analytics/schema";
 import { trackManualFixFromDto } from "../analytics/pipeline-events";
 import { isChoicePolicy } from "../core/apply-policy";
 import {
@@ -52,7 +53,11 @@ export function resetManualApplyInFlightForTests(): void {
   inFlightManualOps.clear();
 }
 
-export async function applyManualFixAndRefresh(nodeId: string, fix: TextFixDto): Promise<void> {
+export async function applyManualFixAndRefresh(
+  nodeId: string,
+  fix: TextFixDto,
+  spellingSource?: AnalyticsSpellingSource,
+): Promise<void> {
   const key = manualOperationKey(nodeId, fix);
   const pending = inFlightManualOps.get(key);
   if (pending) {
@@ -60,7 +65,7 @@ export async function applyManualFixAndRefresh(nodeId: string, fix: TextFixDto):
     return;
   }
 
-  const run = applyManualFixOnce(nodeId, fix);
+  const run = applyManualFixOnce(nodeId, fix, spellingSource);
   inFlightManualOps.set(key, run);
   try {
     await run;
@@ -69,7 +74,11 @@ export async function applyManualFixAndRefresh(nodeId: string, fix: TextFixDto):
   }
 }
 
-async function applyManualFixOnce(nodeId: string, fix: TextFixDto): Promise<void> {
+async function applyManualFixOnce(
+  nodeId: string,
+  fix: TextFixDto,
+  spellingSource?: AnalyticsSpellingSource,
+): Promise<void> {
   const node = await figma.getNodeByIdAsync(nodeId);
   if (!node || node.type !== "TEXT") return;
 
@@ -103,7 +112,7 @@ async function applyManualFixOnce(nodeId: string, fix: TextFixDto): Promise<void
   // Choice уходит в choice_resolved, обычная замена — в manual_fix_complete.
   // Второй счётчик на ту же правку не отправляется.
   if (success.track !== "none") {
-    trackManualFixFromDto(fix, "applied");
+    trackManualFixFromDto(fix, "applied", spellingSource);
   }
 
   if (!textChanges) {

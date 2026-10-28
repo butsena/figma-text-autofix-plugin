@@ -60,7 +60,7 @@ describe("manual QA collector #59", () => {
   it("сохраняет только безопасные поля и целиком отклоняет неверную запись", () => {
     const rows: unknown[][] = [];
     const scope = vm.createContext({
-      SpreadsheetApp: { getActiveSpreadsheet: () => ({
+      SpreadsheetApp: { flush() {}, getActiveSpreadsheet: () => ({
         getSheetByName: (name: string) => {
           expect(name).toBe("events");
           return { appendRow: (row: unknown[]) => rows.push(Array.from(row)) };

@@ -1,12 +1,15 @@
 import { isChoicePolicy } from "../core/apply-policy";
 import { isOrthographyRuleId } from "../rules/orthography-spell-rules";
 import type { AutoApplyReportDto, CheckSummary, TextFixDto } from "../shared/messages";
+import { normalizeSpellingSource } from "../shared/spelling-source";
 import {
   aggregateAnalyticsCategories,
   type AnalyticsErrorCode,
   type AnalyticsErrorStage,
+  type AnalyticsSpellingSource,
 } from "./schema";
 import { trackAnalytics } from "./track";
+import { createAnalyticsEventId } from "./event-id";
 
 /** Кнопка «Проверить орфографию»: один клик, без текста слоёв. */
 export function trackSpellcheckRequested(): void {
@@ -48,17 +51,28 @@ export function trackAutoFixComplete(
  * `applied` вызывать только после подтверждённого результата.
  * Choice становится `choice_resolved`, а не вторым `manual_fix_complete`.
  */
-export function trackManualFixFromDto(fix: TextFixDto, action: "applied" | "skipped"): void {
+export function trackManualFixFromDto(
+  fix: TextFixDto,
+  action: "applied" | "skipped",
+  spellingSource?: AnalyticsSpellingSource,
+): void {
   if (isChoicePolicy(fix.rule.applyPolicy)) {
     trackAnalytics("choice_resolved", {
       action: action === "applied" ? "confirmed" : "skipped",
     });
     return;
   }
-  trackAnalytics("manual_fix_complete", {
-    action,
-    kind: isOrthographyRuleId(fix.rule.id) ? "orthography" : "confirm",
-  });
+  const kind = isOrthographyRuleId(fix.rule.id) ? "orthography" : "confirm";
+  if (kind === "orthography" && action === "applied") {
+    trackAnalytics("manual_fix_complete", {
+      action,
+      kind,
+      source: normalizeSpellingSource(spellingSource),
+      event_id: createAnalyticsEventId(),
+    });
+    return;
+  }
+  trackAnalytics("manual_fix_complete", { action, kind });
 }
 
 export function mapErrorToAnalyticsCode(error: unknown): AnalyticsErrorCode {

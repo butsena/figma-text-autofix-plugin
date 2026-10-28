@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TextFixDto } from "../shared/messages";
+import type { AnalyticsSpellingSource } from "../analytics/schema";
 
 const trackAnalytics = vi.fn();
 
@@ -169,9 +170,9 @@ describe("applyManualFixAndRefresh", () => {
   it("обычная замена без изменения текста не считается успехом", async () => {
     const node = fakeTextNode("Кватира");
     installNode(node);
-    const unchanged = confirmFix({ before: "Кватира", after: "Кватира", to: 7 });
+    const unchanged = { ...spellFix(), after: "Кватира" };
 
-    await applyManualFixAndRefresh(node.id, unchanged);
+    await applyManualFixAndRefresh(node.id, unchanged, "suggested");
 
     expect(applyTextFixesToTextNode).not.toHaveBeenCalled();
     expect(trackAnalytics).not.toHaveBeenCalled();
@@ -182,7 +183,7 @@ describe("applyManualFixAndRefresh", () => {
     installNode(node);
     vi.mocked(applyTextFixesToTextNode).mockResolvedValue([]);
 
-    await applyManualFixAndRefresh(node.id, confirmFix());
+    await applyManualFixAndRefresh(node.id, spellFix(), "custom");
 
     expect(trackAnalytics).not.toHaveBeenCalled();
     expect(runAutofixAutoPasses).toHaveBeenCalled();
@@ -208,19 +209,51 @@ describe("applyManualFixAndRefresh", () => {
     expect(trackAnalytics).toHaveBeenCalledWith("manual_fix_complete", {
       action: "applied",
       kind: "orthography",
+      source: "unknown",
+      event_id: expect.stringMatching(/^evt_[A-Za-z0-9_-]{16,64}$/),
     });
     expect(JSON.stringify(trackAnalytics.mock.calls)).not.toMatch(/Кватира|Квартира/);
   });
 
+  it.each(["suggested", "custom", "unknown"] as const)("source %s начисляется в том же единственном успешном событии", async (source) => {
+    const node = fakeTextNode("Кватира");
+    installNode(node);
+    vi.mocked(applyTextFixesToTextNode).mockImplementation(async () => {
+      node.characters = "Квартира";
+      return [{} as never];
+    });
+
+    await applyManualFixAndRefresh(node.id, spellFix(), source);
+
+    expect(trackAnalytics).toHaveBeenCalledExactlyOnceWith("manual_fix_complete", {
+      action: "applied", kind: "orthography", source,
+      event_id: expect.stringMatching(/^evt_[A-Za-z0-9_-]{16,64}$/),
+    });
+  });
+
+  it("невалидные метаданные не попадают в аналитику", async () => {
+    const node = fakeTextNode("Кватира");
+    installNode(node);
+    vi.mocked(applyTextFixesToTextNode).mockImplementation(async () => {
+      node.characters = "Квартира";
+      return [{} as never];
+    });
+    await applyManualFixAndRefresh(node.id, spellFix(), "текст пользователя" as AnalyticsSpellingSource);
+    expect(trackAnalytics).toHaveBeenCalledExactlyOnceWith("manual_fix_complete", {
+      action: "applied", kind: "orthography", source: "unknown",
+      event_id: expect.stringMatching(/^evt_[A-Za-z0-9_-]{16,64}$/),
+    });
+  });
+
   it("нет слоя, устаревший фрагмент и исключение не пишут успех", async () => {
     installNode(null);
-    await applyManualFixAndRefresh("missing", confirmFix());
+    await applyManualFixAndRefresh("missing", spellFix(), "suggested");
     expect(trackAnalytics).not.toHaveBeenCalled();
 
     const stale = fakeTextNode("уже другое");
     installNode(stale);
     vi.mocked(applyTextFixesToTextNode).mockResolvedValue([]);
-    await applyManualFixAndRefresh(stale.id, confirmFix());
+    await applyManualFixAndRefresh(stale.id, spellFix(), "custom");
     expect(trackAnalytics).not.toHaveBeenCalled();
     expect(runAutofixAutoPasses).toHaveBeenCalled();
 
@@ -229,7 +262,7 @@ describe("applyManualFixAndRefresh", () => {
     const node = fakeTextNode("Кватира");
     installNode(node);
     vi.mocked(applyTextFixesToTextNode).mockRejectedValue(new Error("apply failed"));
-    await expect(applyManualFixAndRefresh(node.id, confirmFix())).rejects.toThrow("apply failed");
+    await expect(applyManualFixAndRefresh(node.id, spellFix(), "suggested")).rejects.toThrow("apply failed");
     expect(trackAnalytics).not.toHaveBeenCalled();
     expect(runAutofixAutoPasses).not.toHaveBeenCalled();
   });
@@ -255,7 +288,7 @@ describe("applyManualFixAndRefresh", () => {
       return [{} as never];
     });
 
-    await applyManualFixAndRefresh(node.id, choiceFix("напишете"));
+    await applyManualFixAndRefresh(node.id, choiceFix("напишете"), "custom");
 
     expect(trackAnalytics).toHaveBeenCalledTimes(1);
     expect(trackAnalytics).toHaveBeenCalledWith("choice_resolved", { action: "confirmed" });
@@ -317,6 +350,8 @@ describe("applyManualFixAndRefresh", () => {
     expect(trackAnalytics).toHaveBeenCalledWith("manual_fix_complete", {
       action: "applied",
       kind: "orthography",
+      source: "unknown",
+      event_id: expect.stringMatching(/^evt_[A-Za-z0-9_-]{16,64}$/),
     });
     expect(trackAnalytics.mock.calls.filter((call) => call[0] === "auto_fix_complete")).toHaveLength(1);
   });
@@ -340,6 +375,8 @@ describe("applyManualFixAndRefresh", () => {
     expect(trackAnalytics).toHaveBeenCalledWith("manual_fix_complete", {
       action: "applied",
       kind: "orthography",
+      source: "unknown",
+      event_id: expect.stringMatching(/^evt_[A-Za-z0-9_-]{16,64}$/),
     });
     expect(trackAnalytics.mock.calls.some((call) => call[0] === "auto_fix_complete")).toBe(false);
   });

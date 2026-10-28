@@ -30,7 +30,7 @@ export async function handleUiMessage(
     }
     case "ui:applyManualFix": {
       try {
-        await applyManualFixAndRefresh(message.nodeId, message.fix);
+        await applyManualFixAndRefresh(message.nodeId, message.fix, message.spellingSource);
       } catch (e) {
         trackPluginError("manual_apply", e);
         throw e;

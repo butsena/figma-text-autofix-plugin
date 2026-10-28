@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ANALYTICS_FORBIDDEN_KEYS,
   ANALYTICS_SCHEMA_VERSION,
+  ANALYTICS_SPELLING_SOURCES,
   aggregateAnalyticsCategories,
   buildAnalyticsEnvelope,
   mapRuleCategoryToAnalytics,
@@ -127,6 +128,123 @@ describe("analytics schema v1", () => {
     if (!built.ok) return;
     expect(built.envelope.event).toBe("spellcheck_requested");
     expect(built.envelope.payload).toEqual({});
+  });
+
+  it.each(ANALYTICS_SPELLING_SOURCES)("сохраняет источник %s только как enum", (source) => {
+    const built = buildAnalyticsEnvelope({
+      event: "manual_fix_complete",
+      payload: { action: "applied", kind: "orthography", source },
+      sessionId: "sess_abc12345", pluginVersion: "0.22.0",
+    });
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    expect(JSON.parse(serializeAnalyticsEnvelope(built.envelope)!).payload).toEqual({
+      action: "applied", kind: "orthography", source,
+    });
+  });
+
+  it("не дописывает source старому клиенту и не меняет его семантику", () => {
+    for (const action of ["applied", "skipped"] as const) {
+      for (const kind of ["orthography", "confirm"] as const) {
+        const built = buildAnalyticsEnvelope({
+          event: "manual_fix_complete", payload: { action, kind },
+          sessionId: "sess_abc12345", pluginVersion: "0.18.0",
+        });
+        expect(built.ok).toBe(true);
+        if (!built.ok) continue;
+        expect(built.envelope.payload).toEqual({ action, kind });
+        expect(JSON.parse(serializeAnalyticsEnvelope(built.envelope)!).payload).not.toHaveProperty("source");
+      }
+    }
+  });
+
+  it.each(["PRIVATE_TEXT", "Suggested", "", null, 1, {}, [], undefined])(
+    "отклоняет неверный источник #%s, не превращая его в legacy", (source) => {
+      const built = buildAnalyticsEnvelope({
+        event: "manual_fix_complete",
+        // @ts-expect-error проверка недоверенных данных
+        payload: { action: "applied", kind: "orthography", source },
+        sessionId: "sess_abc12345", pluginVersion: "0.22.0",
+      });
+      expect(built).toEqual({ ok: false, reason: "payload.source" });
+      expect(JSON.stringify(built)).not.toContain("PRIVATE_TEXT");
+    },
+  );
+
+  it("не разрешает source у пропуска, confirm, choice и других событий", () => {
+    for (const [event, payload] of [
+      ["manual_fix_complete", { action: "skipped", kind: "orthography", source: "suggested" }],
+      ["manual_fix_complete", { action: "applied", kind: "confirm", source: "custom" }],
+      ["manual_fix_complete", { action: "skipped", kind: "confirm", source: "unknown" }],
+      ["choice_resolved", { action: "confirmed", source: "suggested" }],
+      ["choice_resolved", { action: "skipped", source: "suggested" }],
+      ["spellcheck_requested", { source: "unknown" }],
+      ["plugin_open", { has_text_layers: true, source: "suggested" }],
+    ] as const) {
+      const built = buildAnalyticsEnvelope({
+        event, payload: payload as never,
+        sessionId: "sess_abc12345", pluginVersion: "0.22.0",
+      });
+      expect(built).toEqual({ ok: false, reason: "payload.source" });
+    }
+  });
+
+  it("сохраняет enum источника, отбрасывая слова и прочие приватные поля", () => {
+    const built = buildAnalyticsEnvelope({
+      event: "manual_fix_complete",
+      payload: {
+        action: "applied", kind: "orthography", source: "custom",
+        // @ts-expect-error приватные поля должны быть отброшены
+        before: "PRIVATE_TEXT", after: "PRIVATE_TEXT", sourceText: "PRIVATE_TEXT",
+        candidate: "PRIVATE_TEXT", extra: { nodeId: "PRIVATE_TEXT" },
+      },
+      sessionId: "sess_abc12345", pluginVersion: "0.22.0",
+    });
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    const json = serializeAnalyticsEnvelope(built.envelope)!;
+    expect(JSON.parse(json).payload).toEqual({ action: "applied", kind: "orthography", source: "custom" });
+    expect(json).not.toContain("PRIVATE_TEXT");
+  });
+
+  it.each(["evt_" + "a".repeat(12), "evt_" + "Z_9-".repeat(15)])(
+    "сохраняет одноразовый event_id допустимой длины", (event_id) => {
+      const built = buildAnalyticsEnvelope({
+        event: "manual_fix_complete",
+        payload: { action: "applied", kind: "orthography", source: "suggested", event_id },
+        sessionId: "sess_abc12345", pluginVersion: "0.22.0",
+      });
+      expect(built.ok).toBe(true);
+      if (!built.ok) return;
+      expect(JSON.parse(serializeAnalyticsEnvelope(built.envelope)!).payload).toEqual({
+        action: "applied", kind: "orthography", source: "suggested", event_id,
+      });
+    },
+  );
+
+  it.each(["", "evt_" + "a".repeat(11), "evt_" + "a".repeat(61), "sess_123456789012",
+    "evt_PRIVATE TEXT", "evt_123456789012\n", "evt_123456789012\r", null, 42, {}, undefined])("отклоняет неверный event_id #%s", (event_id) => {
+    const built = buildAnalyticsEnvelope({
+      event: "manual_fix_complete",
+      payload: { action: "applied", kind: "orthography", source: "custom", event_id } as never,
+      sessionId: "sess_abc12345", pluginVersion: "0.22.0",
+    });
+    expect(built).toEqual({ ok: false, reason: "payload.event_id" });
+  });
+
+  it("не разрешает event_id вне состоявшейся орфографической замены", () => {
+    for (const [event, payload] of [
+      ["manual_fix_complete", { action: "skipped", kind: "orthography" }],
+      ["manual_fix_complete", { action: "applied", kind: "confirm" }],
+      ["choice_resolved", { action: "confirmed" }],
+      ["plugin_open", { has_text_layers: true }],
+    ] as const) {
+      const built = buildAnalyticsEnvelope({
+        event, payload: { ...payload, event_id: "evt_123456789012" } as never,
+        sessionId: "sess_abc12345", pluginVersion: "0.22.0",
+      });
+      expect(built).toEqual({ ok: false, reason: "payload.event_id" });
+    }
   });
 
   it("мапит неизвестную категорию в other", () => {

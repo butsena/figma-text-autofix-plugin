@@ -454,9 +454,9 @@
     {
       "scenarioId": "51",
       "agentStatus": "fixed",
-      "agentNote": "Community уже v22, а pluginVersion с запуска аналитики оставался 0.18.0. Release-сборка шлёт 0.22.0. Обычный build в events не пишет. T-141: повторный клик даёт одну замену и один applied; пустой, устаревший результат и ошибка сохранения успех не пишут; исходная форма — один choice_resolved confirmed. T-142: после ручной правки auto_fix_complete содержит только новую дельту; нулевая дельта, повтор и ошибка старый отчёт не отправляют.",
+      "agentNote": "Community уже v22, а pluginVersion с запуска аналитики оставался 0.18.0. Release-сборка шлёт 0.22.0. Обычный build в events не пишет. T-141: повторный клик даёт одну замену и один applied; пустой, устаревший результат и ошибка сохранения успех не пишут; исходная форма — один choice_resolved confirmed. T-142: после ручной правки auto_fix_complete содержит только новую дельту; нулевая дельта, повтор и ошибка старый отчёт не отправляют. T-135: источник успешной орфографической замены suggested/custom/unknown, одноразовый event_id и защита повторной доставки; старые события остаются неизвестными, без второго начисления. Автоматические проверки не заменяют ручную приёмку новых случаев.",
       "checkedAt": "2026-10-27",
-      "commit": "a3217681d3f411525bb871400da58327f7ecbb19",
+      "commit": null,
       "method": "engine-test",
       "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
     },

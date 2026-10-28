@@ -1,4 +1,5 @@
 import type { ApplyPolicy } from "../core/apply-policy";
+import type { AnalyticsSpellingSource } from "../analytics/schema";
 
 export type CheckSummary = {
   checkedLayers: number;
@@ -133,6 +134,8 @@ export type UiToPluginMessage =
       type: "ui:applyManualFix";
       nodeId: string;
       fix: TextFixDto;
+      /** Только enum источника орфографической замены; в слое не сохраняется. */
+      spellingSource?: AnalyticsSpellingSource;
     }
   | {
       type: "ui:skipManualFix";

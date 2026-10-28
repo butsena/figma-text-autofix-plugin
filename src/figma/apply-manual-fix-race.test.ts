@@ -209,8 +209,8 @@ describe("повтор ручного применения на настояще
     vi.mocked(figma.getNodeByIdAsync).mockImplementation(async () => node as unknown as TextNode);
     figma.currentPage.selection = [node as unknown as TextNode];
 
-    const first = applyManualFixAndRefresh(node.id, spellDto());
-    const second = applyManualFixAndRefresh(node.id, spellDto());
+    const first = applyManualFixAndRefresh(node.id, spellDto(), "suggested");
+    const second = applyManualFixAndRefresh(node.id, spellDto(), "custom");
     await vi.waitFor(() => expect(fontCalls).toBeGreaterThan(0));
     await Promise.resolve();
     expect(fontCalls).toBe(1);
@@ -223,6 +223,8 @@ describe("повтор ручного применения на настояще
     expect(trackAnalytics).toHaveBeenCalledWith("manual_fix_complete", {
       action: "applied",
       kind: "orthography",
+      source: "suggested",
+      event_id: expect.stringMatching(/^evt_[A-Za-z0-9_-]{16,64}$/),
     });
   });
 
