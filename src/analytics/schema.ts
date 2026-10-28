@@ -36,6 +36,11 @@ export const ANALYTICS_FIX_CATEGORIES = [
 
 export type AnalyticsFixCategory = (typeof ANALYTICS_FIX_CATEGORIES)[number];
 
+/** Источник применённой орфографической замены, без самого слова или варианта. */
+export const ANALYTICS_SPELLING_SOURCES = ["suggested", "custom", "unknown"] as const;
+
+export type AnalyticsSpellingSource = (typeof ANALYTICS_SPELLING_SOURCES)[number];
+
 export const ANALYTICS_ERROR_STAGES = [
   "open",
   "scan",
@@ -90,7 +95,7 @@ export type AutoFixCompletePayload = {
   categories: Partial<Record<AnalyticsFixCategory, number>>;
 };
 
-export type ManualFixCompletePayload = {
+type ManualFixCompleteBase = {
   /**
    * applied — текст уже изменён этой правкой.
    * skipped — человек пропустил карточку; это не исправление.
@@ -101,6 +106,18 @@ export type ManualFixCompletePayload = {
   /** confirm = «Обратите внимание»; orthography = поле «как исправить». */
   kind: "confirm" | "orthography";
 };
+
+export type ManualFixCompletePayload =
+  // Старый клиент не передаёт source. Его запись остаётся без этого поля.
+  | (ManualFixCompleteBase & { source?: never; event_id?: never })
+  | {
+      action: "applied";
+      kind: "orthography";
+      /** unknown — новый клиент не смог определить источник; это не исторический вывод. */
+      source?: AnalyticsSpellingSource;
+      /** Одноразовый случайный id события, не идентификатор человека или слоя. */
+      event_id?: string;
+    };
 
 export type ChoiceResolvedPayload = {
   /**
@@ -140,6 +157,7 @@ export type AnalyticsEnvelope<E extends AnalyticsEventName = AnalyticsEventName>
 
 const EVENT_NAME_SET = new Set<string>(ANALYTICS_EVENT_NAMES);
 const CATEGORY_SET = new Set<string>(ANALYTICS_FIX_CATEGORIES);
+const SPELLING_SOURCE_SET = new Set<string>(ANALYTICS_SPELLING_SOURCES);
 const STAGE_SET = new Set<string>(ANALYTICS_ERROR_STAGES);
 const CODE_SET = new Set<string>(ANALYTICS_ERROR_CODES);
 
@@ -208,6 +226,20 @@ function validatePayload(event: AnalyticsEventName, payload: unknown): string | 
     return "payload must be object";
   }
   const p = payload as Record<string, unknown>;
+
+  // В отличие от неизвестных полей, source уже имеет договорённую семантику:
+  // неподходящее событие/действие или свободный текст отклоняют всю запись.
+  if (Object.prototype.hasOwnProperty.call(p, "source") &&
+      (event !== "manual_fix_complete" || p.action !== "applied" || p.kind !== "orthography" ||
+       typeof p.source !== "string" || !SPELLING_SOURCE_SET.has(p.source))) {
+    return "source";
+  }
+  if (Object.prototype.hasOwnProperty.call(p, "event_id") &&
+      (event !== "manual_fix_complete" || p.action !== "applied" || p.kind !== "orthography" ||
+       typeof p.event_id !== "string" || p.event_id !== p.event_id.trim() ||
+       !/^evt_[A-Za-z0-9_-]{12,60}$/.test(p.event_id))) {
+    return "event_id";
+  }
 
   switch (event) {
     case "plugin_open":
@@ -326,7 +358,12 @@ function sanitizePayload<E extends AnalyticsEventName>(
     }
     case "manual_fix_complete": {
       const p = payload as ManualFixCompletePayload;
-      return { action: p.action, kind: p.kind } as AnalyticsPayloadByEvent[E];
+      return {
+        action: p.action,
+        kind: p.kind,
+        ...(Object.prototype.hasOwnProperty.call(p, "source") ? { source: p.source } : {}),
+        ...(Object.prototype.hasOwnProperty.call(p, "event_id") ? { event_id: p.event_id } : {}),
+      } as AnalyticsPayloadByEvent[E];
     }
     case "choice_resolved": {
       const p = payload as ChoiceResolvedPayload;

@@ -1,5 +1,6 @@
 import type { TextFixDto } from "../shared/messages";
 import { capitalizeLike, replacementFromSpellInput } from "../shared/case";
+import { classifySpellingSource } from "../shared/spelling-source";
 import { countConfirmFixes } from "./ui-helpers";
 import { sendToPlugin } from "./ui-plugin-bridge";
 import { render } from "./ui-render";
@@ -53,6 +54,7 @@ export function applySpellFix(cardIdx: number, fixIdx: number): void {
   sendToPlugin({
     type: "ui:applyManualFix",
     nodeId: card.nodeId,
+    spellingSource: classifySpellingSource(fix.before, fix.after, after),
     fix: {
       ...fix,
       after,

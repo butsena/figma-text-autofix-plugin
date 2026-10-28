@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 import {
-  ANALYTICS_EVENT_NAMES, ANALYTICS_FIX_CATEGORIES,
+  ANALYTICS_EVENT_NAMES, ANALYTICS_FIX_CATEGORIES, ANALYTICS_SPELLING_SOURCES,
   ANALYTICS_ERROR_STAGES, ANALYTICS_ERROR_CODES, buildAnalyticsEnvelope,
 } from "./schema";
 
@@ -25,13 +25,50 @@ function envelope(event = "plugin_open", payload = payloads[event]) {
 }
 
 // Все сервисы локальные. Ни рабочая таблица, ни сеть здесь недоступны.
-function collector({ appendFails = false, lockFails = false, existingSheet = true } = {}) {
+function collector({ appendFails = false, lockFails = false, existingSheet = true, flushFailsOnce = false } = {}) {
   const rows = [];
+  const searches = [];
+  const trace = [];
+  let held = false;
+  // В существующем листе заголовок есть, но rows хранит только новые записи.
+  const headerRows = existingSheet ? 1 : 0;
+  function storedRow(row) { return rows[row - 1 - headerRows]; }
   const appendRow = vi.fn((row) => {
     if (appendFails) throw new Error("private failure must not escape");
+    trace.push("append");
     rows.push(Array.from(row));
   });
-  const sheet = { appendRow, getLastRow: () => 0, setFrozenRows: vi.fn() };
+  const getRange = vi.fn((row, column, numRows, numColumns) => {
+    if (!held) throw new Error("Range access must be inside ScriptLock");
+    trace.push("range");
+    return {
+      getValues: () => Array.from({ length: numRows }, (_, i) =>
+        storedRow(row + i).slice(column - 1, column - 1 + numColumns)),
+      createTextFinder(needle) {
+        const search = { row, column, numRows, numColumns, needle, options: {} };
+        searches.push(search);
+        const finder = {
+          matchCase(value) { search.options.matchCase = value; return this; },
+          matchEntireCell(value) { search.options.matchEntireCell = value; return this; },
+          matchFormulaText(value) { search.options.matchFormulaText = value; return this; },
+          useRegularExpression(value) { search.options.useRegularExpression = value; return this; },
+          findAll() {
+            if (!held) throw new Error("Search must be inside ScriptLock");
+            trace.push("search");
+            const matches = [];
+            for (let i = 0; i < numRows; i++) {
+              if (String(storedRow(row + i)?.[column - 1] ?? "").includes(needle)) {
+                matches.push({ getRow: () => row + i });
+              }
+            }
+            return matches;
+          },
+        };
+        return finder;
+      },
+    };
+  });
+  const sheet = { appendRow, getLastRow: () => rows.length + headerRows, getRange, setFrozenRows: vi.fn() };
   let present = existingSheet;
   const spreadsheet = {
     getSheetByName: vi.fn((name) => {
@@ -44,12 +81,25 @@ function collector({ appendFails = false, lockFails = false, existingSheet = tru
       return sheet;
     }),
   };
-  const waitLock = vi.fn(() => { if (lockFails) throw new Error("lock unavailable"); });
-  const releaseLock = vi.fn();
+  const waitLock = vi.fn(() => {
+    if (lockFails) throw new Error("lock unavailable");
+    if (held) throw new Error("Lock already held");
+    held = true;
+    trace.push("lock");
+  });
+  const releaseLock = vi.fn(() => { trace.push("release"); held = false; });
   const getScriptLock = vi.fn(() => ({ waitLock, releaseLock }));
   const getActiveSpreadsheet = vi.fn(() => spreadsheet);
+  const flush = vi.fn(() => {
+    if (!held) throw new Error("Flush must be inside ScriptLock");
+    trace.push("flush");
+    if (flushFailsOnce) {
+      flushFailsOnce = false;
+      throw new Error("private failure after append");
+    }
+  });
   const scope = vm.createContext({
-    SpreadsheetApp: { getActiveSpreadsheet }, LockService: { getScriptLock },
+    SpreadsheetApp: { getActiveSpreadsheet, flush }, LockService: { getScriptLock },
     ContentService: {
       MimeType: { JSON: "application/json" },
       createTextOutput: (text) => ({ text, setMimeType() { return this; } }),
@@ -57,7 +107,7 @@ function collector({ appendFails = false, lockFails = false, existingSheet = tru
   });
   vm.runInContext(source, scope, { timeout: 1000 });
   return {
-    scope, rows, appendRow, spreadsheet, getActiveSpreadsheet, getScriptLock, waitLock, releaseLock,
+    scope, rows, searches, trace, getRange, appendRow, flush, spreadsheet, getActiveSpreadsheet, getScriptLock, waitLock, releaseLock,
     postRaw: (raw) => JSON.parse(scope.doPost({ postData: { contents: raw } }).text),
     post(body) { return this.postRaw(JSON.stringify(body)); },
   };
@@ -68,6 +118,7 @@ describe("Apps Script collector: совместимость schema v1", () => {
     const { scope } = collector();
     expect(Object.keys(scope.EVENT_NAMES)).toEqual([...ANALYTICS_EVENT_NAMES]);
     expect(Array.from(scope.FIX_CATEGORIES)).toEqual([...ANALYTICS_FIX_CATEGORIES]);
+    expect(Array.from(scope.SPELLING_SOURCES)).toEqual([...ANALYTICS_SPELLING_SOURCES]);
     expect(Array.from(scope.ERROR_STAGES)).toEqual([...ANALYTICS_ERROR_STAGES]);
     expect(Array.from(scope.ERROR_CODES)).toEqual([...ANALYTICS_ERROR_CODES]);
   });
@@ -104,6 +155,105 @@ describe("Apps Script collector: совместимость schema v1", () => {
     expect(JSON.parse(c.rows[0][6])).toEqual(payload);
   });
 
+  it.each(ANALYTICS_SPELLING_SOURCES)("принимает клиентский источник %s без потери поля", (source) => {
+    const c = collector();
+    const built = buildAnalyticsEnvelope({
+      event: "manual_fix_complete", payload: { action: "applied", kind: "orthography", source },
+      sessionId: "sess_fixture01", pluginVersion: "0.22.0", clientTime: "2026-10-27T12:00:00.000Z",
+    });
+    expect(built.ok).toBe(true);
+    expect(c.post(built.envelope)).toEqual({ ok: true });
+    expect(c.rows[0]).toHaveLength(7);
+    expect(JSON.parse(c.rows[0][6])).toEqual({ action: "applied", kind: "orthography", source });
+  });
+
+  it("не дописывает unknown старым событиям без source", () => {
+    const c = collector();
+    for (const action of ["applied", "skipped"]) for (const kind of ["confirm", "orthography"]) {
+      expect(c.post(envelope("manual_fix_complete", { action, kind }))).toEqual({ ok: true });
+      expect(JSON.parse(c.rows.at(-1)[6])).toEqual({ action, kind });
+    }
+  });
+
+  it("повторная доставка одного event_id даёт одну строку, поиск и запись под одной блокировкой", () => {
+    const c = collector();
+    const payload = { action: "applied", kind: "orthography", source: "suggested", event_id: "evt_123456789012" };
+    expect(c.post(envelope("manual_fix_complete", payload))).toEqual({ ok: true });
+    // Порядок JSON-полей и служебное время доставки не меняют содержимое события.
+    expect(c.post({
+      ...envelope("manual_fix_complete", {
+        event_id: payload.event_id, source: "suggested", kind: "orthography", action: "applied",
+        before: "PRIVATE_TEXT",
+      }), client_time: "2026-10-27T12:00:00.000Z",
+    })).toEqual({ ok: true, duplicate: true });
+    expect(c.rows).toHaveLength(1);
+    expect(JSON.parse(c.rows[0][6])).toEqual(payload);
+    expect(c.trace).toEqual(["lock", "append", "flush", "release", "lock", "range", "search", "range", "release"]);
+    expect(c.searches[0]).toEqual({
+      row: 2, column: 7, numRows: 1, numColumns: 1, needle: '"event_id":"evt_123456789012"',
+      options: { matchCase: true, matchEntireCell: false, matchFormulaText: false, useRegularExpression: false },
+    });
+    expect(c.releaseLock).toHaveBeenCalledTimes(2);
+  });
+
+  it("повтор после ошибки ответа/flush не дублирует уже сохранённый ID", () => {
+    const c = collector({ flushFailsOnce: true });
+    const payload = { action: "applied", kind: "orthography", source: "custom", event_id: "evt_123456789012" };
+    expect(c.post(envelope("manual_fix_complete", payload))).toEqual({ ok: false, error: "server" });
+    expect(c.rows).toHaveLength(1);
+    expect(c.post(envelope("manual_fix_complete", payload))).toEqual({ ok: true, duplicate: true });
+    expect(c.rows).toHaveLength(1);
+    expect(c.releaseLock).toHaveBeenCalledTimes(2);
+  });
+
+  it("разные event_id сохраняют две одинаковые по смыслу правки", () => {
+    const c = collector();
+    for (const event_id of ["evt_123456789012", "evt_123456789013"]) {
+      expect(c.post(envelope("manual_fix_complete", {
+        action: "applied", kind: "orthography", source: "custom", event_id,
+      }))).toEqual({ ok: true });
+    }
+    expect(c.rows).toHaveLength(2);
+  });
+
+  it.each([
+    { source: "custom" },
+    { source: "unknown" },
+    { plugin_version: "0.23.0" },
+  ])("отклоняет конфликт event_id без второй строки: %j", (change) => {
+    const c = collector();
+    const payload = { action: "applied", kind: "orthography", source: "suggested", event_id: "evt_123456789012" };
+    expect(c.post(envelope("manual_fix_complete", payload))).toEqual({ ok: true });
+    const body = change.plugin_version ?
+      { ...envelope("manual_fix_complete", payload), plugin_version: change.plugin_version } :
+      envelope("manual_fix_complete", { ...payload, ...change });
+    expect(c.post(body)).toEqual({ ok: false, error: "event_id_conflict" });
+    expect(c.rows).toHaveLength(1);
+    expect(c.releaseLock).toHaveBeenCalledTimes(2);
+  });
+
+  it("сравнивает событие сохранённого ID и ищет по всей истории, включая старые строки", () => {
+    const c = collector();
+    const payload = { action: "applied", kind: "orthography", source: "unknown", event_id: "evt_123456789012" };
+    expect(c.post(envelope("manual_fix_complete", payload))).toEqual({ ok: true });
+    const oldRow = [...c.rows[0]];
+    for (let i = 0; i < 1001; i++) c.rows.push([...oldRow.slice(0, 6), JSON.stringify({ action: "applied", kind: "orthography" })]);
+    expect(c.post(envelope("manual_fix_complete", payload))).toEqual({ ok: true, duplicate: true });
+    expect(c.searches.at(-1).numRows).toBe(1002);
+    c.rows[0][5] = "choice_resolved";
+    expect(c.post(envelope("manual_fix_complete", payload))).toEqual({ ok: false, error: "event_id_conflict" });
+    expect(c.rows).toHaveLength(1002);
+  });
+
+  it("не применяет дедупликацию к legacy без event_id", () => {
+    const c = collector();
+    const body = envelope("manual_fix_complete");
+    expect(c.post(body)).toEqual({ ok: true });
+    expect(c.post(body)).toEqual({ ok: true });
+    expect(c.rows).toHaveLength(2);
+    expect(c.getRange).not.toHaveBeenCalled();
+  });
+
   it("принимает нулевой auto и все разрешённые категории", () => {
     const c = collector();
     expect(c.post(envelope("auto_fix_complete", {
@@ -132,6 +282,18 @@ describe("Apps Script collector: совместимость schema v1", () => {
 });
 
 describe("Apps Script collector: граница приватности и корректности", () => {
+  it.each(ANALYTICS_SPELLING_SOURCES)("сохраняет источник %s, но отбрасывает приватные поля", (source) => {
+    const c = collector();
+    const payload = {
+      action: "applied", kind: "orthography", source,
+      before: "PRIVATE_TEXT", after: "PRIVATE_TEXT", sourceText: "PRIVATE_TEXT",
+      candidate: "PRIVATE_TEXT", extra: { nodeId: "PRIVATE_TEXT" },
+    };
+    expect(c.post(envelope("manual_fix_complete", payload))).toEqual({ ok: true });
+    expect(JSON.parse(c.rows[0][6])).toEqual({ action: "applied", kind: "orthography", source });
+    expect(JSON.stringify(c.rows)).not.toContain("PRIVATE_TEXT");
+  });
+
   it.each(ANALYTICS_EVENT_NAMES)("не сохраняет лишние/защищённые поля в %s", (event) => {
     const c = collector();
     const body = {
@@ -161,6 +323,20 @@ describe("Apps Script collector: граница приватности и кор
     envelope("plugin_open", {}), envelope("plugin_open", { has_text_layers: "true" }),
     envelope("manual_fix_complete", { action: "confirmed", kind: "confirm" }),
     envelope("manual_fix_complete", { action: "applied", kind: "PRIVATE_TEXT" }),
+    ...["PRIVATE_TEXT", "Suggested", "", null, 1, {}, []].map((source) =>
+      envelope("manual_fix_complete", { action: "applied", kind: "orthography", source })),
+    ...["applied", "skipped"].flatMap((action) => ["confirm", "orthography"].flatMap((kind) =>
+      action === "applied" && kind === "orthography" ? [] :
+        ANALYTICS_SPELLING_SOURCES.map((source) => envelope("manual_fix_complete", { action, kind, source })))),
+    ...ANALYTICS_EVENT_NAMES.filter((event) => event !== "manual_fix_complete").map((event) =>
+      envelope(event, { ...payloads[event], source: "unknown" })),
+    ...["", "evt_" + "a".repeat(11), "evt_" + "a".repeat(61), "PRIVATE_TEXT", "evt_PRIVATE TEXT", "evt_123456789012\n", null, 1, {}].map((event_id) =>
+      envelope("manual_fix_complete", { action: "applied", kind: "orthography", source: "custom", event_id })),
+    ...["applied", "skipped"].flatMap((action) => ["confirm", "orthography"].flatMap((kind) =>
+      action === "applied" && kind === "orthography" ? [] :
+        [envelope("manual_fix_complete", { action, kind, event_id: "evt_123456789012" })])),
+    ...ANALYTICS_EVENT_NAMES.filter((event) => event !== "manual_fix_complete").map((event) =>
+      envelope(event, { ...payloads[event], event_id: "evt_123456789012" })),
     envelope("choice_resolved", { action: "applied" }),
     envelope("plugin_error", { stage: "PRIVATE_TEXT", code: "unknown" }),
     envelope("plugin_error", { stage: "scan", code: "PRIVATE_TEXT" }),
@@ -254,7 +430,8 @@ describe("Apps Script collector: граница приватности и кор
   it("health-check показывает реализацию, но не доказывает её публикацию", () => {
     const c = collector();
     expect(JSON.parse(c.scope.doGet().text)).toEqual({
-      ok: true, service: "text-autofix-analytics", schema_version: 1, collector_revision: "T-140-1",
+      ok: true, service: "text-autofix-analytics", schema_version: 1, collector_revision: "T-135-1",
+      spelling_sources: ["suggested", "custom", "unknown"],
     });
     expect(c.getActiveSpreadsheet).not.toHaveBeenCalled();
   });

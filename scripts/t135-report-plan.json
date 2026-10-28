@@ -1,0 +1,2978 @@
+{
+  "taskId": "T-135",
+  "state": "applied_2026-10-28_do_not_reapply",
+  "preparedOn": "2026-10-28",
+  "spreadsheetId": "1hp5YccbllfFn0cYRkvp6ClWEXbx5Es1R79FFLsqfHqM",
+  "requests": [
+    {
+      "addSheet": {
+        "properties": {
+          "sheetId": 1350135,
+          "title": "Источники орфографии",
+          "gridProperties": {
+            "rowCount": 60,
+            "columnCount": 6,
+            "frozenRowCount": 5,
+            "frozenColumnCount": 0,
+            "hideGridlines": true
+          }
+        }
+      }
+    },
+    {
+      "updateCells": {
+        "start": {
+          "sheetId": 1350135,
+          "rowIndex": 0,
+          "columnIndex": 0
+        },
+        "rows": [
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Орфография: подсказки и свои варианты"
+                }
+              },
+              {},
+              {},
+              {},
+              {},
+              {}
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Подсказка — принят вариант плагина; свой вариант — подсказка изменена или исправление введено без неё. Источник старых записей неизвестен. Нули в первых двух группах не доказывают отсутствия таких исправлений в прошлом."
+                }
+              },
+              {},
+              {},
+              {},
+              {},
+              {}
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF('Методика'!$B$54=\"\";\"Пока нет рабочих исправлений с новым учётом источника. Источник прежних записей неизвестен.\";\"Первое событие с новым учётом: \"&LEFT('Методика'!$B$54;10)&\" \"&MID('Методика'!$B$54;12;8)&\" UTC. Наличие новых записей не означает полного покрытия.\")"
+                }
+              },
+              {},
+              {},
+              {},
+              {},
+              {}
+            ]
+          },
+          {
+            "values": [
+              {},
+              {},
+              {},
+              {},
+              {},
+              {}
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Период"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Всего записей"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "По подсказке"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Свой вариант"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Источник неизвестен"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Источник определён, %"
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "='Результаты'!A6"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B6-C6-D6"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B6=0;\"—\";(C6+D6)/B6)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A11"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L11;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M11;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L11;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M11;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L11;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M11;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B7-C7-D7"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B7=0;\"—\";(C7+D7)/B7)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A12"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L12;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M12;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L12;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M12;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L12;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M12;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B8-C8-D8"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B8=0;\"—\";(C8+D8)/B8)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A13"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L13;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M13;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L13;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M13;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L13;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M13;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B9-C9-D9"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B9=0;\"—\";(C9+D9)/B9)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A14"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L14;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M14;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L14;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M14;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L14;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M14;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B10-C10-D10"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B10=0;\"—\";(C10+D10)/B10)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A15"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L15;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M15;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L15;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M15;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L15;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M15;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B11-C11-D11"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B11=0;\"—\";(C11+D11)/B11)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A16"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L16;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M16;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L16;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M16;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L16;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M16;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B12-C12-D12"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B12=0;\"—\";(C12+D12)/B12)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A17"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L17;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M17;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L17;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M17;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L17;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M17;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B13-C13-D13"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B13=0;\"—\";(C13+D13)/B13)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A18"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L18;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M18;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L18;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M18;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L18;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M18;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B14-C14-D14"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B14=0;\"—\";(C14+D14)/B14)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A19"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L19;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M19;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L19;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M19;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L19;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M19;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B15-C15-D15"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B15=0;\"—\";(C15+D15)/B15)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A20"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L20;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M20;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L20;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M20;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L20;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M20;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B16-C16-D16"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B16=0;\"—\";(C16+D16)/B16)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A21"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L21;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M21;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L21;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M21;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L21;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M21;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B17-C17-D17"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B17=0;\"—\";(C17+D17)/B17)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A22"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L22;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M22;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L22;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M22;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L22;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M22;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B18-C18-D18"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B18=0;\"—\";(C18+D18)/B18)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A23"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L23;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M23;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L23;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M23;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L23;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M23;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B19-C19-D19"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B19=0;\"—\";(C19+D19)/B19)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Неделя: \"&'Результаты'!A24"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L24;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M24;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L24;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M24;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L24;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M24;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B20-C20-D20"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B20=0;\"—\";(C20+D20)/B20)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A29"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L29;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M29;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L29;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M29;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L29;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M29;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B21-C21-D21"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B21=0;\"—\";(C21+D21)/B21)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A30"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L30;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M30;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L30;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M30;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L30;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M30;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B22-C22-D22"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B22=0;\"—\";(C22+D22)/B22)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A31"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L31;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M31;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L31;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M31;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L31;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M31;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B23-C23-D23"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B23=0;\"—\";(C23+D23)/B23)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A32"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L32;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M32;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L32;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M32;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L32;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M32;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B24-C24-D24"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B24=0;\"—\";(C24+D24)/B24)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A33"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L33;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M33;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L33;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M33;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L33;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M33;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B25-C25-D25"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B25=0;\"—\";(C25+D25)/B25)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A34"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L34;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M34;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L34;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M34;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L34;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M34;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B26-C26-D26"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B26=0;\"—\";(C26+D26)/B26)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A35"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L35;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M35;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L35;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M35;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L35;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M35;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B27-C27-D27"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B27=0;\"—\";(C27+D27)/B27)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A36"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L36;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M36;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L36;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M36;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L36;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M36;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B28-C28-D28"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B28=0;\"—\";(C28+D28)/B28)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A37"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L37;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M37;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L37;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M37;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L37;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M37;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B29-C29-D29"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B29=0;\"—\";(C29+D29)/B29)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A38"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L38;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M38;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L38;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M38;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L38;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M38;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B30-C30-D30"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B30=0;\"—\";(C30+D30)/B30)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A39"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L39;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M39;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L39;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M39;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L39;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M39;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B31-C31-D31"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B31=0;\"—\";(C31+D31)/B31)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Месяц: \"&'Результаты'!A40"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L40;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M40;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L40;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M40;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L40;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M40;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B32-C32-D32"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B32=0;\"—\";(C32+D32)/B32)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Квартал: \"&'Результаты'!A45"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L45;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M45;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L45;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M45;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L45;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M45;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B33-C33-D33"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B33=0;\"—\";(C33+D33)/B33)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Квартал: \"&'Результаты'!A46"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L46;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M46;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L46;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M46;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L46;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M46;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B34-C34-D34"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B34=0;\"—\";(C34+D34)/B34)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Квартал: \"&'Результаты'!A47"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L47;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M47;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L47;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M47;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L47;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M47;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B35-C35-D35"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B35=0;\"—\";(C35+D35)/B35)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Квартал: \"&'Результаты'!A48"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L48;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M48;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L48;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M48;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L48;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M48;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B36-C36-D36"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B36=0;\"—\";(C36+D36)/B36)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Квартал: \"&'Результаты'!A49"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L49;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M49;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L49;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M49;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L49;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M49;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B37-C37-D37"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B37=0;\"—\";(C37+D37)/B37)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Квартал: \"&'Результаты'!A50"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L50;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M50;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L50;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M50;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L50;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M50;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B38-C38-D38"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B38=0;\"—\";(C38+D38)/B38)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Квартал: \"&'Результаты'!A51"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L51;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M51;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L51;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M51;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L51;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M51;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B39-C39-D39"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B39=0;\"—\";(C39+D39)/B39)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Квартал: \"&'Результаты'!A52"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L52;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M52;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L52;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M52;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L52;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M52;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B40-C40-D40"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B40=0;\"—\";(C40+D40)/B40)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Год: \"&'Результаты'!A57"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L57;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M57;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L57;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M57;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L57;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M57;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B41-C41-D41"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B41=0;\"—\";(C41+D41)/B41)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Год: \"&'Результаты'!A58"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L58;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M58;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L58;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M58;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L58;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M58;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B42-C42-D42"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B42=0;\"—\";(C42+D42)/B42)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Год: \"&'Результаты'!A59"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L59;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M59;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L59;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M59;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L59;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M59;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B43-C43-D43"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B43=0;\"—\";(C43+D43)/B43)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Год: \"&'Результаты'!A60"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L60;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M60;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L60;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M60;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L60;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M60;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B44-C44-D44"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B44=0;\"—\";(C44+D44)/B44)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Год: \"&'Результаты'!A61"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L61;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M61;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L61;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M61;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L61;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M61;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B45-C45-D45"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B45=0;\"—\";(C45+D45)/B45)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=\"Год: \"&'Результаты'!A62"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L62;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M62;\"yyyy-mm-dd\")))"
+                },
+                "note": "Полученные орфографические applied, не уникальные исправления. Историческая семантика T-141 сохранена; пропуски, choice и smoke исключены."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"suggested\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L62;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M62;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=suggested. Ноль не доказывает отсутствия предложенных замен среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"custom\"\"\");FALSE)*(LEFT(events!A$2:A;10)>=TEXT('Результаты'!$L62;\"yyyy-mm-dd\"))*(LEFT(events!A$2:A;10)<TEXT('Результаты'!$M62;\"yyyy-mm-dd\")))"
+                },
+                "note": "Только source=custom. Ноль не доказывает отсутствия собственных вариантов среди записей с неизвестным источником."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=B46-C46-D46"
+                },
+                "note": "Всего минус suggested и custom: отсутствующий source, явный unknown и иное непонятное историческое значение. Не распределять задним числом."
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B46=0;\"—\";(C46+D46)/B46)"
+                },
+                "note": "Доля записей с source=suggested/custom среди всех учтённых орфографических applied. Нулевой total обозначен «—». Число хранится как доля, для отображения нужен процентный формат."
+              }
+            ]
+          }
+        ],
+        "fields": "userEnteredValue,note"
+      }
+    },
+    {
+      "updateCells": {
+        "start": {
+          "sheetId": 912356281,
+          "rowIndex": 52,
+          "columnIndex": 0
+        },
+        "rows": [
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Источники орфографических исправлений"
+                }
+              },
+              {},
+              {},
+              {}
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Первое событие с новым учётом, UTC"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IFERROR(INDEX(SORT(FILTER(events!A$2:A;LOWER(TRIM(events!E$2:E))<>\"smoke\";events!F$2:F=\"manual_fix_complete\";IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE);IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE);IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"(suggested|custom|unknown)\"\"\");FALSE));1;TRUE);1;1);\"\")"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "UTC"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Первое полученное рабочее орфографическое событие с новым полем источника, включая неизвестный источник. Это дата получения, а не дата кода или публикации плагина."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Дата первого события, UTC"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B54=\"\";\"\";DATEVALUE(LEFT(B54;10)))"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "дата"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Производная от B54, отдельно от даты запроса орфографии B35. Это не дата коммита, развёртывания или публикации Community."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Учтено орфографических действий"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "='Источники орфографии'!B6"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "событий"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Полный счётчик с теми же правилами, что прежний орфографический показатель: smoke исключён, исторические строки сохранены."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Записей с новым учётом источника"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT((LOWER(TRIM(events!E$2:E))<>\"smoke\")*(events!F$2:F=\"manual_fix_complete\")*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"kind\"\"\\s*:\\s*\"\"orthography\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"action\"\"\\s*:\\s*\"\"applied\"\"\");FALSE)*IFERROR(REGEXMATCH(events!G$2:G;\"\"\"source\"\"\\s*:\\s*\"\"(suggested|custom|unknown)\"\"\");FALSE))"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "событий"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Поле уже наблюдалось, включая source=unknown; unknown не определяет, был вариант предложенным или собственным."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Записей с определённым источником"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "='Источники орфографии'!C6+'Источники орфографии'!D6"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "событий"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Только source=suggested или source=custom."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Охват новым учётом, %"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B56=0;\"—\";B57/B56)"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "доля"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Отличается от определённого источника: явный unknown входит в валидное поле. При отсутствии орфографических записей — «—»."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Источник определён, %"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=IF(B56=0;\"—\";B58/B56)"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "доля"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "suggested + custom / все учтённые орфографические applied. В таблице периодов используется именно эта доля."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Принятая подсказка"
+                }
+              },
+              {},
+              {},
+              {
+                "userEnteredValue": {
+                  "stringValue": "Итоговый вариант совпадает с подсказкой после удаления пробелов по краям, нормализации Unicode и приведения регистра. Повторный ввод или вставка той же подсказки относится сюда. Внутренние пробелы и е/ё различаются."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Свой вариант"
+                }
+              },
+              {},
+              {},
+              {
+                "userEnteredValue": {
+                  "stringValue": "Итоговый вариант отличается от подсказки; сюда же относится успешное исправление без готовой подсказки. В отправляемом событии есть только название группы, без слов и текста слоя."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Неизвестный источник"
+                }
+              },
+              {},
+              {},
+              {
+                "userEnteredValue": {
+                  "stringValue": "У старого события нет поля источника либо новая сборка явно передала unknown. Такие строки остаются в общем числе и не превращаются задним числом в подсказки или свои варианты."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Граница успешного результата"
+                }
+              },
+              {},
+              {},
+              {
+                "userEnteredValue": {
+                  "stringValue": "В сборке с T-141 учитывается успешная замена. Пустой ввод, отсутствие изменения, ошибка, устаревшая карточка и повторное нажатие не создают успех. Исторические строки могли отражать нажатие; дата перехода всего потока неизвестна."
+                }
+              }
+            ]
+          },
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Проверка суммы по всем периодам"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=SUMPRODUCT(ABS('Источники орфографии'!B6:B46-'Источники орфографии'!C6:C46-'Источники орфографии'!D6:D46-'Источники орфографии'!E6:E46))"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "0 — суммы сходятся"
+                }
+              },
+              {
+                "userEnteredValue": {
+                  "stringValue": "Во всех 41 строках total = suggested + custom + unknown. Проверка не подтверждает происхождение или полноту полученных событий. Коэффициенты, общая оценка часов/рублей и старые графики T-135 не меняются."
+                }
+              }
+            ]
+          }
+        ],
+        "fields": "userEnteredValue,note"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 1350135,
+          "startRowIndex": 0,
+          "endRowIndex": 1,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "backgroundColor": {
+              "red": 0.9098039,
+              "green": 0.93333334,
+              "blue": 0.9607843
+            },
+            "borders": {
+              "bottom": {
+                "style": "SOLID",
+                "width": 1,
+                "color": {
+                  "red": 0.8627451,
+                  "green": 0.89411765,
+                  "blue": 0.92941177
+                },
+                "colorStyle": {
+                  "rgbColor": {
+                    "red": 0.8627451,
+                    "green": 0.89411765,
+                    "blue": 0.92941177
+                  }
+                }
+              }
+            },
+            "padding": {
+              "top": 6,
+              "right": 7,
+              "bottom": 6,
+              "left": 9
+            },
+            "horizontalAlignment": "LEFT",
+            "verticalAlignment": "MIDDLE",
+            "textFormat": {
+              "foregroundColor": {
+                "red": 0.14901961,
+                "green": 0.21568628,
+                "blue": 0.29411766
+              },
+              "fontFamily": "Arial",
+              "fontSize": 11,
+              "bold": true,
+              "foregroundColorStyle": {
+                "rgbColor": {
+                  "red": 0.14901961,
+                  "green": 0.21568628,
+                  "blue": 0.29411766
+                }
+              }
+            },
+            "backgroundColorStyle": {
+              "rgbColor": {
+                "red": 0.9098039,
+                "green": 0.93333334,
+                "blue": 0.9607843
+              }
+            }
+          }
+        },
+        "fields": "userEnteredFormat"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 1350135,
+          "startRowIndex": 1,
+          "endRowIndex": 3,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "backgroundColor": {
+              "red": 1,
+              "green": 1,
+              "blue": 1
+            },
+            "padding": {
+              "top": 5,
+              "right": 8,
+              "bottom": 5,
+              "left": 8
+            },
+            "verticalAlignment": "MIDDLE",
+            "wrapStrategy": "WRAP",
+            "textFormat": {
+              "foregroundColor": {
+                "red": 0.40784314,
+                "green": 0.47058824,
+                "blue": 0.54509807
+              },
+              "fontFamily": "Arial",
+              "fontSize": 10,
+              "bold": false,
+              "foregroundColorStyle": {
+                "rgbColor": {
+                  "red": 0.40784314,
+                  "green": 0.47058824,
+                  "blue": 0.54509807
+                }
+              }
+            },
+            "backgroundColorStyle": {
+              "rgbColor": {
+                "red": 1,
+                "green": 1,
+                "blue": 1
+              }
+            }
+          }
+        },
+        "fields": "userEnteredFormat"
+      }
+    },
+    {
+      "copyPaste": {
+        "source": {
+          "sheetId": 871470193,
+          "startRowIndex": 4,
+          "endRowIndex": 5,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "destination": {
+          "sheetId": 1350135,
+          "startRowIndex": 4,
+          "endRowIndex": 5,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "pasteType": "PASTE_FORMAT",
+        "pasteOrientation": "NORMAL"
+      }
+    },
+    {
+      "copyPaste": {
+        "source": {
+          "sheetId": 871470193,
+          "startRowIndex": 10,
+          "endRowIndex": 11,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "destination": {
+          "sheetId": 1350135,
+          "startRowIndex": 5,
+          "endRowIndex": 46,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "pasteType": "PASTE_FORMAT",
+        "pasteOrientation": "NORMAL"
+      }
+    },
+    {
+      "copyPaste": {
+        "source": {
+          "sheetId": 871470193,
+          "startRowIndex": 5,
+          "endRowIndex": 6,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "destination": {
+          "sheetId": 1350135,
+          "startRowIndex": 5,
+          "endRowIndex": 6,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "pasteType": "PASTE_FORMAT",
+        "pasteOrientation": "NORMAL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 1350135,
+          "startRowIndex": 0,
+          "endRowIndex": 1,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 1350135,
+          "startRowIndex": 1,
+          "endRowIndex": 2,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 1350135,
+          "startRowIndex": 2,
+          "endRowIndex": 3,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 1350135,
+          "startRowIndex": 4,
+          "endRowIndex": 46,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "wrapStrategy": "WRAP",
+            "verticalAlignment": "MIDDLE"
+          }
+        },
+        "fields": "userEnteredFormat.wrapStrategy,userEnteredFormat.verticalAlignment"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 1350135,
+          "startRowIndex": 5,
+          "endRowIndex": 46,
+          "startColumnIndex": 1,
+          "endColumnIndex": 5
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "numberFormat": {
+              "type": "NUMBER",
+              "pattern": "0"
+            }
+          }
+        },
+        "fields": "userEnteredFormat.numberFormat"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 1350135,
+          "startRowIndex": 5,
+          "endRowIndex": 46,
+          "startColumnIndex": 5,
+          "endColumnIndex": 6
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "numberFormat": {
+              "type": "PERCENT",
+              "pattern": "0%"
+            }
+          }
+        },
+        "fields": "userEnteredFormat.numberFormat"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "COLUMNS",
+          "startIndex": 0,
+          "endIndex": 1
+        },
+        "properties": {
+          "pixelSize": 220
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "COLUMNS",
+          "startIndex": 1,
+          "endIndex": 2
+        },
+        "properties": {
+          "pixelSize": 100
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "COLUMNS",
+          "startIndex": 2,
+          "endIndex": 3
+        },
+        "properties": {
+          "pixelSize": 140
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "COLUMNS",
+          "startIndex": 3,
+          "endIndex": 4
+        },
+        "properties": {
+          "pixelSize": 140
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "COLUMNS",
+          "startIndex": 4,
+          "endIndex": 5
+        },
+        "properties": {
+          "pixelSize": 160
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "COLUMNS",
+          "startIndex": 5,
+          "endIndex": 6
+        },
+        "properties": {
+          "pixelSize": 160
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "ROWS",
+          "startIndex": 0,
+          "endIndex": 1
+        },
+        "properties": {
+          "pixelSize": 34
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "ROWS",
+          "startIndex": 1,
+          "endIndex": 2
+        },
+        "properties": {
+          "pixelSize": 60
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "ROWS",
+          "startIndex": 2,
+          "endIndex": 3
+        },
+        "properties": {
+          "pixelSize": 44
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "ROWS",
+          "startIndex": 3,
+          "endIndex": 4
+        },
+        "properties": {
+          "pixelSize": 14
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "ROWS",
+          "startIndex": 4,
+          "endIndex": 5
+        },
+        "properties": {
+          "pixelSize": 54
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 1350135,
+          "dimension": "ROWS",
+          "startIndex": 5,
+          "endIndex": 46
+        },
+        "properties": {
+          "pixelSize": 34
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 52,
+          "endRowIndex": 53,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "backgroundColor": {
+              "red": 0.9098039,
+              "green": 0.93333334,
+              "blue": 0.9607843
+            },
+            "borders": {
+              "bottom": {
+                "style": "SOLID",
+                "width": 1,
+                "color": {
+                  "red": 0.8627451,
+                  "green": 0.89411765,
+                  "blue": 0.92941177
+                },
+                "colorStyle": {
+                  "rgbColor": {
+                    "red": 0.8627451,
+                    "green": 0.89411765,
+                    "blue": 0.92941177
+                  }
+                }
+              }
+            },
+            "padding": {
+              "top": 6,
+              "right": 7,
+              "bottom": 6,
+              "left": 9
+            },
+            "horizontalAlignment": "LEFT",
+            "verticalAlignment": "MIDDLE",
+            "textFormat": {
+              "foregroundColor": {
+                "red": 0.14901961,
+                "green": 0.21568628,
+                "blue": 0.29411766
+              },
+              "fontFamily": "Arial",
+              "fontSize": 11,
+              "bold": true,
+              "foregroundColorStyle": {
+                "rgbColor": {
+                  "red": 0.14901961,
+                  "green": 0.21568628,
+                  "blue": 0.29411766
+                }
+              }
+            },
+            "backgroundColorStyle": {
+              "rgbColor": {
+                "red": 0.9098039,
+                "green": 0.93333334,
+                "blue": 0.9607843
+              }
+            }
+          }
+        },
+        "fields": "userEnteredFormat"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 52,
+          "endRowIndex": 53,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "copyPaste": {
+        "source": {
+          "sheetId": 912356281,
+          "startRowIndex": 5,
+          "endRowIndex": 6,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "destination": {
+          "sheetId": 912356281,
+          "startRowIndex": 53,
+          "endRowIndex": 65,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "pasteType": "PASTE_FORMAT",
+        "pasteOrientation": "NORMAL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 53,
+          "endRowIndex": 54,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 54,
+          "endRowIndex": 55,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 55,
+          "endRowIndex": 56,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 56,
+          "endRowIndex": 57,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 57,
+          "endRowIndex": 58,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 58,
+          "endRowIndex": 59,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 59,
+          "endRowIndex": 60,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 60,
+          "endRowIndex": 61,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 61,
+          "endRowIndex": 62,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 62,
+          "endRowIndex": 63,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 63,
+          "endRowIndex": 64,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 64,
+          "endRowIndex": 65,
+          "startColumnIndex": 3,
+          "endColumnIndex": 6
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 53,
+          "endRowIndex": 65,
+          "startColumnIndex": 0,
+          "endColumnIndex": 6
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "wrapStrategy": "WRAP",
+            "verticalAlignment": "MIDDLE"
+          }
+        },
+        "fields": "userEnteredFormat.wrapStrategy,userEnteredFormat.verticalAlignment"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 54,
+          "endRowIndex": 55,
+          "startColumnIndex": 1,
+          "endColumnIndex": 2
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "numberFormat": {
+              "type": "DATE",
+              "pattern": "dd.MM.yyyy"
+            }
+          }
+        },
+        "fields": "userEnteredFormat.numberFormat"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 58,
+          "endRowIndex": 60,
+          "startColumnIndex": 1,
+          "endColumnIndex": 2
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "numberFormat": {
+              "type": "PERCENT",
+              "pattern": "0%"
+            }
+          }
+        },
+        "fields": "userEnteredFormat.numberFormat"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 912356281,
+          "dimension": "ROWS",
+          "startIndex": 52,
+          "endIndex": 53
+        },
+        "properties": {
+          "pixelSize": 34
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 912356281,
+          "dimension": "ROWS",
+          "startIndex": 53,
+          "endIndex": 65
+        },
+        "properties": {
+          "pixelSize": 68
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "updateCells": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 37,
+          "endRowIndex": 38,
+          "startColumnIndex": 0,
+          "endColumnIndex": 1
+        },
+        "rows": [
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Исторические записи «Исправить» отражают нажатие; подтвердить по ним изменение текста нельзя. В сборках с логикой T-141 событие пишется после успешной замены. Дата перехода всего потока не установлена; историю не пересчитываем. Учёт источника T-135 — отдельное поле."
+                }
+              }
+            ]
+          }
+        ],
+        "fields": "userEnteredValue"
+      }
+    },
+    {
+      "updateCells": {
+        "range": {
+          "sheetId": 1634415588,
+          "startRowIndex": 36,
+          "endRowIndex": 37,
+          "startColumnIndex": 0,
+          "endColumnIndex": 1
+        },
+        "rows": [
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "stringValue": "Запрос орфографии — нажатие, а не завершённая проверка. Исторические записи исправлений отражают нажатие; в сборках с логикой T-141 — успешную замену. История не пересчитывается. Сессии не равны людям."
+                }
+              }
+            ]
+          }
+        ],
+        "fields": "userEnteredValue"
+      }
+    },
+    {
+      "updateCells": {
+        "start": {
+          "sheetId": 871470193,
+          "rowIndex": 68,
+          "columnIndex": 0
+        },
+        "rows": [
+          {
+            "values": [
+              {
+                "userEnteredValue": {
+                  "formulaValue": "=HYPERLINK(\"https://docs.google.com/spreadsheets/d/1hp5YccbllfFn0cYRkvp6ClWEXbx5Es1R79FFLsqfHqM/edit#gid=1350135\";\"Орфография: подсказки и свои варианты →\")"
+                }
+              }
+            ]
+          }
+        ],
+        "fields": "userEnteredValue"
+      }
+    },
+    {
+      "mergeCells": {
+        "range": {
+          "sheetId": 871470193,
+          "startRowIndex": 68,
+          "endRowIndex": 69,
+          "startColumnIndex": 0,
+          "endColumnIndex": 11
+        },
+        "mergeType": "MERGE_ALL"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 871470193,
+          "startRowIndex": 68,
+          "endRowIndex": 69,
+          "startColumnIndex": 0,
+          "endColumnIndex": 11
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "backgroundColor": {
+              "red": 0.9098039,
+              "green": 0.93333334,
+              "blue": 0.9607843
+            },
+            "borders": {
+              "bottom": {
+                "style": "SOLID",
+                "width": 1,
+                "color": {
+                  "red": 0.8627451,
+                  "green": 0.89411765,
+                  "blue": 0.92941177
+                },
+                "colorStyle": {
+                  "rgbColor": {
+                    "red": 0.8627451,
+                    "green": 0.89411765,
+                    "blue": 0.92941177
+                  }
+                }
+              }
+            },
+            "padding": {
+              "top": 6,
+              "right": 7,
+              "bottom": 6,
+              "left": 9
+            },
+            "horizontalAlignment": "LEFT",
+            "verticalAlignment": "MIDDLE",
+            "textFormat": {
+              "foregroundColor": {
+                "red": 0.14901961,
+                "green": 0.21568628,
+                "blue": 0.29411766
+              },
+              "fontFamily": "Arial",
+              "fontSize": 11,
+              "bold": true,
+              "foregroundColorStyle": {
+                "rgbColor": {
+                  "red": 0.16,
+                  "green": 0.39,
+                  "blue": 0.73
+                }
+              }
+            },
+            "backgroundColorStyle": {
+              "rgbColor": {
+                "red": 0.9098039,
+                "green": 0.93333334,
+                "blue": 0.9607843
+              }
+            }
+          }
+        },
+        "fields": "userEnteredFormat"
+      }
+    },
+    {
+      "updateDimensionProperties": {
+        "range": {
+          "sheetId": 871470193,
+          "dimension": "ROWS",
+          "startIndex": 68,
+          "endIndex": 69
+        },
+        "properties": {
+          "pixelSize": 32
+        },
+        "fields": "pixelSize"
+      }
+    },
+    {
+      "repeatCell": {
+        "range": {
+          "sheetId": 912356281,
+          "startRowIndex": 53,
+          "endRowIndex": 65,
+          "startColumnIndex": 1,
+          "endColumnIndex": 2
+        },
+        "cell": {
+          "userEnteredFormat": {
+            "backgroundColor": {
+              "red": 0.94,
+              "green": 0.96,
+              "blue": 0.99
+            },
+            "textFormat": {
+              "foregroundColor": {
+                "red": 0.28,
+                "green": 0.38,
+                "blue": 0.52
+              },
+              "bold": true
+            }
+          }
+        },
+        "fields": "userEnteredFormat.backgroundColor,userEnteredFormat.textFormat.foregroundColor,userEnteredFormat.textFormat.bold"
+      }
+    }
+  ],
+  "preflight": [
+    "Read current workbook metadata and target ranges; stop if named source tab or sheetId exists.",
+    "Compare existing period structure and blank target ranges with preview baseline.",
+    "Preserve all events and existing formula/chart/coefficients; do not import data from preview.",
+    "Save before snapshot; apply once only after explicit user approval."
+  ]
+}

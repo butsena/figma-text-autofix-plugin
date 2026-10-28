@@ -24,7 +24,7 @@ var MAX_BODY_CHARS = 4000;
 var MAX_SESSION_LEN = 64;
 var MAX_VERSION_LEN = 32;
 // Номер реализации приёмника; это не номер версии плагина или deployment в Apps Script.
-var COLLECTOR_REVISION = "T-140-1";
+var COLLECTOR_REVISION = "T-135-1";
 
 // Держать в соответствии с src/analytics/schema.ts. Новые поля — только по явному контракту.
 var FIX_CATEGORIES = [
@@ -32,6 +32,7 @@ var FIX_CATEGORIES = [
   "numeric_formatting", "phone_formatting", "punctuation_typography", "sheet_text",
   "text_formatting", "typography", "yo_spelling", "orthography", "other",
 ];
+var SPELLING_SOURCES = ["suggested", "custom", "unknown"];
 var ERROR_STAGES = [
   "open", "scan", "auto_apply", "manual_apply", "choice", "lexicon", "spell", "ui", "unknown",
 ];
@@ -76,8 +77,8 @@ function doPost(e) {
     if (!validated.ok) {
       return jsonResponse_(400, { ok: false, error: validated.error });
     }
-    appendEvent_(validated.envelope);
-    return jsonResponse_(200, { ok: true });
+    var result = appendEvent_(validated.envelope);
+    return jsonResponse_(result.ok ? 200 : 409, result);
   } catch (err) {
     return jsonResponse_(500, { ok: false, error: "server" });
   }
@@ -88,6 +89,7 @@ function doGet() {
   return jsonResponse_(200, {
     ok: true, service: "text-autofix-analytics", schema_version: SCHEMA_VERSION,
     collector_revision: COLLECTOR_REVISION,
+    spelling_sources: SPELLING_SOURCES.slice(),
   });
 }
 
@@ -149,6 +151,19 @@ function isRecord_(value) {
 function validatePayload_(event, payload) {
   function intOk(v) {
     return Number.isSafeInteger(v) && v >= 0;
+  }
+  // Поле source разрешено только для состоявшейся орфографической замены.
+  // Его наличие с неверным значением нельзя молча превращать в старую запись.
+  if (Object.prototype.hasOwnProperty.call(payload, "source") &&
+      (event !== "manual_fix_complete" || payload.action !== "applied" || payload.kind !== "orthography" ||
+       typeof payload.source !== "string" || SPELLING_SOURCES.indexOf(payload.source) === -1)) {
+    return "payload.source";
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, "event_id") &&
+      (event !== "manual_fix_complete" || payload.action !== "applied" || payload.kind !== "orthography" ||
+       typeof payload.event_id !== "string" || payload.event_id !== payload.event_id.trim() ||
+       !/^evt_[A-Za-z0-9_-]{12,60}$/.test(payload.event_id))) {
+    return "payload.event_id";
   }
   switch (event) {
     case "plugin_open":
@@ -219,7 +234,11 @@ function sanitizePayload_(event, payload) {
         duration_ms: payload.duration_ms, categories: categories,
       };
     case "manual_fix_complete":
-      return { action: payload.action, kind: payload.kind };
+      var manual = { action: payload.action, kind: payload.kind };
+      // Не дописываем unknown историческим/старым клиентским событиям.
+      if (Object.prototype.hasOwnProperty.call(payload, "source")) manual.source = payload.source;
+      if (Object.prototype.hasOwnProperty.call(payload, "event_id")) manual.event_id = payload.event_id;
+      return manual;
     case "choice_resolved":
       return { action: payload.action };
     case "spellcheck_requested":
@@ -232,6 +251,35 @@ function sanitizePayload_(event, payload) {
 /** Дополнительная защита ячеек, даже если разрешённые строки впоследствии расширят. */
 function safeSheetString_(value) {
   return /^[\s\uFEFF]*[=+\-@]/.test(value) || /^[\t\r\n]/.test(value) ? "'" + value : value;
+}
+
+/** Вызывать только под ScriptLock: поиск по всей сохранённой истории, не кэшу. */
+function findEventReplay_(sheet, envelope) {
+  if (!Object.prototype.hasOwnProperty.call(envelope.payload, "event_id")) return null;
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return null;
+  var needle = '"event_id":"' + envelope.payload.event_id + '"';
+  var matches = sheet.getRange(2, 7, lastRow - 1, 1).createTextFinder(needle)
+    .matchCase(true).matchEntireCell(false).matchFormulaText(false).useRegularExpression(false).findAll();
+  if (matches.length === 0) return null;
+  var expectedPayload = JSON.stringify(envelope.payload);
+  for (var i = 0; i < matches.length; i++) {
+    // Версия, событие, payload_json; служебные client/server_time и session_id
+    // не меняют смысл повторной доставки того же одноразового события.
+    var stored = sheet.getRange(matches[i].getRow(), 5, 1, 3).getValues()[0];
+    var payload;
+    try {
+      payload = JSON.parse(stored[2]);
+    } catch (err) {
+      return { ok: false, error: "event_id_conflict" };
+    }
+    if (stored[0] !== envelope.plugin_version || stored[1] !== envelope.event ||
+        !isRecord_(payload) || validatePayload_(stored[1], payload) ||
+        JSON.stringify(sanitizePayload_(stored[1], payload)) !== expectedPayload) {
+      return { ok: false, error: "event_id_conflict" };
+    }
+  }
+  return { ok: true, duplicate: true };
 }
 
 function appendEvent_(envelope) {
@@ -248,6 +296,8 @@ function appendEvent_(envelope) {
       onceSetup();
       sheet = ss.getSheetByName("events");
     }
+    var replay = findEventReplay_(sheet, envelope);
+    if (replay) return replay;
     sheet.appendRow([
       new Date().toISOString(),
       safeSheetString_(envelope.client_time),
@@ -257,6 +307,9 @@ function appendEvent_(envelope) {
       safeSheetString_(envelope.event),
       safeSheetString_(JSON.stringify(envelope.payload)),
     ]);
+    // Commit до releaseLock: следующий запрос должен видеть только что записанный ID.
+    SpreadsheetApp.flush();
+    return { ok: true };
   } finally {
     lock.releaseLock();
   }

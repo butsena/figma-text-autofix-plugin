@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetAnalyticsSessionForTests } from "./track";
+import type { TextFixDto } from "../shared/messages";
+import type { AnalyticsSpellingSource } from "./schema";
 
 const trackAnalytics = vi.fn();
 
@@ -25,6 +27,51 @@ describe("pipeline-events", () => {
   beforeEach(() => {
     trackAnalytics.mockClear();
     resetAnalyticsSessionForTests();
+  });
+
+  function spellingFix(): TextFixDto {
+    return {
+      fixId: "private-fix", from: 0, to: 7, before: "Кватира", after: "Квартира",
+      rule: { id: "orthography-spellcheck", category: "orthography", message: "private-message", applyPolicy: "confirm", priority: 1 },
+    };
+  }
+
+  it.each([
+    ["suggested", "suggested"],
+    ["custom", "custom"],
+    ["unknown", "unknown"],
+    [undefined, "unknown"],
+    ["private-invalid-value", "unknown"],
+  ])("успешная орфография передаёт только enum: %j → %j", (source, expected) => {
+    trackManualFixFromDto(spellingFix(), "applied", source as AnalyticsSpellingSource | undefined);
+    expect(trackAnalytics).toHaveBeenCalledExactlyOnceWith("manual_fix_complete", {
+      action: "applied", kind: "orthography", source: expected,
+      event_id: expect.stringMatching(/^evt_[A-Za-z0-9_-]{16,64}$/),
+    });
+    expect(JSON.stringify(trackAnalytics.mock.calls)).not.toMatch(/Кватира|Квартира|private/);
+  });
+
+  it("источник отсутствует у skip, confirm и choice даже при переданных метаданных", () => {
+    const spell = spellingFix();
+    trackManualFixFromDto(spell, "skipped", "custom");
+    trackManualFixFromDto({ ...spell, rule: { ...spell.rule, id: "cian-confirm" } }, "applied", "suggested");
+    trackManualFixFromDto({ ...spell, rule: { ...spell.rule, applyPolicy: "choice" } }, "applied", "custom");
+    expect(trackAnalytics.mock.calls).toEqual([
+      ["manual_fix_complete", { action: "skipped", kind: "orthography" }],
+      ["manual_fix_complete", { action: "applied", kind: "confirm" }],
+      ["choice_resolved", { action: "confirmed" }],
+    ]);
+  });
+
+  it("два самостоятельных успешных исправления получают разные одноразовые id", () => {
+    trackManualFixFromDto(spellingFix(), "applied", "suggested");
+    trackManualFixFromDto({ ...spellingFix(), fixId: "another-private-fix" }, "applied", "custom");
+    expect(trackAnalytics).toHaveBeenCalledTimes(2);
+    const first = trackAnalytics.mock.calls[0][1].event_id;
+    const second = trackAnalytics.mock.calls[1][1].event_id;
+    expect(first).toMatch(/^evt_[A-Za-z0-9_-]{16,64}$/);
+    expect(second).toMatch(/^evt_[A-Za-z0-9_-]{16,64}$/);
+    expect(first).not.toBe(second);
   });
 
   it("choice apply → choice_resolved confirmed", () => {
