@@ -3,7 +3,8 @@ import vm from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 import {
   ANALYTICS_EVENT_NAMES, ANALYTICS_FIX_CATEGORIES, ANALYTICS_SPELLING_SOURCES,
-  ANALYTICS_ERROR_STAGES, ANALYTICS_ERROR_CODES, buildAnalyticsEnvelope,
+  ANALYTICS_ERROR_STAGES, ANALYTICS_ERROR_CODES, ANALYTICS_ERROR_OUTCOMES,
+  ANALYTICS_ERROR_RESOURCES, ANALYTICS_ERROR_RECOVERIES, buildAnalyticsEnvelope,
 } from "./schema";
 
 const source = readFileSync(new URL("../../scripts/analytics-apps-script.js", import.meta.url), "utf8");
@@ -121,6 +122,9 @@ describe("Apps Script collector: совместимость schema v1", () => {
     expect(Array.from(scope.SPELLING_SOURCES)).toEqual([...ANALYTICS_SPELLING_SOURCES]);
     expect(Array.from(scope.ERROR_STAGES)).toEqual([...ANALYTICS_ERROR_STAGES]);
     expect(Array.from(scope.ERROR_CODES)).toEqual([...ANALYTICS_ERROR_CODES]);
+    expect(Array.from(scope.ERROR_OUTCOMES)).toEqual([...ANALYTICS_ERROR_OUTCOMES]);
+    expect(Array.from(scope.ERROR_RESOURCES)).toEqual([...ANALYTICS_ERROR_RESOURCES]);
+    expect(Array.from(scope.ERROR_RECOVERIES)).toEqual([...ANALYTICS_ERROR_RECOVERIES]);
   });
 
   it.each(ANALYTICS_EVENT_NAMES)("принимает клиентское событие %s без изменения смысла", (event) => {
@@ -430,9 +434,50 @@ describe("Apps Script collector: граница приватности и кор
   it("health-check показывает реализацию, но не доказывает её публикацию", () => {
     const c = collector();
     expect(JSON.parse(c.scope.doGet().text)).toEqual({
-      ok: true, service: "text-autofix-analytics", schema_version: 1, collector_revision: "T-135-1",
+      ok: true, service: "text-autofix-analytics", schema_version: 1, collector_revision: "T-144-1",
       spelling_sources: ["suggested", "custom", "unknown"],
     });
     expect(c.getActiveSpreadsheet).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("T-144: error outcome roundtrip", () => {
+  const modern = [
+    ...["font_load_failed", "apply_failed", "style_restore_failed"].map(code => ({ stage: "manual_apply", code, outcome: "failed" })),
+    { stage: "scan", code: "scan_failed", outcome: "failed" },
+    { stage: "spell", code: "spell_init_failed", outcome: "failed", resource: "spell_dictionary" },
+    ...ANALYTICS_ERROR_RESOURCES.map(resource => ({
+      stage: resource.startsWith("spell_") ? "spell" : "lexicon",
+      code: resource.startsWith("spell_") ? "spell_load_failed" : "lexicon_load_failed",
+      outcome: "recovered", resource, recovery: resource === "spell_dictionary" ? "cache" : "bundled",
+    })),
+  ];
+  it.each(modern)("preserves safe client metadata %j", payload => {
+    const c = collector();
+    const built = buildAnalyticsEnvelope({ event: "plugin_error", payload, sessionId: "sess_fixture01", pluginVersion: "smoke" });
+    expect(built.ok).toBe(true);
+    expect(c.post({ ...built.envelope, payload: { ...payload, message: "PRIVATE", stack: "PRIVATE", fileKey: "PRIVATE" } })).toEqual({ ok: true });
+    expect(JSON.parse(c.rows[0][6])).toEqual(payload);
+    expect(JSON.stringify(c.rows)).not.toContain("PRIVATE");
+  });
+  it.each([
+    { outcome: null }, { outcome: "PRIVATE" }, { outcome: "recovered" },
+    { resource: "PRIVATE", outcome: "failed" }, { recovery: "cache" },
+    { outcome: "failed", recovery: "cache" },
+    { outcome: "recovered", resource: "replacements", recovery: "cache" },
+    { outcome: "recovered", resource: "spell_dictionary", recovery: "bundled" },
+    { stage: "manual_apply", outcome: "recovered", resource: "spell_dictionary", recovery: "cache" },
+  ])("rejects bad metadata before storage %j", extra => {
+    const payload = { stage: "spell", code: "spell_load_failed", ...extra };
+    const c = collector();
+    expect(c.post(envelope("plugin_error", payload)).ok).toBe(false);
+    expect(c.rows).toHaveLength(0);
+    expect(buildAnalyticsEnvelope({ event: "plugin_error", payload, sessionId: "sess_fixture01", pluginVersion: "smoke" }).ok).toBe(false);
+  });
+  it("never adds a modern outcome to old records", () => {
+    const c = collector();
+    c.post(envelope("plugin_error", { stage: "ui", code: "unknown" }));
+    expect(JSON.parse(c.rows[0][6])).toEqual({ stage: "ui", code: "unknown" });
   });
 });

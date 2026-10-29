@@ -1,6 +1,6 @@
 import { trackFollowUpAutoFixes } from "../analytics/follow-up-auto";
 import type { AnalyticsSpellingSource } from "../analytics/schema";
-import { trackManualFixFromDto } from "../analytics/pipeline-events";
+import { trackManualFixFromDto, trackPluginError } from "../analytics/pipeline-events";
 import { isChoicePolicy } from "../core/apply-policy";
 import {
   buildAutoApplyReportFromConfirmFix,
@@ -80,7 +80,10 @@ async function applyManualFixOnce(
   spellingSource?: AnalyticsSpellingSource,
 ): Promise<void> {
   const node = await figma.getNodeByIdAsync(nodeId);
-  if (!node || node.type !== "TEXT") return;
+  if (!node || node.type !== "TEXT") {
+    trackPluginError("manual_apply", null, { code: "node_missing" });
+    return;
+  }
 
   const sourceText = node.characters;
   const textChanges = fix.before !== fix.after;
@@ -90,7 +93,7 @@ async function applyManualFixOnce(
     hasSavedChoiceDecision(sourceText, readChoiceResolutions(node), fix);
 
   let applied: Awaited<ReturnType<typeof applyTextFixesToTextNode>> = [];
-  applied = textChanges ? await applyTextFixesToTextNode(node, [textFixDtoToEngineFix(fix)]) : [];
+  applied = textChanges ? await applyTextFixesToTextNode(node, [textFixDtoToEngineFix(fix)], "manual_apply") : [];
 
   const resolutionSaved = shouldPersistManualResolution(fix, {
     appliedCount: applied.length,
@@ -174,7 +177,10 @@ export async function skipManualFixAndRefresh(
   fix: TextFixDto,
 ): Promise<void> {
   const node = await figma.getNodeByIdAsync(nodeId);
-  if (!node || node.type !== "TEXT") return;
+  if (!node || node.type !== "TEXT") {
+    trackPluginError("manual_apply", null, { code: "node_missing" });
+    return;
+  }
 
   if (isOrthographyRuleId(fix.rule.id)) {
     recordSpellSkipOnNode(node, {

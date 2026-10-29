@@ -1,4 +1,7 @@
 import type { TextFix } from "../core/autofix-engine";
+import { AnalyticsFailure, annotateFailure } from "../analytics/failure";
+import { trackPluginError } from "../analytics/pipeline-events";
+import type { AnalyticsErrorStage } from "../analytics/schema";
 import { isManualPolicy } from "../core/apply-policy";
 import type { CheckResultDto } from "../shared/messages";
 import { orderFixesForApply } from "../shared/fix-sort";
@@ -47,7 +50,15 @@ async function loadFontsForTextNode(textNode: TextNode): Promise<void> {
   }
 }
 
-async function loadFontsForRange(textNode: TextNode, from: number, to: number): Promise<void> {
+class FontRangeFailure extends AnalyticsFailure {
+  constructor(stage: AnalyticsErrorStage, readonly fontKey: string, error: unknown) {
+    super(stage, "font_load_failed", error);
+  }
+}
+
+async function loadFontsForRange(
+  textNode: TextNode, from: number, to: number, stage: AnalyticsErrorStage,
+): Promise<void> {
   const len = textNode.characters.length;
   if (len === 0 || to <= from) return;
 
@@ -61,7 +72,11 @@ async function loadFontsForRange(textNode: TextNode, from: number, to: number): 
     const key = `${fontName.family}__${fontName.style}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    await figma.loadFontAsync(fontName);
+    try {
+      await figma.loadFontAsync(fontName);
+    } catch (error) {
+      throw new FontRangeFailure(stage, JSON.stringify([fontName.family, fontName.style]), error);
+    }
   }
 }
 
@@ -77,17 +92,25 @@ export type ApplyFixesBatchResult = {
 export async function applyTextFixesToTextNode(
   textNode: TextNode,
   fixes: TextFix[],
+  stage: AnalyticsErrorStage = "auto_apply",
+  failedFonts: Set<string> = new Set(),
 ): Promise<TextFix[]> {
   if (fixes.length === 0) return [];
 
-  await loadFontsForTextNode(textNode);
+  try {
+    await loadFontsForTextNode(textNode);
+  } catch (error) {
+    throw annotateFailure(error, stage, "font_load_failed");
+  }
 
   const applied: TextFix[] = [];
+  // Only repeated failures of the same font within this layer operation are coalesced.
+  // Different fonts, layers and subsequent operations remain separate problems.
   for (const fix of orderFixesForApply(fixes)) {
     try {
       if (fragmentIsStale(textNode, fix)) continue;
 
-      await loadFontsForRange(textNode, fix.from, fix.to);
+      await loadFontsForRange(textNode, fix.from, fix.to, stage);
       // Пока грузился шрифт, параллельный клик мог уже записать тот же фрагмент.
       if (fragmentIsStale(textNode, fix)) continue;
 
@@ -108,12 +131,17 @@ export async function applyTextFixesToTextNode(
               await restoreRangeStyles(textNode, fix.from, capturedStyles, fix.after.length);
             }
           } catch (error) {
+            trackPluginError(stage, error, { code: "style_restore_failed" });
             console.warn("[text-autofix] style restore failed", fix.ruleId, error);
           }
         }
       }
       applied.push(fix);
     } catch (error) {
+      if (!(error instanceof FontRangeFailure) || !failedFonts.has(error.fontKey)) {
+        trackPluginError(stage, error, { code: "apply_failed" });
+        if (error instanceof FontRangeFailure) failedFonts.add(error.fontKey);
+      }
       console.warn("[text-autofix] fix apply failed", fix.ruleId, fix.before, error);
     }
   }
@@ -125,6 +153,7 @@ export async function applyTextFixesToTextNode(
 export async function applyFixesFromScan(
   result: CheckResultDto,
   nodeById: Map<string, TextNode>,
+  failedFontsByNode: Map<string, Set<string>> = new Map(),
 ): Promise<ApplyFixesBatchResult> {
   const fixByNodeId = new Map<string, TextFix[]>();
 
@@ -143,17 +172,21 @@ export async function applyFixesFromScan(
   for (const [nodeId, fixes] of fixByNodeId.entries()) {
     const node = nodeById.get(nodeId);
     if (!node) {
+      trackPluginError("auto_apply", null, { code: "node_missing" });
       console.warn("[text-autofix] text layer not found for apply", nodeId);
       continue;
     }
 
     try {
-      const applied = await applyTextFixesToTextNode(node, fixes);
+      const failedFonts = failedFontsByNode.get(nodeId) ?? new Set<string>();
+      failedFontsByNode.set(nodeId, failedFonts);
+      const applied = await applyTextFixesToTextNode(node, fixes, "auto_apply", failedFonts);
       if (applied.length > 0) {
         appliedByNode.set(nodeId, applied);
         appliedFixesCount += applied.length;
       }
     } catch (error) {
+      trackPluginError("auto_apply", error, { code: "apply_failed" });
       console.warn("[text-autofix] failed to apply fixes to layer", nodeId, error);
     }
   }

@@ -23,10 +23,11 @@ describe("qa portable model (T-046)", () => {
   ) as { map: Record<string, string | string[]> };
 
   it("keeps stable unique id/n from migration", () => {
-    expect(scenariosFile.scenarios.length).toBe(59);
+    expect(scenariosFile.scenarios.length).toBe(60);
     assertStableIdsUnique(scenariosFile.scenarios);
-    expect(nextScenarioNumber(scenariosFile.scenarios)).toBe(60);
-    expect(scenariosFile.scenarios.find((s) => s.id === "59")?.taskIds).toEqual(["T-140"]);
+    expect(nextScenarioNumber(scenariosFile.scenarios)).toBe(61);
+    expect(scenariosFile.scenarios.find((s) => s.id === "59")?.taskIds).toEqual(["T-140", "T-144"]);
+    expect(scenariosFile.scenarios.find((s) => s.id === "60")?.taskIds).toEqual(["T-144"]);
     const portable = scenariosFile.scenarios.find((s) => s.id === "55");
     expect(portable?.taskIds).toEqual(["T-046", "T-139"]);
     expect(portable?.legacyTaskIds).toContain("pipeline-qa");

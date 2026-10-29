@@ -248,7 +248,10 @@ describe("applyManualFixAndRefresh", () => {
   it("нет слоя, устаревший фрагмент и исключение не пишут успех", async () => {
     installNode(null);
     await applyManualFixAndRefresh("missing", spellFix(), "suggested");
-    expect(trackAnalytics).not.toHaveBeenCalled();
+    expect(trackAnalytics).toHaveBeenCalledExactlyOnceWith("plugin_error", {
+      stage: "manual_apply", code: "node_missing", outcome: "failed",
+    });
+    trackAnalytics.mockClear();
 
     const stale = fakeTextNode("уже другое");
     installNode(stale);

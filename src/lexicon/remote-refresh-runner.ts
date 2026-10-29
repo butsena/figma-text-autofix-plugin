@@ -1,4 +1,6 @@
 import { invalidateAutofixRulesCache } from "../rules/autofix-rules";
+import { trackPluginError } from "../analytics/pipeline-events";
+import type { AnalyticsErrorResource } from "../analytics/schema";
 import {
   fetchUrlWithCacheBust,
   looksLikeHtmlResponse,
@@ -24,8 +26,17 @@ export async function runRemoteRefresh<TResult extends { ok: boolean; fromRemote
   logLabel: string,
   fetchText: (fetchUrl: string) => Promise<string>,
   handlers: RemoteRefreshHandlers<TResult>,
+  issueResource?: AnalyticsErrorResource,
 ): Promise<TResult> {
   const fetchUrl = url.trim();
+  function reportFallback(): void {
+    if (!issueResource) return;
+    const spelling = issueResource.startsWith("spell_");
+    trackPluginError(spelling ? "spell" : "lexicon", null, {
+      code: spelling ? "spell_load_failed" : "lexicon_load_failed",
+      outcome: "recovered", resource: issueResource, recovery: "bundled",
+    });
+  }
 
   if (!fetchUrl) {
     handlers.resetBundled();
@@ -41,12 +52,14 @@ export async function runRemoteRefresh<TResult extends { ok: boolean; fromRemote
     if (!result.ok) {
       handlers.resetBundled();
       invalidateAutofixRulesCache();
+      reportFallback();
     }
     return result;
   } catch (e) {
     console.warn(`[text-autofix] ${logLabel} load failed:`, e);
     handlers.resetBundled();
     invalidateAutofixRulesCache();
+    reportFallback();
     return handlers.buildNetworkErrorResult(fetchUrl, e);
   }
 }

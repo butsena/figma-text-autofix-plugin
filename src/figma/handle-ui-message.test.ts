@@ -3,6 +3,7 @@ import type { TextFixDto, UiToPluginMessage } from "../shared/messages";
 import { trackPluginError } from "../analytics/pipeline-events";
 import { applyManualFixAndRefresh, skipManualFixAndRefresh } from "./apply-manual-fix";
 import { handleUiMessage } from "./handle-ui-message";
+import { annotateFailure } from "../analytics/failure";
 
 vi.mock("../analytics/pipeline-events", () => ({ trackPluginError: vi.fn(), trackSpellcheckRequested: vi.fn() }));
 vi.mock("../config/spellcheck-preference", () => ({ enableSpellcheckForSession: vi.fn() }));
@@ -36,6 +37,13 @@ describe("передача источника орфографии из UI", () 
     const error = new Error("apply failed");
     vi.mocked(applyManualFixAndRefresh).mockRejectedValueOnce(error);
     await expect(handleUiMessage({ type: "ui:applyManualFix", nodeId: "1:2", fix, spellingSource: "suggested" }, gate())).rejects.toThrow("apply failed");
+    expect(trackPluginError).toHaveBeenCalledExactlyOnceWith("manual_apply", error);
+  });
+
+  it("T-144: передаёт происхождение ошибки сканирования без второго владельца записи", async () => {
+    const error = annotateFailure(new Error("private scan failure"), "scan", "scan_failed");
+    vi.mocked(applyManualFixAndRefresh).mockRejectedValueOnce(error);
+    await expect(handleUiMessage({ type: "ui:applyManualFix", nodeId: "1:2", fix }, gate())).rejects.toBe(error);
     expect(trackPluginError).toHaveBeenCalledExactlyOnceWith("manual_apply", error);
   });
 });

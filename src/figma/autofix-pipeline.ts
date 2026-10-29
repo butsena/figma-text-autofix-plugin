@@ -1,5 +1,6 @@
 import type { AutoApplyReportDto, CheckResultDto } from "../shared/messages";
-import { trackAutoFixComplete } from "../analytics/pipeline-events";
+import { trackAutoFixComplete, trackPluginError } from "../analytics/pipeline-events";
+import { annotateFailure } from "../analytics/failure";
 import {
   getCachedSpellcheckActive,
   loadSpellcheckPreference,
@@ -40,6 +41,7 @@ export async function runAutofixAutoPasses(
   let mergedReport = existingReport;
   let totalApplied = existingReport?.summary.appliedFixCount ?? 0;
   let passCount = 0;
+  const failedFontsByNode = new Map<string, Set<string>>();
 
   while (passCount < MAX_AUTOFIX_PASSES) {
     const { result: scan, nodeById } = scanSelectedTextNodes(selection, {
@@ -49,7 +51,7 @@ export async function runAutofixAutoPasses(
     });
     if (scan.summary.foundFixes === 0) break;
 
-    const { appliedCount, appliedByNode } = await applyFixesFromScan(scan, nodeById);
+    const { appliedCount, appliedByNode } = await applyFixesFromScan(scan, nodeById, failedFontsByNode);
     passCount += 1;
     totalApplied += appliedCount;
 
@@ -92,16 +94,19 @@ export async function runAutofixPipeline(): Promise<void> {
   try {
     if (spellActive) {
       try {
-        await refreshSpellLexiconFromRemote();
-        await ensureSpellCheckerReady();
+        await refreshSpellLexiconFromRemote()
+          .catch((error) => { throw annotateFailure(error, "lexicon", "lexicon_load_failed"); });
+        await ensureSpellCheckerReady()
+          .catch((error) => { throw annotateFailure(error, "spell", "spell_init_failed"); });
       } catch (error) {
+        trackPluginError("spell", error);
         console.warn("[text-autofix] spellcheck failed, continuing with other rules", error);
       }
     }
 
     const lexiconLoad = await refreshLexiconFromRemote({
       includeSpell: getCachedSpellcheckActive(),
-    });
+    }).catch((error) => { throw annotateFailure(error, "lexicon", "lexicon_load_failed"); });
     postPluginConfigToUi(lexiconLoad);
 
     const { report, finalScan } = await runAutofixAutoPasses(selection);

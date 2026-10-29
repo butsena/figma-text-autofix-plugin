@@ -42,6 +42,7 @@ async function boot(): Promise<void> {
 
 describe("пустой запуск", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     notify.mockClear();
     closePlugin.mockClear();
     showUI.mockClear();
@@ -76,5 +77,22 @@ describe("пустой запуск", () => {
     expect(notify).not.toHaveBeenCalled();
     expect(closePlugin).not.toHaveBeenCalled();
     expect(showUI).toHaveBeenCalledTimes(1);
+  });
+
+  it("T-144: ошибка реального UI-маршрута записывается один раз; новая операция не склеивается", async () => {
+    installFigma([{ id: "1:1", type: "TEXT", name: "Слой", characters: "Кватира" }]);
+    await boot();
+    const { applyManualFixAndRefresh } = await import("./figma/apply-manual-fix");
+    const { trackPluginError } = await import("./analytics/pipeline-events");
+    const failure = new Error("private apply failure");
+    vi.mocked(applyManualFixAndRefresh).mockRejectedValue(failure);
+    const message = { type: "ui:applyManualFix", nodeId: "1:1", fix: {} };
+    const receive = figma.ui.onmessage!;
+    await receive(message, { origin: "" });
+    expect(trackPluginError).toHaveBeenCalledExactlyOnceWith("manual_apply", failure);
+    expect(figma.ui.postMessage).toHaveBeenCalledWith({ type: "plugin:error", message: failure.message });
+    await receive(message, { origin: "" });
+    expect(trackPluginError).toHaveBeenCalledTimes(2);
+    expect(trackPluginError).not.toHaveBeenCalledWith("ui", failure);
   });
 });
