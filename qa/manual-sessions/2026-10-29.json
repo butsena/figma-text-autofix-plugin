@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "exportedAt": "2026-10-29T04:40:49Z",
+  "exportedAt": "2026-10-29T08:59:01Z",
   "canvasPath": "/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx",
   "unsavedSession": false,
   "entries": {
     "51": {
-      "status": "needs_retest",
-      "comment": "T-144: повторить обычное ручное исправление и отсутствие ложного успеха. Приёмка T-135 сохранена в history, нового passed нет.",
+      "status": "passed",
+      "comment": "Антон подтвердил обычное исправление «Кватира» → «Квартира» в Text Autofix — T-144 QA (smoke). events!A421:G427, sess_669feed5bbbad1a186df7346: один manual_fix_complete/applied/suggested, строка 426. Passed только для обычного исправления T-144, не для всех вариантов #51. Дисковая smoke-сборка из 8063a6e, SHA256 491ce37311c6d56f687ca1b6b4fd7dbed30fbc2373cfc7410105441b12eaaae8; SHA загруженного Figma-кода напрямую не прочитан. Приёмка задачи и merge не разрешены.",
       "attachments": [],
-      "checkedAt": "2026-10-29T04:40:49Z",
+      "checkedAt": "2026-10-29T08:59:01Z",
       "checkedCommit": null,
       "history": [
         {
@@ -394,16 +394,33 @@
           "checkedCommit": null,
           "archivedAt": "2026-10-29T04:40:49Z",
           "retestReason": "T-144: изменён учёт сбоев/восстановлений."
+        },
+        {
+          "status": "needs_retest",
+          "comment": "T-144: повторить обычное ручное исправление и отсутствие ложного успеха. Приёмка T-135 сохранена в history, нового passed нет.",
+          "attachments": [],
+          "checkedAt": "2026-10-29T04:40:49Z",
+          "checkedCommit": null,
+          "archivedAt": "2026-10-29T08:59:01Z"
         }
       ]
     },
     "60": {
-      "status": "not_run",
-      "comment": "Автопроверки выполнены отдельно; ручной passed не поставлен.",
+      "status": "passed",
+      "comment": "Антон подтвердил удаление тестового слоя: слой не восстановился, карточка осталась. Отдельно уточнил: «Нажал три раза». events!A428:G434, sess_598f0325d637d1a186e0872b: три отдельных plugin_error/manual_apply/node_missing/failed, по одному на нажатие; нет ui-дубликата и manual_fix_complete/applied. Passed только для удалённого слоя и повторных отдельных попыток; другие сбои и восстановления проверены автоматизированно, ручной passed на них не распространяется. Дисковая smoke-сборка из 8063a6e, SHA256 491ce37311c6d56f687ca1b6b4fd7dbed30fbc2373cfc7410105441b12eaaae8; SHA загруженного Figma-кода напрямую не прочитан. Приёмка задачи и merge не разрешены.",
       "attachments": [],
-      "checkedAt": null,
+      "checkedAt": "2026-10-29T08:59:01Z",
       "checkedCommit": null,
-      "history": []
+      "history": [
+        {
+          "status": "not_run",
+          "comment": "Автопроверки выполнены отдельно; ручной passed не поставлен.",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-10-29T08:59:01Z"
+        }
+      ]
     }
   }
 }
