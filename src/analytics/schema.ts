@@ -63,11 +63,22 @@ export const ANALYTICS_ERROR_CODES = [
   "apply_failed",
   "lexicon_load_failed",
   "spell_load_failed",
+  "scan_failed",
+  "spell_init_failed",
+  "style_restore_failed",
   "timeout",
   "unknown",
 ] as const;
 
 export type AnalyticsErrorCode = (typeof ANALYTICS_ERROR_CODES)[number];
+
+export const ANALYTICS_ERROR_OUTCOMES = ["failed", "recovered"] as const;
+export const ANALYTICS_ERROR_RESOURCES = [
+  "replacements", "boundary_exceptions", "ambiguous_forms",
+  "spell_dictionary", "spell_supplement", "spell_whitelist",
+] as const;
+export const ANALYTICS_ERROR_RECOVERIES = ["bundled", "cache"] as const;
+export type AnalyticsErrorResource = (typeof ANALYTICS_ERROR_RESOURCES)[number];
 
 export type PluginOpenPayload = {
   /** Было ли выделение с текстовыми слоями на открытии. */
@@ -134,6 +145,10 @@ export type SpellcheckRequestedPayload = Record<string, never>;
 export type PluginErrorPayload = {
   stage: AnalyticsErrorStage;
   code: AnalyticsErrorCode;
+  /** Absent in legacy records: their outcome is unknown, not failed. */
+  outcome?: (typeof ANALYTICS_ERROR_OUTCOMES)[number];
+  resource?: AnalyticsErrorResource;
+  recovery?: (typeof ANALYTICS_ERROR_RECOVERIES)[number];
 };
 
 export type AnalyticsPayloadByEvent = {
@@ -273,6 +288,17 @@ function validatePayload(event: AnalyticsEventName, payload: unknown): string | 
     case "plugin_error":
       if (typeof p.stage !== "string" || !STAGE_SET.has(p.stage)) return "stage";
       if (typeof p.code !== "string" || !CODE_SET.has(p.code)) return "code";
+      if (p.outcome !== undefined && !(ANALYTICS_ERROR_OUTCOMES as readonly unknown[]).includes(p.outcome)) return "outcome";
+      if (p.resource !== undefined && !(ANALYTICS_ERROR_RESOURCES as readonly unknown[]).includes(p.resource)) return "resource";
+      if (p.recovery !== undefined && !(ANALYTICS_ERROR_RECOVERIES as readonly unknown[]).includes(p.recovery)) return "recovery";
+      if (p.outcome === undefined && (p.resource !== undefined || p.recovery !== undefined)) return "outcome";
+      if (p.outcome === "recovered" && (p.resource === undefined || p.recovery === undefined ||
+          (p.stage !== "lexicon" && p.stage !== "spell"))) return "recovery";
+      if (p.outcome === "failed" && p.recovery !== undefined) return "recovery";
+      if (typeof p.resource === "string" &&
+          p.stage !== (p.resource.startsWith("spell_") ? "spell" : "lexicon")) return "resource";
+      if (p.outcome === "recovered" &&
+          ((p.resource === "spell_dictionary") !== (p.recovery === "cache"))) return "recovery";
       return null;
   }
 }
@@ -373,7 +399,12 @@ function sanitizePayload<E extends AnalyticsEventName>(
       return {} as AnalyticsPayloadByEvent[E];
     case "plugin_error": {
       const p = payload as PluginErrorPayload;
-      return { stage: p.stage, code: p.code } as AnalyticsPayloadByEvent[E];
+      return {
+        stage: p.stage, code: p.code,
+        ...(p.outcome !== undefined ? { outcome: p.outcome } : {}),
+        ...(p.resource !== undefined ? { resource: p.resource } : {}),
+        ...(p.recovery !== undefined ? { recovery: p.recovery } : {}),
+      } as AnalyticsPayloadByEvent[E];
     }
   }
 }

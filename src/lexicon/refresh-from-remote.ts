@@ -141,7 +141,7 @@ export async function refreshTextReplacementsFromRemote(
       errorMessage: formatFetchError(e),
       fetchUrl,
     }),
-  });
+  }, "replacements");
 }
 
 /** Подтянуть список исключений по URL; при ошибке — fallback на bundled. */
@@ -164,7 +164,7 @@ export async function refreshBoundaryExceptionsFromRemote(
       errorMessage: formatFetchError(e),
       fetchUrl,
     }),
-  });
+  }, "boundary_exceptions");
 }
 
 /** Подтянуть пары выборочных форм по URL; при ошибке — fallback на bundled. */
@@ -187,5 +187,5 @@ export async function refreshAmbiguousFormChoicesFromRemote(
       errorMessage: formatFetchError(e),
       fetchUrl,
     }),
-  });
+  }, "ambiguous_forms");
 }

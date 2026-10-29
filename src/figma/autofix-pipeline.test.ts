@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const order: string[] = [];
+vi.mock("../analytics/track", () => ({ trackAnalytics: vi.fn() }));
 
 vi.mock("../config/feature-flags", () => ({
   SPELLCHECK_ENABLED: true,
@@ -67,6 +68,20 @@ describe("runAutofixPipeline", () => {
     vi.clearAllMocks();
     const { resetSpellcheckPreferenceCacheForTests } = await import("../config/spellcheck-preference");
     resetSpellcheckPreferenceCacheForTests();
+  });
+
+  it("T-144: ошибка инициализации орфографии учитывается, остальные правила продолжают работу", async () => {
+    const { enableSpellcheckForSession } = await import("../config/spellcheck-preference");
+    const { ensureSpellCheckerReady } = await import("../spell/spell-checker");
+    const { trackAnalytics } = await import("../analytics/track");
+    enableSpellcheckForSession();
+    vi.mocked(ensureSpellCheckerReady).mockRejectedValueOnce(new Error("PRIVATE"));
+    const { runAutofixPipeline } = await import("./autofix-pipeline");
+    await runAutofixPipeline();
+    const problems = vi.mocked(trackAnalytics).mock.calls.filter(([name]) => name === "plugin_error");
+    expect(problems).toEqual([["plugin_error", { stage: "spell", code: "spell_init_failed", outcome: "failed" }]]);
+    expect(order).toContain("editorial-lexicon");
+    expect(messages.some(m => m.type === "plugin:checkResult")).toBe(true);
   });
 
   it("сначала орфография, один отчёт, чужой UI не уходит раньше плашки", async () => {

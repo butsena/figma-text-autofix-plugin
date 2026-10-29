@@ -39,7 +39,7 @@ if (collectTextNodesFromSelection(selection).length === 0) {
     try {
       await handleUiMessage(rawMessage as UiToPluginMessage, gate);
     } catch (e) {
-      trackPluginError("ui", e);
+      // handleUiMessage owns analytics for this operation; preserve the visible error.
       postPluginError(e instanceof Error ? e.message : String(e));
     }
   };

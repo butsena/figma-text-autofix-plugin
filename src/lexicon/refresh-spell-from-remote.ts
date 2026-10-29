@@ -3,6 +3,7 @@ import {
   looksLikeHtmlResponse,
   previewResponseText,
 } from "./remote-fetch";
+import { trackPluginError } from "../analytics/pipeline-events";
 import {
   getFigmaSpellDictionaryCacheStore,
   packSpellDictionary,
@@ -115,7 +116,7 @@ export async function refreshSpellSupplementFromRemote(
       errorMessage: formatFetchError(e),
       fetchUrl,
     }),
-  });
+  }, "spell_supplement");
 }
 
 /** Подтянуть whitelist орфографии по URL; при ошибке — fallback на bundled. */
@@ -134,7 +135,7 @@ export async function refreshSpellWhitelistFromRemote(
       errorMessage: formatFetchError(e),
       fetchUrl,
     }),
-  });
+  }, "spell_whitelist");
 }
 
 export type SpellDictionaryFetchResult =
@@ -167,6 +168,9 @@ function failSpellDictionary(
 ): RefreshSpellDictionaryResult {
   clearHunspellDictionary();
   resetSpellCheckerCache();
+  trackPluginError("spell", null, {
+    code: "spell_load_failed", resource: "spell_dictionary",
+  });
   return {
     ok: false,
     fromRemote: false,
@@ -183,6 +187,10 @@ function spellDictionaryFromCache(
 ): RefreshSpellDictionaryResult | null {
   if (!unpacked || !applyHunspellDictionaryFromRaw(unpacked.aff, unpacked.dic)) return null;
   resetSpellCheckerCache();
+  trackPluginError("spell", null, {
+    code: "spell_load_failed", outcome: "recovered",
+    resource: "spell_dictionary", recovery: "cache",
+  });
   console.warn(warn);
   return {
     ok: true,
@@ -348,15 +356,7 @@ export async function refreshSpellDictionaryFromRemote(
       "[text-autofix] spell dictionary offline, using cache",
     );
     if (cached) return cached;
-    clearHunspellDictionary();
-    resetSpellCheckerCache();
-    return {
-      ok: false,
-      fromRemote: false,
-      ...spellDictionaryLoadCounts(),
-      errorMessage: formatFetchError(e),
-      fetchUrl: dicFetchUrl,
-    };
+    return failSpellDictionary(formatFetchError(e), dicFetchUrl);
   }
 }
 

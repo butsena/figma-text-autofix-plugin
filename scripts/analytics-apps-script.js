@@ -24,7 +24,7 @@ var MAX_BODY_CHARS = 4000;
 var MAX_SESSION_LEN = 64;
 var MAX_VERSION_LEN = 32;
 // Номер реализации приёмника; это не номер версии плагина или deployment в Apps Script.
-var COLLECTOR_REVISION = "T-135-1";
+var COLLECTOR_REVISION = "T-144-1";
 
 // Держать в соответствии с src/analytics/schema.ts. Новые поля — только по явному контракту.
 var FIX_CATEGORIES = [
@@ -38,8 +38,15 @@ var ERROR_STAGES = [
 ];
 var ERROR_CODES = [
   "empty_selection", "font_load_failed", "node_missing", "apply_failed",
-  "lexicon_load_failed", "spell_load_failed", "timeout", "unknown",
+  "lexicon_load_failed", "spell_load_failed",
+  "scan_failed", "spell_init_failed", "style_restore_failed", "timeout", "unknown",
 ];
+var ERROR_OUTCOMES = ["failed", "recovered"];
+var ERROR_RESOURCES = [
+  "replacements", "boundary_exceptions", "ambiguous_forms",
+  "spell_dictionary", "spell_supplement", "spell_whitelist",
+];
+var ERROR_RECOVERIES = ["bundled", "cache"];
 
 var EVENT_NAMES = {
   plugin_open: true,
@@ -207,6 +214,17 @@ function validatePayload_(event, payload) {
     case "plugin_error":
       if (ERROR_STAGES.indexOf(payload.stage) === -1) return "payload.stage";
       if (ERROR_CODES.indexOf(payload.code) === -1) return "payload.code";
+      if (payload.outcome !== undefined && ERROR_OUTCOMES.indexOf(payload.outcome) === -1) return "payload.outcome";
+      if (payload.resource !== undefined && ERROR_RESOURCES.indexOf(payload.resource) === -1) return "payload.resource";
+      if (payload.recovery !== undefined && ERROR_RECOVERIES.indexOf(payload.recovery) === -1) return "payload.recovery";
+      if (payload.outcome === undefined && (payload.resource !== undefined || payload.recovery !== undefined)) return "payload.outcome";
+      if (payload.outcome === "recovered" && (payload.resource === undefined || payload.recovery === undefined ||
+          (payload.stage !== "lexicon" && payload.stage !== "spell"))) return "payload.recovery";
+      if (payload.outcome === "failed" && payload.recovery !== undefined) return "payload.recovery";
+      if (typeof payload.resource === "string" &&
+          payload.stage !== (payload.resource.indexOf("spell_") === 0 ? "spell" : "lexicon")) return "payload.resource";
+      if (payload.outcome === "recovered" &&
+          ((payload.resource === "spell_dictionary") !== (payload.recovery === "cache"))) return "payload.recovery";
       return null;
     default:
       return "event";
@@ -244,7 +262,11 @@ function sanitizePayload_(event, payload) {
     case "spellcheck_requested":
       return {};
     case "plugin_error":
-      return { stage: payload.stage, code: payload.code };
+      var problem = { stage: payload.stage, code: payload.code };
+      if (payload.outcome !== undefined) problem.outcome = payload.outcome;
+      if (payload.resource !== undefined) problem.resource = payload.resource;
+      if (payload.recovery !== undefined) problem.recovery = payload.recovery;
+      return problem;
   }
 }
 

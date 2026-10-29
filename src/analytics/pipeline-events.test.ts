@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetAnalyticsSessionForTests } from "./track";
 import type { TextFixDto } from "../shared/messages";
 import type { AnalyticsSpellingSource } from "./schema";
+import { annotateFailure } from "./failure";
 
 const trackAnalytics = vi.fn();
 
@@ -177,8 +178,26 @@ describe("pipeline-events", () => {
     expect(trackAnalytics).toHaveBeenCalledWith("plugin_error", {
       stage: "scan",
       code: "font_load_failed",
+      outcome: "failed",
     });
     expect(JSON.stringify(trackAnalytics.mock.calls[0])).not.toMatch(/font load failed|stack/);
+  });
+
+  it("T-144: сохраняет исходный этап при пробросе через другой обработчик", () => {
+    const error = annotateFailure(new Error("PRIVATE"), "scan", "scan_failed");
+    trackPluginError("manual_apply", annotateFailure(error, "ui", "unknown"));
+    expect(trackAnalytics).toHaveBeenCalledExactlyOnceWith("plugin_error", {
+      stage: "scan", code: "scan_failed", outcome: "failed",
+    });
+    expect(JSON.stringify(trackAnalytics.mock.calls)).not.toContain("PRIVATE");
+  });
+
+  it("T-144: отказ диагностики не заменяет продуктовый результат", () => {
+    trackAnalytics.mockImplementationOnce(() => { throw new Error("transport failed"); });
+    expect(() => trackPluginError("manual_apply", new Error("apply failed"))).not.toThrow();
+    const hostile = new Error();
+    Object.defineProperty(hostile, "message", { get() { throw new Error("getter"); } });
+    expect(() => trackPluginError("ui", hostile)).not.toThrow();
   });
 
   it("mapErrorToAnalyticsCode для неизвестной ошибки", () => {

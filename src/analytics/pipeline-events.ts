@@ -10,6 +10,8 @@ import {
 } from "./schema";
 import { trackAnalytics } from "./track";
 import { createAnalyticsEventId } from "./event-id";
+import { AnalyticsFailure } from "./failure";
+import type { PluginErrorPayload } from "./schema";
 
 /** Кнопка «Проверить орфографию»: один клик, без текста слоёв. */
 export function trackSpellcheckRequested(): void {
@@ -77,6 +79,7 @@ export function trackManualFixFromDto(
 
 export function mapErrorToAnalyticsCode(error: unknown): AnalyticsErrorCode {
   if (!(error instanceof Error)) return "unknown";
+  if (typeof error.message !== "string") return "unknown";
   const msg = error.message.toLowerCase();
   if (msg.includes("font")) return "font_load_failed";
   if (msg.includes("timeout")) return "timeout";
@@ -87,9 +90,20 @@ export function mapErrorToAnalyticsCode(error: unknown): AnalyticsErrorCode {
   return "unknown";
 }
 
-export function trackPluginError(stage: AnalyticsErrorStage, error: unknown): void {
-  trackAnalytics("plugin_error", {
-    stage,
-    code: mapErrorToAnalyticsCode(error),
-  });
+export function trackPluginError(
+  stage: AnalyticsErrorStage,
+  error: unknown,
+  details: Partial<Pick<PluginErrorPayload, "outcome" | "resource" | "recovery" | "code">> = {},
+): void {
+  try {
+    trackAnalytics("plugin_error", {
+      stage: error instanceof AnalyticsFailure ? error.stage : stage,
+      code: error instanceof AnalyticsFailure ? error.code : details.code ?? mapErrorToAnalyticsCode(error),
+      outcome: details.outcome ?? "failed",
+      ...(details.resource ? { resource: details.resource } : {}),
+      ...(details.recovery ? { recovery: details.recovery } : {}),
+    });
+  } catch {
+    // Diagnostic access/transport must not change the product operation or its error.
+  }
 }

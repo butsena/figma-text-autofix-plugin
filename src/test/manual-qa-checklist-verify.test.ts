@@ -41,6 +41,25 @@ import {
   spellDictionaryCacheSkipsNetwork,
 } from "../spell/spell-dictionary-cache";
 import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
+import { buildAnalyticsEnvelope } from "../analytics/schema";
+
+describe("QA #60 / T-144: безопасные исходы", () => {
+  it("разделяет сбой, восстановление и неизвестную историю без приватных данных", () => {
+    const payloads = [
+      { stage: "manual_apply", code: "apply_failed", outcome: "failed" },
+      { stage: "spell", code: "spell_load_failed", outcome: "recovered", resource: "spell_dictionary", recovery: "cache" },
+      { stage: "ui", code: "unknown" },
+    ] as const;
+    for (const payload of payloads) {
+      const built = buildAnalyticsEnvelope({
+        event: "plugin_error", payload: { ...payload, message: "PRIVATE", stack: "PRIVATE" } as never,
+        sessionId: "sess_qa60local", pluginVersion: "smoke",
+      });
+      expect(built.ok && built.envelope.payload).toEqual(payload);
+      expect(JSON.stringify(built)).not.toContain("PRIVATE");
+    }
+  });
+});
 import {
   readResponseEtag,
   refreshSpellDictionaryFromRemote,

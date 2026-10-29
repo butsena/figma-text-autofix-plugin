@@ -1,4 +1,5 @@
 import { getAutofixRules } from "../rules/autofix-rules";
+import { annotateFailure } from "../analytics/failure";
 import { isOrthographyRuleId } from "../rules/orthography-spell-rules";
 import type { CheckResultDto, TextNodeCardDto } from "../shared/messages";
 import { compareFixesByPosition } from "../shared/fix-sort";
@@ -154,6 +155,17 @@ function toScanResult(
 }
 
 export function scanSelectedTextNodes(
+  selection: readonly SceneNode[],
+  options?: ScanSelectionOptions,
+): { result: CheckResultDto; nodeById: Map<string, TextNode> } {
+  try {
+    return scanSelectedTextNodesImpl(selection, options);
+  } catch (error) {
+    throw annotateFailure(error, "scan", "scan_failed");
+  }
+}
+
+function scanSelectedTextNodesImpl(
   selection: readonly SceneNode[],
   options?: ScanSelectionOptions,
 ): {

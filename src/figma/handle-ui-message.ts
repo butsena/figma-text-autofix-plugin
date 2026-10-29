@@ -19,6 +19,22 @@ export async function handleUiMessage(
   message: UiToPluginMessage,
   gate: UiMessageGate,
 ): Promise<void> {
+  try {
+    await dispatchUiMessage(message, gate);
+  } catch (error) {
+    // One owner for the entire UI operation, including errors rethrown to main.
+    const stage = message?.type === "ui:applyManualFix" || message?.type === "ui:skipManualFix"
+      ? "manual_apply" : message?.type === "ui:ready" || message?.type === "ui:enableSpellcheck"
+        ? "open" : "ui";
+    trackPluginError(stage, error);
+    throw error;
+  }
+}
+
+async function dispatchUiMessage(
+  message: UiToPluginMessage,
+  gate: UiMessageGate,
+): Promise<void> {
   switch (message.type) {
     case "ui:ready": {
       gate.uiReady = true;
@@ -29,21 +45,11 @@ export async function handleUiMessage(
       break;
     }
     case "ui:applyManualFix": {
-      try {
-        await applyManualFixAndRefresh(message.nodeId, message.fix, message.spellingSource);
-      } catch (e) {
-        trackPluginError("manual_apply", e);
-        throw e;
-      }
+      await applyManualFixAndRefresh(message.nodeId, message.fix, message.spellingSource);
       break;
     }
     case "ui:skipManualFix": {
-      try {
-        await skipManualFixAndRefresh(message.nodeId, message.fix);
-      } catch (e) {
-        trackPluginError("manual_apply", e);
-        throw e;
-      }
+      await skipManualFixAndRefresh(message.nodeId, message.fix);
       break;
     }
     case "ui:enableSpellcheck": {

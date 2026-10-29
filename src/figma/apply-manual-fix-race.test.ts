@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TextFix } from "../core/autofix-engine";
 import type { TextFixDto } from "../shared/messages";
+import { textFixDtoToEngineFix } from "../shared/text-fix-mapping";
 import { applyTextFixesToTextNode } from "./apply-fixes";
 import { applyManualFixAndRefresh, resetManualApplyInFlightForTests } from "./apply-manual-fix";
 import { readChoiceResolutions, shouldSuppressChoiceFix } from "./choice-resolution";
@@ -162,6 +163,55 @@ describe("повтор ручного применения на настояще
       loadFontAsync: vi.fn(async () => undefined),
       getNodeByIdAsync: vi.fn(),
       currentPage: { selection: [] },
+    });
+  });
+
+  it("T-144: один недоступный шрифт не размножается по правкам, но новый слой/вызов учитываются", async () => {
+    const node = fakeTextNode("private:1", "Кватира Кватира");
+    vi.mocked(figma.loadFontAsync).mockRejectedValue(new Error("private font name"));
+    const first = textFixDtoToEngineFix(spellDto());
+    const fixes = [first, { ...first, from: 8, to: 15 }];
+    expect(await applyTextFixesToTextNode(node as unknown as TextNode, fixes, "manual_apply")).toEqual([]);
+    expect(trackAnalytics).toHaveBeenCalledExactlyOnceWith("plugin_error", {
+      stage: "manual_apply", code: "font_load_failed", outcome: "failed",
+    });
+    await applyTextFixesToTextNode(node as unknown as TextNode, fixes, "manual_apply");
+    await applyTextFixesToTextNode(fakeTextNode("private:2", node.characters) as unknown as TextNode, fixes);
+    expect(trackAnalytics).toHaveBeenCalledTimes(3);
+    const sharedPasses = new Set<string>();
+    await applyTextFixesToTextNode(node as unknown as TextNode, fixes, "auto_apply", sharedPasses);
+    await applyTextFixesToTextNode(node as unknown as TextNode, fixes, "auto_apply", sharedPasses);
+    expect(trackAnalytics).toHaveBeenCalledTimes(4);
+    expect(JSON.stringify(trackAnalytics.mock.calls)).not.toMatch(/private|Кватира|Inter/);
+  });
+
+  it("T-144: разные ошибки записи не склеиваются по коду или экземпляру Error", async () => {
+    const node = fakeTextNode("1:2", "Кватира Кватира");
+    const sameError = new Error("private failure");
+    node.deleteCharacters = () => { throw sameError; };
+    const fix = textFixDtoToEngineFix(spellDto());
+    await applyTextFixesToTextNode(node as unknown as TextNode, [fix, { ...fix, from: 8, to: 15 }]);
+    expect(trackAnalytics).toHaveBeenCalledTimes(2);
+    expect(trackAnalytics.mock.calls.every(([, p]) => p.code === "apply_failed" && p.outcome === "failed")).toBe(true);
+  });
+
+  it("T-144: предупреждение предварительной загрузки без сорванной правки не считается сбоем", async () => {
+    const node = fakeTextNode("1:2", "Кватира");
+    vi.mocked(figma.loadFontAsync).mockRejectedValueOnce(new Error("prefetch only"));
+    const result = await applyTextFixesToTextNode(node as unknown as TextNode, [textFixDtoToEngineFix(spellDto())]);
+    expect(result).toHaveLength(1);
+    expect(node.characters).toBe("Квартира");
+    expect(trackAnalytics).not.toHaveBeenCalled();
+  });
+
+  it("T-144: сбой восстановления оформления не отменяет подтверждённую замену текста", async () => {
+    const node = fakeTextNode("1:2", "Кватира");
+    node.setRangeFontName = () => { throw new Error("private style failure"); };
+    const result = await applyTextFixesToTextNode(node as unknown as TextNode, [textFixDtoToEngineFix(spellDto())]);
+    expect(result).toHaveLength(1);
+    expect(node.characters).toBe("Квартира");
+    expect(trackAnalytics).toHaveBeenCalledExactlyOnceWith("plugin_error", {
+      stage: "auto_apply", code: "style_restore_failed", outcome: "failed",
     });
   });
 
