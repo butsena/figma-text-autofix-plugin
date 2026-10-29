@@ -1,6 +1,6 @@
 import { it, expect } from 'vitest';
 import { assertReleaseMetadata, assertRolloutReady } from '../../scripts/check-analytics-release.mjs';
-import { classifyTraffic, migrateTrafficFormula } from '../../scripts/t151-traffic-report.mjs';
+import { classifyTraffic, migrateTrafficFormula, buildTrafficChartPlan } from '../../scripts/t151-traffic-report.mjs';
 
 it('rejects a QA file renamed or copied into a release folder, a dirty build, and an outdated commit', () => {
   const info = {kind:'release',enabled:true,trafficMode:'production',pluginVersion:'0.23.0',dirty:false,sourceCommit:'commit'};
@@ -23,4 +23,15 @@ it('adds the work filter to the previously unfiltered coverage date and chart ca
   expect(migrateTrafficFormula('=FILTER(events!A$2:A;events!F$2:F="spellcheck_requested")','Методика',34,1)).toContain('events!H$2:H');
   expect(migrateTrafficFormula('=FILTER(events!A2:A;events!A2:A<>"")','Графики',122,0)).toContain('IFERROR');
   expect(() => migrateTrafficFormula('=COUNTA(events!A:A)','unreviewed',1,1)).toThrow();
+});
+it('removes the hardcoded coverage date without changing chart data, style or input specs', () => {
+  const charts = Array.from({length:10},(_,i)=>({chartId:i,spec:{title:'Chart '+i,subtitle:'Other',basicChart:{chartType:'LINE',domains:[{domain:{sourceRange:{sources:[{sheetId:1,startColumnIndex:0,endColumnIndex:1}]}}}]}}}));
+  charts[0].spec.subtitle='Рабочие события · запросы орфографии наблюдаются с 21.10.2026 · UTC';
+  const before=JSON.stringify(charts);
+  const plan=buildTrafficChartPlan(charts);
+  expect(plan).toHaveLength(1);
+  expect(plan[0].updateChartSpec.spec.subtitle).not.toContain('21.10.2026');
+  expect(plan[0].updateChartSpec.spec.basicChart).toEqual(charts[0].spec.basicChart);
+  expect(JSON.stringify(charts)).toBe(before);
+  expect(()=>buildTrafficChartPlan([])).toThrow();
 });

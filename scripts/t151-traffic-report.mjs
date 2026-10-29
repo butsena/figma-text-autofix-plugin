@@ -31,7 +31,16 @@ export function migrateTrafficFormula(formula, title, row, col) {
   return f;
 }
 
-export function buildTrafficReportPlan(cells) {
+export function buildTrafficChartPlan(charts) {
+  if (!charts || charts.length !== 10) throw new Error("Inspect all 10 existing chart specs before planning a migration");
+  return charts.flatMap(chart => {
+    const subtitle = chart.spec.subtitle?.replace(/запросы орфографии наблюдаются с \d{2}\.\d{2}\.\d{4}/, "начало учёта запросов — в «Методике»").replaceAll("smoke исключён", "проверки исключены");
+    return subtitle !== chart.spec.subtitle ? [{ updateChartSpec: { chartId: chart.chartId, spec: { ...chart.spec, subtitle } } }] : [];
+  });
+}
+
+export function buildTrafficReportPlan(cells, charts) {
+  const chartRequests = buildTrafficChartPlan(charts);
   if (cells.some(c => c.title === TRAFFIC_TITLE || (c.title === "events" && c.col === 7 && c.value))) {
     throw new Error("Source already migrated or H occupied; inspect a fresh snapshot instead of replaying a migration");
   }
@@ -78,5 +87,6 @@ export function buildTrafficReportPlan(cells) {
   });
   requests.push({ updateCells: { start: { sheetId: sid, rowIndex: 5, columnIndex: 0 }, rows, fields: "userEnteredValue" } });
   requests.push({ repeatCell: { range: { sheetId: sid, startRowIndex: 5, endRowIndex: 46, startColumnIndex: 1, endColumnIndex: 6 }, cell: { userEnteredFormat: { numberFormat: { type: "NUMBER", pattern: "0" } } }, fields: "userEnteredFormat.numberFormat" } });
+  requests.push(...chartRequests);
   return { requests, changedFormulaCount: changes.length, changes };
 }
