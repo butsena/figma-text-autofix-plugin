@@ -540,6 +540,15 @@
       "method": "engine-test",
       "environmentNote": "Локальные имитации API Figma; не ручная приёмка.",
       "agentNote": "T-144: main → UI, apply/font, bundled/cache/failed и клиент → collector проверяются без рабочей сети. Реальный Figma-прогон не выполнен."
+    },
+    {
+      "scenarioId": "61",
+      "agentStatus": "fixed",
+      "checkedAt": "2026-10-29",
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "Готовые QA/release-файлы выполнены с перехватом fetch; копия native Sheets проверена и очищена. Рабочих POST нет.",
+      "agentNote": "T-151: режимы, legacy unknown, ошибки режима, replay и фильтры/даты проверены автоматически. Ручного Figma-прогона пока нет."
     }
   ]
 }

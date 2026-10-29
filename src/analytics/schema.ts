@@ -4,6 +4,8 @@
  */
 
 export const ANALYTICS_SCHEMA_VERSION = 1 as const;
+export const ANALYTICS_TRAFFIC_MODES = ["production", "test"] as const;
+export type AnalyticsTrafficMode = (typeof ANALYTICS_TRAFFIC_MODES)[number];
 
 export const ANALYTICS_EVENT_NAMES = [
   "plugin_open",
@@ -166,6 +168,8 @@ export type AnalyticsEnvelope<E extends AnalyticsEventName = AnalyticsEventName>
   client_time: string;
   session_id: string;
   plugin_version: string;
+  /** Absent only for compatible legacy envelopes. */
+  traffic_mode?: AnalyticsTrafficMode;
   event: E;
   payload: AnalyticsPayloadByEvent[E];
 };
@@ -313,6 +317,7 @@ export function buildAnalyticsEnvelope<E extends AnalyticsEventName>(input: {
   sessionId: string;
   pluginVersion: string;
   clientTime?: string;
+  trafficMode?: AnalyticsTrafficMode;
 }): { ok: true; envelope: AnalyticsEnvelope<E> } | { ok: false; reason: string } {
   const sessionId = input.sessionId.trim();
   if (sessionId.length < 8 || sessionId.length > 64) {
@@ -326,6 +331,12 @@ export function buildAnalyticsEnvelope<E extends AnalyticsEventName>(input: {
     return { ok: false, reason: "plugin_version" };
   }
 
+  if (Object.prototype.hasOwnProperty.call(input, "trafficMode") &&
+      (!(ANALYTICS_TRAFFIC_MODES as readonly unknown[]).includes(input.trafficMode) ||
+       (input.pluginVersion.trim() === "smoke" && input.trafficMode === "production"))) {
+    return { ok: false, reason: "traffic_mode" };
+  }
+
   const payloadError = validatePayload(input.event, input.payload);
   if (payloadError) return { ok: false, reason: `payload.${payloadError}` };
 
@@ -334,6 +345,7 @@ export function buildAnalyticsEnvelope<E extends AnalyticsEventName>(input: {
     client_time: input.clientTime ?? new Date().toISOString(),
     session_id: sessionId,
     plugin_version: pluginVersion,
+    ...(Object.prototype.hasOwnProperty.call(input, "trafficMode") ? { traffic_mode: input.trafficMode } : {}),
     event: input.event,
     payload: sanitizePayload(input.event, input.payload),
   } as AnalyticsEnvelope<E>;
@@ -416,6 +428,7 @@ export function serializeAnalyticsEnvelope(envelope: AnalyticsEnvelope): string 
     payload: envelope.payload,
     sessionId: envelope.session_id,
     pluginVersion: envelope.plugin_version,
+    ...(Object.prototype.hasOwnProperty.call(envelope, "traffic_mode") ? { trafficMode: envelope.traffic_mode } : {}),
     clientTime: envelope.client_time,
   });
   if (!built.ok) return null;

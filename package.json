@@ -8,11 +8,13 @@
     "build:replacements": "node scripts/build-text-replacements.mjs",
     "sync:spell-dictionary": "node scripts/sync-spell-dictionary-bundled.mjs",
     "build": "npm run build:yo-curated && node scripts/build-ui-html.mjs && vite build",
-    "build:release": "ANALYTICS=1 npm run build",
+    "build:release": "node scripts/build-analytics.mjs release",
     "test": "npm run build:yo-curated && vitest run",
     "test:watch": "npm run build:yo-curated && vitest",
     "qa:extract-canvas": "node scripts/qa-extract-canvas-items.mjs",
-    "qa:sync-canvas": "node scripts/qa-sync-canvas.mjs"
+    "qa:sync-canvas": "node scripts/qa-sync-canvas.mjs",
+    "build:qa": "node scripts/build-analytics.mjs qa",
+    "check:release": "node scripts/check-analytics-release.mjs"
   },
   "dependencies": {
     "nspell": "^2.1.5",

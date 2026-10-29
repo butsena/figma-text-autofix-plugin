@@ -8,7 +8,7 @@ import {
 
 vi.mock("../config/analytics-config", () => ({
   ANALYTICS_CONFIG: {
-    pluginVersion: "0.18.0-test",
+    pluginVersion: "0.18.0-test", trafficMode: "test",
     endpointUrl: "https://script.google.com/macros/s/fake/exec",
     enabled: true,
     timeoutMs: 50,
@@ -51,6 +51,7 @@ describe("trackAnalytics", () => {
       url: "https://script.google.com/macros/s/fake/exec",
       body: {
         schema_version: 1,
+        traffic_mode: "test",
         event: "plugin_open",
         payload: { has_text_layers: false },
       },
@@ -84,7 +85,7 @@ describe("trackAnalytics disabled", () => {
     vi.resetModules();
     vi.doMock("../config/analytics-config", () => ({
       ANALYTICS_CONFIG: {
-        pluginVersion: "0.18.0-test",
+        pluginVersion: "0.18.0-test", trafficMode: "test",
         endpointUrl: "",
         enabled: true,
         timeoutMs: 50,

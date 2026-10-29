@@ -5,10 +5,10 @@
   "unsavedSession": false,
   "entries": {
     "51": {
-      "status": "passed",
-      "comment": "Антон подтвердил обычное исправление «Кватира» → «Квартира» в Text Autofix — T-144 QA (smoke). events!A421:G427, sess_669feed5bbbad1a186df7346: один manual_fix_complete/applied/suggested, строка 426. Passed только для обычного исправления T-144, не для всех вариантов #51. Дисковая smoke-сборка из 8063a6e, SHA256 491ce37311c6d56f687ca1b6b4fd7dbed30fbc2373cfc7410105441b12eaaae8; SHA загруженного Figma-кода напрямую не прочитан. Приёмка задачи и merge не разрешены.",
+      "status": "needs_retest",
+      "comment": "T-151: проверить явный test и настоящий номер после рабочего переноса. Приёмка обычной правки T-144 сохранена в истории; нового ручного passed нет.",
       "attachments": [],
-      "checkedAt": "2026-10-29T08:59:01Z",
+      "checkedAt": "2026-10-29T10:12:38Z",
       "checkedCommit": null,
       "history": [
         {
@@ -402,6 +402,14 @@
           "checkedAt": "2026-10-29T04:40:49Z",
           "checkedCommit": null,
           "archivedAt": "2026-10-29T08:59:01Z"
+        },
+        {
+          "status": "passed",
+          "comment": "Антон подтвердил обычное исправление «Кватира» → «Квартира» в Text Autofix — T-144 QA (smoke). events!A421:G427, sess_669feed5bbbad1a186df7346: один manual_fix_complete/applied/suggested, строка 426. Passed только для обычного исправления T-144, не для всех вариантов #51. Дисковая smoke-сборка из 8063a6e, SHA256 491ce37311c6d56f687ca1b6b4fd7dbed30fbc2373cfc7410105441b12eaaae8; SHA загруженного Figma-кода напрямую не прочитан. Приёмка задачи и merge не разрешены.",
+          "attachments": [],
+          "checkedAt": "2026-10-29T08:59:01Z",
+          "checkedCommit": null,
+          "archivedAt": "2026-10-29T10:12:38Z"
         }
       ]
     },
@@ -421,6 +429,14 @@
           "archivedAt": "2026-10-29T08:59:01Z"
         }
       ]
+    },
+    "61": {
+      "status": "not_run",
+      "comment": "T-151: локальные проверки готовых файлов и копии отчёта не заменяют Figma-прогон. Ждать разрешённого переноса.",
+      "attachments": [],
+      "checkedAt": null,
+      "checkedCommit": null,
+      "history": []
     }
   }
 }

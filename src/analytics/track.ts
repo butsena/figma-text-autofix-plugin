@@ -55,6 +55,7 @@ export function trackAnalytics<E extends AnalyticsEventName>(
       payload,
       sessionId: sid,
       pluginVersion: ANALYTICS_CONFIG.pluginVersion,
+      trafficMode: ANALYTICS_CONFIG.trafficMode,
     });
     if (!built.ok) return;
     const body = serializeAnalyticsEnvelope(built.envelope);

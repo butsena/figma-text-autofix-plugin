@@ -24,7 +24,7 @@ var MAX_BODY_CHARS = 4000;
 var MAX_SESSION_LEN = 64;
 var MAX_VERSION_LEN = 32;
 // Номер реализации приёмника; это не номер версии плагина или deployment в Apps Script.
-var COLLECTOR_REVISION = "T-144-1";
+var COLLECTOR_REVISION = "T-151-1";
 
 // Держать в соответствии с src/analytics/schema.ts. Новые поля — только по явному контракту.
 var FIX_CATEGORIES = [
@@ -66,6 +66,7 @@ var EVENT_HEADERS = [
   "plugin_version",
   "event",
   "payload_json",
+  "traffic_mode",
 ];
 
 function doPost(e) {
@@ -97,6 +98,8 @@ function doGet() {
     ok: true, service: "text-autofix-analytics", schema_version: SCHEMA_VERSION,
     collector_revision: COLLECTOR_REVISION,
     spelling_sources: SPELLING_SOURCES.slice(),
+    traffic_modes: ["production", "test"],
+    traffic_mode_storage: "events!H",
   });
 }
 
@@ -126,6 +129,11 @@ function validateEnvelope_(body) {
        !/^\d+\.\d+\.\d+(?:-[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*)?(?:\+[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*)?$/.test(body.plugin_version))) {
     return { ok: false, error: "plugin_version" };
   }
+  if (Object.prototype.hasOwnProperty.call(body, "traffic_mode") &&
+      ((body.traffic_mode !== "production" && body.traffic_mode !== "test") ||
+       (body.plugin_version === "smoke" && body.traffic_mode === "production"))) {
+    return { ok: false, error: "traffic_mode" };
+  }
   // Клиент отправляет Date.toISOString(): проверяем также календарную дату, не только форму строки.
   if (typeof body.client_time !== "string" ||
       !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(body.client_time) ||
@@ -144,6 +152,7 @@ function validateEnvelope_(body) {
       schema_version: SCHEMA_VERSION,
       session_id: body.session_id,
       plugin_version: body.plugin_version,
+      ...(Object.prototype.hasOwnProperty.call(body, "traffic_mode") ? { traffic_mode: body.traffic_mode } : {}),
       event: body.event,
       // Не сохраняем исходный объект: лишние поля отбрасываются и нигде не логируются.
       payload: sanitizePayload_(body.event, body.payload),
@@ -275,6 +284,12 @@ function safeSheetString_(value) {
   return /^[\s\uFEFF]*[=+\-@]/.test(value) || /^[\t\r\n]/.test(value) ? "'" + value : value;
 }
 
+/** Старые пустые H и новые legacy unknown имеют один смысл. */
+function normalizedTrafficMode_(value) {
+  if (value === undefined || value === "" || value === "unknown") return "unknown";
+  return value;
+}
+
 /** Вызывать только под ScriptLock: поиск по всей сохранённой истории, не кэшу. */
 function findEventReplay_(sheet, envelope) {
   if (!Object.prototype.hasOwnProperty.call(envelope.payload, "event_id")) return null;
@@ -288,14 +303,15 @@ function findEventReplay_(sheet, envelope) {
   for (var i = 0; i < matches.length; i++) {
     // Версия, событие, payload_json; служебные client/server_time и session_id
     // не меняют смысл повторной доставки того же одноразового события.
-    var stored = sheet.getRange(matches[i].getRow(), 5, 1, 3).getValues()[0];
+    var stored = sheet.getRange(matches[i].getRow(), 5, 1, 4).getValues()[0];
     var payload;
     try {
       payload = JSON.parse(stored[2]);
     } catch (err) {
       return { ok: false, error: "event_id_conflict" };
     }
-    if (stored[0] !== envelope.plugin_version || stored[1] !== envelope.event ||
+    if (normalizedTrafficMode_(stored[3]) !== normalizedTrafficMode_(envelope.traffic_mode) ||
+        stored[0] !== envelope.plugin_version || stored[1] !== envelope.event ||
         !isRecord_(payload) || validatePayload_(stored[1], payload) ||
         JSON.stringify(sanitizePayload_(stored[1], payload)) !== expectedPayload) {
       return { ok: false, error: "event_id_conflict" };
@@ -318,6 +334,8 @@ function appendEvent_(envelope) {
       onceSetup();
       sheet = ss.getSheetByName("events");
     }
+    var header = sheet.getRange(1, 1, 1, 8).getValues()[0];
+    if (JSON.stringify(header) !== JSON.stringify(EVENT_HEADERS)) throw new Error("Traffic mode storage not migrated");
     var replay = findEventReplay_(sheet, envelope);
     if (replay) return replay;
     sheet.appendRow([
@@ -328,6 +346,7 @@ function appendEvent_(envelope) {
       safeSheetString_(envelope.plugin_version),
       safeSheetString_(envelope.event),
       safeSheetString_(JSON.stringify(envelope.payload)),
+      normalizedTrafficMode_(envelope.traffic_mode),
     ]);
     // Commit до releaseLock: следующий запрос должен видеть только что записанный ID.
     SpreadsheetApp.flush();
@@ -346,12 +365,12 @@ function jsonResponse_(code, obj) {
  * После onceSetup и деплоя лучше слать POST снаружи; эта функция пишет строку напрямую.
  */
 function smokeAppend() {
-  onceSetup();
   appendEvent_({
     client_time: new Date().toISOString(),
     schema_version: SCHEMA_VERSION,
+    traffic_mode: "test",
     session_id: "sess_smoke_test_01",
-    plugin_version: "0.18.0",
+    plugin_version: "0.0.0-collector-test",
     event: "plugin_open",
     payload: { has_text_layers: true },
   });

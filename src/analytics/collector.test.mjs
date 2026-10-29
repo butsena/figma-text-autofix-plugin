@@ -26,14 +26,14 @@ function envelope(event = "plugin_open", payload = payloads[event]) {
 }
 
 // Все сервисы локальные. Ни рабочая таблица, ни сеть здесь недоступны.
-function collector({ appendFails = false, lockFails = false, existingSheet = true, flushFailsOnce = false } = {}) {
+function collector({ appendFails = false, lockFails = false, existingSheet = true, flushFailsOnce = false, headers } = {}) {
   const rows = [];
   const searches = [];
   const trace = [];
   let held = false;
   // В существующем листе заголовок есть, но rows хранит только новые записи.
   const headerRows = existingSheet ? 1 : 0;
-  function storedRow(row) { return rows[row - 1 - headerRows]; }
+  function storedRow(row) { return headerRows && row === 1 ? (headers ?? Array.from(scope.EVENT_HEADERS)) : rows[row - 1 - headerRows]; }
   const appendRow = vi.fn((row) => {
     if (appendFails) throw new Error("private failure must not escape");
     trace.push("append");
@@ -167,7 +167,7 @@ describe("Apps Script collector: совместимость schema v1", () => {
     });
     expect(built.ok).toBe(true);
     expect(c.post(built.envelope)).toEqual({ ok: true });
-    expect(c.rows[0]).toHaveLength(7);
+    expect(c.rows[0]).toHaveLength(8);
     expect(JSON.parse(c.rows[0][6])).toEqual({ action: "applied", kind: "orthography", source });
   });
 
@@ -192,7 +192,7 @@ describe("Apps Script collector: совместимость schema v1", () => {
     })).toEqual({ ok: true, duplicate: true });
     expect(c.rows).toHaveLength(1);
     expect(JSON.parse(c.rows[0][6])).toEqual(payload);
-    expect(c.trace).toEqual(["lock", "append", "flush", "release", "lock", "range", "search", "range", "release"]);
+    expect(c.trace).toEqual(["lock", "range", "append", "flush", "release", "lock", "range", "range", "search", "range", "release"]);
     expect(c.searches[0]).toEqual({
       row: 2, column: 7, numRows: 1, numColumns: 1, needle: '"event_id":"evt_123456789012"',
       options: { matchCase: true, matchEntireCell: false, matchFormulaText: false, useRegularExpression: false },
@@ -255,7 +255,7 @@ describe("Apps Script collector: совместимость schema v1", () => {
     expect(c.post(body)).toEqual({ ok: true });
     expect(c.post(body)).toEqual({ ok: true });
     expect(c.rows).toHaveLength(2);
-    expect(c.getRange).not.toHaveBeenCalled();
+    expect(c.searches).toHaveLength(0);
   });
 
   it("принимает нулевой auto и все разрешённые категории", () => {
@@ -414,7 +414,7 @@ describe("Apps Script collector: граница приватности и кор
     expect(c.post(envelope())).toEqual({ ok: true });
     expect(c.spreadsheet.insertSheet).toHaveBeenCalledExactlyOnceWith("events");
     expect(c.rows).toHaveLength(2); // прежний заголовок + целая запись; других листов нет
-    expect(c.rows[0]).toEqual(["server_time", "client_time", "schema_version", "session_id", "plugin_version", "event", "payload_json"]);
+    expect(c.rows[0]).toEqual(["server_time", "client_time", "schema_version", "session_id", "plugin_version", "event", "payload_json", "traffic_mode"]);
   });
 
   it("ошибка хранилища освобождает блокировку и не раскрывает исключение", () => {
@@ -434,7 +434,8 @@ describe("Apps Script collector: граница приватности и кор
   it("health-check показывает реализацию, но не доказывает её публикацию", () => {
     const c = collector();
     expect(JSON.parse(c.scope.doGet().text)).toEqual({
-      ok: true, service: "text-autofix-analytics", schema_version: 1, collector_revision: "T-144-1",
+      ok: true, service: "text-autofix-analytics", schema_version: 1, collector_revision: "T-151-1",
+      traffic_modes: ["production", "test"], traffic_mode_storage: "events!H",
       spelling_sources: ["suggested", "custom", "unknown"],
     });
     expect(c.getActiveSpreadsheet).not.toHaveBeenCalled();
@@ -479,5 +480,62 @@ describe("T-144: error outcome roundtrip", () => {
     const c = collector();
     c.post(envelope("plugin_error", { stage: "ui", code: "unknown" }));
     expect(JSON.parse(c.rows[0][6])).toEqual({ stage: "ui", code: "unknown" });
+  });
+});
+
+describe("T-151: explicit traffic mode and compatible storage", () => {
+  it.each(ANALYTICS_EVENT_NAMES)("roundtrips both modes for %s", event => {
+    for (const trafficMode of ["production", "test"]) {
+      const built = buildAnalyticsEnvelope({ event, payload: payloads[event], sessionId: "sess_fixture01", pluginVersion: "0.23.0", trafficMode });
+      expect(built.ok).toBe(true);
+      const c = collector();
+      expect(c.post(built.envelope)).toEqual({ ok: true });
+      expect(c.rows[0][7]).toBe(trafficMode);
+      expect(c.rows[0].slice(1, 7)).toEqual([built.envelope.client_time, 1, "sess_fixture01", "0.23.0", event, JSON.stringify(built.envelope.payload)]);
+    }
+  });
+  it.each([null, "", "unknown", "Production", " test", 1, {}, []])("rejects explicit bad mode %j before storage", trafficMode => {
+    const c = collector();
+    expect(c.post({ ...envelope(), traffic_mode: trafficMode })).toEqual({ ok: false, error: "traffic_mode" });
+    expect(c.getActiveSpreadsheet).not.toHaveBeenCalled();
+    expect(buildAnalyticsEnvelope({ event: "plugin_open", payload: payloads.plugin_open, sessionId: "sess_fixture01", pluginVersion: "0.23.0", trafficMode }).ok).toBe(false);
+  });
+  it("stores legacy as unknown; does not infer a mode from a version suffix", () => {
+    const c = collector();
+    for (const version of ["0.18.0", "0.23.0-qa", "smoke"]) c.post({ ...envelope(), plugin_version: version });
+    expect(c.rows.map(r => r[7])).toEqual(["unknown", "unknown", "unknown"]);
+    expect(c.rows.map(r => r[4])).toEqual(["0.18.0", "0.23.0-qa", "smoke"]);
+  });
+  it("rejects smoke+production, allows smoke+test", () => {
+    const c = collector();
+    expect(c.post({ ...envelope(), plugin_version: "smoke", traffic_mode: "production" }).ok).toBe(false);
+    expect(c.post({ ...envelope(), plugin_version: "smoke", traffic_mode: "test" })).toEqual({ ok: true });
+    expect(c.rows).toHaveLength(1);
+  });
+  it("mode participates in replay identity; legacy empty storage normalizes to unknown", () => {
+    const c = collector();
+    const e = envelope("manual_fix_complete", { action: "applied", kind: "orthography", source: "custom", event_id: "evt_t151fixture0001" });
+    expect(c.post(e)).toEqual({ ok: true });
+    c.rows[0][7] = ""; // previously stored A:G, H still blank
+    expect(c.post(e)).toEqual({ ok: true, duplicate: true });
+    expect(c.post({ ...e, traffic_mode: "production" })).toEqual({ ok: false, error: "event_id_conflict" });
+    expect(c.rows).toHaveLength(1);
+    const test = { ...e, traffic_mode: "test", payload: { ...e.payload, event_id: "evt_t151fixture0002" } };
+    expect(c.post(test)).toEqual({ ok: true });
+    expect(c.post(test)).toEqual({ ok: true, duplicate: true });
+    expect(c.post({ ...test, traffic_mode: "production" })).toEqual({ ok: false, error: "event_id_conflict" });
+    expect(c.rows).toHaveLength(2);
+  });
+  it("does not overwrite an unmigrated or occupied header", () => {
+    const c = collector({ headers: ["server_time", "client_time", "schema_version", "session_id", "plugin_version", "event", "payload_json", "OTHER"] });
+    expect(c.post(envelope())).toEqual({ ok: false, error: "server" });
+    expect(c.rows).toHaveLength(0);
+    expect(c.releaseLock).toHaveBeenCalled();
+  });
+  it("smokeAppend writes an explicit test, not unmarked work", () => {
+    const c = collector();
+    c.scope.smokeAppend();
+    expect(c.rows[0][7]).toBe("test");
+    expect(c.rows[0][4]).toBe("0.0.0-collector-test");
   });
 });
