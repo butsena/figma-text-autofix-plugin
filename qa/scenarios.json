@@ -658,7 +658,8 @@
       ],
       "prNumbers": [
         21,
-        23
+        23,
+        25
       ],
       "legacyTaskIds": []
     },
@@ -800,7 +801,9 @@
       "taskIds": [
         "T-151"
       ],
-      "prNumbers": [],
+      "prNumbers": [
+        25
+      ],
       "legacyTaskIds": []
     }
   ]
