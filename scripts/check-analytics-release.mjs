@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import { resolveAnalyticsBuild } from "./analytics-build-config.mjs";
 import { verifyAnalyticsBundle } from "./verify-analytics-bundle.mjs";
 
+import { projectBuildVersion } from "./project-build-version.mjs";
+
 export function assertReleaseMetadata(info, expectedVersion, currentCommit) {
   if (info.kind !== "release" || !info.enabled || info.trafficMode !== "production" ||
       info.pluginVersion !== expectedVersion || info.dirty !== false || info.sourceCommit !== currentCommit) throw new Error("Not a clean release artifact for the requested version/commit");
@@ -16,7 +18,7 @@ export function assertRolloutReady(health, report) {
       !Number.isFinite(Date.parse(report.verifiedAt))) throw new Error("Working report verification is missing; a preview copy is not sufficient");
 }
 async function main() {
-  const expected = resolveAnalyticsBuild({ ANALYTICS: "1", ANALYTICS_TRAFFIC_MODE: "production", PLUGIN_VERSION: process.env.PLUGIN_VERSION });
+  const expected = resolveAnalyticsBuild({ ANALYTICS: "1", ANALYTICS_TRAFFIC_MODE: "production", PLUGIN_VERSION: projectBuildVersion(process.env) });
   const info = JSON.parse(await fs.readFile("dist-release/build-info.json", "utf8"));
   const commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
   assertReleaseMetadata(info, expected.pluginVersion, commit);

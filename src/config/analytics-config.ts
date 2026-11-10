@@ -4,8 +4,8 @@
  *
  * Сборка:
  * - `npm run build` / `dev` — enabled=false (локалка не пишет в прод-таблицу)
- * - `PLUGIN_VERSION=X.Y.Z npm run build:release` — production для Community
- * - `PLUGIN_VERSION=X.Y.Z npm run build:qa` — test, отдельная папка
+ * - `npm run build:release` — production для Community
+ * - `npm run build:qa` — test, отдельная папка
  */
 
 import { ANALYTICS_ENDPOINT } from "../../scripts/analytics-build-config.mjs";
