@@ -3,11 +3,13 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { resolveAnalyticsBuild } from "./analytics-build-config.mjs";
 import { verifyAnalyticsBundle } from "./verify-analytics-bundle.mjs";
 
+import { projectBuildVersion } from "./project-build-version.mjs";
+
 const kind = process.argv[2];
 if (!["qa", "release"].includes(kind)) throw new Error("Choose qa or release");
 const mode = kind === "qa" ? "test" : "production";
 if (process.env.ANALYTICS_TRAFFIC_MODE !== undefined && process.env.ANALYTICS_TRAFFIC_MODE !== mode) throw new Error("Build command conflicts with requested traffic mode");
-const env = { ...process.env, ANALYTICS: "1", ANALYTICS_TRAFFIC_MODE: mode, ANALYTICS_BUILD_KIND: kind };
+const env = { ...process.env, PLUGIN_VERSION: projectBuildVersion(process.env), ANALYTICS: "1", ANALYTICS_TRAFFIC_MODE: mode, ANALYTICS_BUILD_KIND: kind };
 const config = resolveAnalyticsBuild(env);
 const run = spawnSync("npm", ["run", "build"], { env, stdio: "inherit" });
 if (run.status !== 0) process.exit(run.status ?? 1);
