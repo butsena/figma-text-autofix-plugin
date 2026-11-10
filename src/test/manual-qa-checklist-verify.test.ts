@@ -82,7 +82,9 @@ describe("manual QA collector #59", () => {
       SpreadsheetApp: { flush() {}, getActiveSpreadsheet: () => ({
         getSheetByName: (name: string) => {
           expect(name).toBe("events");
-          return { appendRow: (row: unknown[]) => rows.push(Array.from(row)) };
+          return { appendRow: (row: unknown[]) => rows.push(Array.from(row)),
+            getRange: () => ({ getValues: () => [Array.from(scope.EVENT_HEADERS)] }),
+            getLastRow: () => rows.length + 1 };
         },
       }) },
       LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },

@@ -1,11 +1,12 @@
 // Generates a narrow native Sheets migration; does not execute it or reset dashboard.
+import { WORK } from "./t151-traffic-report.mjs";
 export const ERROR_REPORT_SHEET_ID = 1440144;
 export const ERROR_REPORT_TITLE = "Сбои и восстановления";
 
 export function buildErrorReportPlan(periods) {
   if (periods.length !== 41) throw new Error("Expected the 41 existing report periods; inspect template first");
   const sheetId = ERROR_REPORT_SHEET_ID;
-  const base = '(LOWER(TRIM(events!E$2:E))<>"smoke")*(events!F$2:F="plugin_error")';
+  const base = WORK + '*(events!F$2:F="plugin_error")';
   const outcome = value => 'IFERROR(REGEXMATCH(events!G$2:G;"""outcome""\\s*:\\s*""' + value + '""");FALSE)';
   const modern = outcome('(failed|recovered)');
   const rows = periods.map((p, i) => {
@@ -30,7 +31,7 @@ export function buildErrorReportPlan(periods) {
   });
   const startFormula = '=IF(F6=0;"Новых рабочих записей с разделением исходов пока нет.";' +
     '"Первая полученная рабочая запись с новым учётом (UTC): "&LEFT(INDEX(SORT(FILTER(events!A$2:A;' +
-    'LOWER(TRIM(events!E$2:E))<>"smoke";events!F$2:F="plugin_error";' + modern + ');1;TRUE);1;1);10))';
+    WORK + ';events!F$2:F="plugin_error";' + modern + ');1;TRUE);1;1);10))';
   return [
     { duplicateSheet: { sourceSheetId: 1350135, newSheetId: sheetId, newSheetName: ERROR_REPORT_TITLE, insertSheetIndex: 6 } },
     { updateCells: { range: { sheetId, startRowIndex: 0, endRowIndex: 60, startColumnIndex: 0, endColumnIndex: 6 },

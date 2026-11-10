@@ -4,20 +4,25 @@
  *
  * Сборка:
  * - `npm run build` / `dev` — enabled=false (локалка не пишет в прод-таблицу)
- * - `npm run build:release` (ANALYTICS=1) — enabled=true для Community
+ * - `PLUGIN_VERSION=X.Y.Z npm run build:release` — production для Community
+ * - `PLUGIN_VERSION=X.Y.Z npm run build:qa` — test, отдельная папка
  */
 
+import { ANALYTICS_ENDPOINT } from "../../scripts/analytics-build-config.mjs";
+
 declare const __ANALYTICS_ENABLED__: boolean;
+declare const __ANALYTICS_VERSION__: string;
+declare const __ANALYTICS_TRAFFIC_MODE__: "production" | "test";
 
 export const ANALYTICS_CONFIG = {
   /** Версия плагина в событиях (не npm package version). */
-  pluginVersion: "0.18.0",
+  pluginVersion: typeof __ANALYTICS_VERSION__ !== "undefined" ? __ANALYTICS_VERSION__ : "0.0.0-local",
+  trafficMode: typeof __ANALYTICS_TRAFFIC_MODE__ !== "undefined" ? __ANALYTICS_TRAFFIC_MODE__ : "test",
   /**
    * Полный URL Web App, заканчивается на /exec.
    * Пустой endpoint = аналитика выключена. URL виден в бандле — это не секрет.
    */
-  endpointUrl:
-    "https://script.google.com/macros/s/AKfycbwM7CMlkveKebb88voctDyzNGLn51cVn3ISNNfYdy2LPDDvVSrT0gCvILdctick4xJfgA/exec",
+  endpointUrl: ANALYTICS_ENDPOINT,
   /**
    * Подставляется на сборке из vite define (__ANALYTICS_ENABLED__).
    * Без ANALYTICS=1 всегда false.

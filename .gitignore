@@ -8,3 +8,6 @@ data/hunspell/ru_RU.aff
 data/hunspell/ru_RU.dic
 src/ui/ui.figma.html
 
+
+dist-qa/
+dist-release/

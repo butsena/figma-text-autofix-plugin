@@ -87,7 +87,7 @@ describe("followUpAutoFixPayload", () => {
       event: "auto_fix_complete",
       payload: payload!,
       sessionId: "sess_fixture01",
-      pluginVersion: "0.22.0",
+      pluginVersion: "0.22.0", trafficMode: "test",
       clientTime: "2026-10-27T12:00:00.000Z",
     });
     expect(built.ok).toBe(true);
