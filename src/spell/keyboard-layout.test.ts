@@ -5,10 +5,12 @@ import {
   convertLatinCharsToRuLayout,
   extractLatinLayoutTokens,
   extractMixedScriptTokens,
+  isLikelyUrlOrEmailContext,
   looksLikeRuTypedInEnLayout,
   shouldSkipLatinLayoutToken,
   suggestMixedScriptRu,
   suggestRuFromLatinLayout,
+  textHasCyrillic,
 } from "./keyboard-layout";
 
 describe("convertEnLayoutToRu", () => {
@@ -113,5 +115,37 @@ describe("shouldSkipLatinLayoutToken", () => {
     expect(shouldSkipLatinLayoutToken("API")).toBe(true);
     expect(shouldSkipLatinLayoutToken("ok")).toBe(true);
     expect(shouldSkipLatinLayoutToken("ghbdtn")).toBe(false);
+  });
+
+  it("пропускает цифры и короткий ALL CAPS, длинный CAPS не режет по этому правилу", () => {
+    expect(shouldSkipLatinLayoutToken("http2")).toBe(true);
+    expect(shouldSkipLatinLayoutToken("HTML5")).toBe(true);
+    expect(shouldSkipLatinLayoutToken("CTA")).toBe(true);
+    expect(shouldSkipLatinLayoutToken("ABCDEF")).toBe(false);
+  });
+});
+
+describe("textHasCyrillic / isLikelyUrlOrEmailContext", () => {
+  it("textHasCyrillic", () => {
+    expect(textHasCyrillic("привет")).toBe(true);
+    expect(textHasCyrillic("hello")).toBe(false);
+    expect(textHasCyrillic("gдоказываем")).toBe(true);
+  });
+
+  it("не предлагает раскладку в email/url контексте", () => {
+    const email = "user@ghbdtn.com";
+    const at = email.indexOf("ghbdtn");
+    expect(isLikelyUrlOrEmailContext(email, at, at + 6)).toBe(true);
+    const url = "см. https://www.example.ru/path";
+    const host = url.indexOf("www.");
+    expect(isLikelyUrlOrEmailContext(url, host, host + 4)).toBe(true);
+    expect(isLikelyUrlOrEmailContext("Наберите ghbdtn в чат", 9, 15)).toBe(false);
+  });
+});
+
+describe("suggestMixedScriptRu affix", () => {
+  it("срезает латинскую букву и в конце слова", () => {
+    const known = (w: string) => w.toLowerCase() === "пишите";
+    expect(suggestMixedScriptRu("пишитеy", known)).toBe("пишите");
   });
 });

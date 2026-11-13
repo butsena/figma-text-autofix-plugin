@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapStylesForReplacement, type CharTextStyle } from "./text-style-snapshot";
+import { caseStylesAreUniform, mapStylesForReplacement, type CharTextStyle } from "./text-style-snapshot";
 
 const style = (id: string): CharTextStyle => ({
   fontName: { family: "Inter", style: id },
@@ -34,5 +34,17 @@ describe("mapStylesForReplacement", () => {
   it("сохраняет стиль при смене регистра одного символа", () => {
     const mapped = mapStylesForReplacement([style("Bold")], 1);
     expect(mapped).toEqual([style("Bold")]);
+  });
+});
+
+describe("caseStylesAreUniform", () => {
+  it("одинаковый регистровый диапазон можно записать одним setRange", () => {
+    expect(caseStylesAreUniform([style("Regular"), style("Regular")])).toBe(true);
+  });
+
+  it("разный интервал не схлопывается", () => {
+    const wide = style("Regular");
+    wide.letterSpacing = { unit: "PERCENT", value: 8 };
+    expect(caseStylesAreUniform([style("Regular"), wide])).toBe(false);
   });
 });

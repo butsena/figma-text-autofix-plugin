@@ -1,4 +1,4 @@
-import { applyTextFixes, type TextFix } from "../core/autofix-engine";
+import type { TextFix } from "../core/autofix-engine";
 import { resolveApplyPolicy } from "../core/apply-policy";
 import type {
   CheckSummary,
@@ -96,14 +96,21 @@ export function containingFrameName(node: { name: string; parent?: NamedParent |
   return node.name.trim() || "Без имени";
 }
 
+/** Длиннее этого в таблице показывается имя фрейма, полный текст в панель не шлём. */
+const CHECKED_LAYER_TEXT_MAX = 25;
+
 export function buildCheckedTextLayers(textNodes: TextNode[]): CheckedTextLayerDto[] {
-  return textNodes.map((node) => ({
-    nodeId: node.id,
-    nodeName: node.name,
-    characterCount: countTextCharacters(node.characters),
-    text: node.characters,
-    frameName: containingFrameName(node),
-  }));
+  return textNodes.map((node) => {
+    const text = node.characters;
+    const characterCount = countTextCharacters(text);
+    return {
+      nodeId: node.id,
+      nodeName: node.name,
+      characterCount,
+      ...(characterCount <= CHECKED_LAYER_TEXT_MAX ? { text } : {}),
+      frameName: containingFrameName(node),
+    };
+  });
 }
 
 export function buildCheckSummary(
@@ -119,19 +126,15 @@ export function buildCheckSummary(
 export function buildCardForNode(
   node: TextNode,
   fixes: TextFix[],
-  previewMode: "auto" | "manual",
 ): TextNodeCardDto | null {
   if (!fixes.length) return null;
 
   const originalText = node.characters;
-  const previewText =
-    previewMode === "manual" ? originalText : applyTextFixes(originalText, fixes);
 
   return {
     nodeId: node.id,
     nodeName: node.name,
     originalText,
-    previewText,
     characterCount: countTextCharacters(originalText),
     frameName: containingFrameName(node),
     fixes: toFixDto(node.id, fixes),

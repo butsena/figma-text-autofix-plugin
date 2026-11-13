@@ -5,6 +5,7 @@ import { countConfirmFixes } from "./ui-helpers";
 import { sendToPlugin } from "./ui-plugin-bridge";
 import { render } from "./ui-render";
 import { selectedChoiceOptionIndex } from "./choice-selection";
+import { confirmGroupId } from "./fix-groups";
 import { choiceSelectionKey, state } from "./ui-state";
 
 export function skipConfirmFix(cardIdx: number, fixIdx: number): void {
@@ -78,6 +79,19 @@ export function skipSpellFix(cardIdx: number, fixIdx: number): void {
     nodeId: card.nodeId,
     fix: fix as TextFixDto,
   });
+}
+
+export function applyConfirmGroup(groupId: string): void {
+  const fixes: Array<{ nodeId: string; fix: TextFixDto }> = [];
+  for (const card of state.confirmCards) {
+    for (const fix of card.fixes) {
+      if (confirmGroupId(fix.rule?.id ?? "") !== groupId) continue;
+      fixes.push({ nodeId: card.nodeId, fix });
+    }
+  }
+  if (!fixes.length) return;
+  state.ui.confirmDetailsOpen = true;
+  sendToPlugin({ type: "ui:applyFixBatch", fixes });
 }
 
 export function applyConfirmFix(cardIdx: number, fixIdx: number): void {

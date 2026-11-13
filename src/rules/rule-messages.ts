@@ -97,6 +97,8 @@ export const MSG_TYPO_NUMERIC_RANGE = "Типографика: короткое 
 
 export const MSG_ORTHOGRAPHY_YO = "Орфография: буква «ё» в словарных словах";
 
+export const MSG_NE_VERB_SEPARATE = "Редполитика: «не» с глаголом пишется раздельно";
+
 export const MSG_NORMALIZE_EMAIL = "Форматы: «email» без дефиса";
 
 export const MSG_NORMALIZE_PHONE = "Форматы: телефон в формате +7 999 999-99-99";

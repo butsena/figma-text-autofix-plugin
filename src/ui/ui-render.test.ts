@@ -107,9 +107,10 @@ describe("render во время орфографии", () => {
     expect(app.innerHTML).not.toContain("Счётчик символов");
     expect(app.innerHTML).toContain("Проверить орфографию");
     expect(app.innerHTML).toContain('id="spellcheckBtn"');
-    const emptyAt = app.innerHTML.indexOf("Исправлено автоматически");
+    const reportAt = app.innerHTML.indexOf("Исправлено автоматически");
     const spellBtnAt = app.innerHTML.indexOf('id="spellcheckBtn"');
-    expect(spellBtnAt).toBeGreaterThan(emptyAt);
-    expect(spellBtnAt).toBeLessThan(tableAt);
+    expect(spellBtnAt).toBeGreaterThan(-1);
+    expect(spellBtnAt).toBeLessThan(confirmAt);
+    expect(spellBtnAt).toBeLessThan(reportAt);
   });
 });

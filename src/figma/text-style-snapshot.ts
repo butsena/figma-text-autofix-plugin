@@ -128,6 +128,86 @@ export function captureRangeStyles(textNode: TextNode, from: number, to: number)
   return styles;
 }
 
+/**
+ * Один стиль на весь диапазон. null — внутри диапазона оформление смешанное,
+ * тогда нужен посимвольный снимок.
+ */
+export function captureUniformRangeStyle(
+  textNode: TextNode,
+  from: number,
+  to: number,
+): CharTextStyle | null {
+  if (to <= from || to > textNode.characters.length) return null;
+
+  const textStyleId = textNode.getRangeTextStyleId(from, to);
+  const fillStyleId = textNode.getRangeFillStyleId(from, to);
+  const fontName = textNode.getRangeFontName(from, to);
+  const fontSize = textNode.getRangeFontSize(from, to);
+  const fills = textNode.getRangeFills(from, to);
+  const letterSpacing = textNode.getRangeLetterSpacing(from, to);
+  const lineHeight = textNode.getRangeLineHeight(from, to);
+  const textCase = textNode.getRangeTextCase(from, to);
+  const textDecoration = textNode.getRangeTextDecoration(from, to);
+
+  if (
+    isMixed(textStyleId) ||
+    isMixed(fillStyleId) ||
+    isMixed(fontName) ||
+    isMixed(fontSize) ||
+    isMixed(fills) ||
+    isMixed(letterSpacing) ||
+    isMixed(lineHeight) ||
+    isMixed(textCase) ||
+    isMixed(textDecoration)
+  ) {
+    return null;
+  }
+
+  return {
+    textStyleId: textStyleId || "",
+    fillStyleId: fillStyleId || "",
+    fontName,
+    fontSize,
+    fills: clonePaints(fills),
+    fillsKnown: true,
+    letterSpacing,
+    lineHeight,
+    textCase,
+    textDecoration,
+    localFontOverride: Boolean(textStyleId),
+  };
+}
+
+function sameLetterSpacing(a: LetterSpacing, b: LetterSpacing): boolean {
+  return a.unit === b.unit && a.value === b.value;
+}
+
+function sameLineHeight(a: LineHeight, b: LineHeight): boolean {
+  if (a.unit === "AUTO" || b.unit === "AUTO") return a.unit === b.unit;
+  return a.unit === b.unit && a.value === b.value;
+}
+
+/** Для смены только регистра: различающийся интервал или заливка остаются посимвольно. */
+export function caseStylesAreUniform(styles: CharTextStyle[]): boolean {
+  if (styles.length <= 1) return true;
+  const first = styles[0];
+  return styles.every(
+    (style) =>
+      style.fontName.family === first.fontName.family &&
+      style.fontName.style === first.fontName.style &&
+      style.fontSize === first.fontSize &&
+      style.textDecoration === first.textDecoration &&
+      style.textCase === first.textCase &&
+      style.textStyleId === first.textStyleId &&
+      style.fillStyleId === first.fillStyleId &&
+      style.localFontOverride === first.localFontOverride &&
+      style.fillsKnown === first.fillsKnown &&
+      sameLetterSpacing(style.letterSpacing, first.letterSpacing) &&
+      sameLineHeight(style.lineHeight, first.lineHeight) &&
+      JSON.stringify(style.fills) === JSON.stringify(first.fills),
+  );
+}
+
 async function loadFontsForStyles(styles: CharTextStyle[]): Promise<void> {
   const seen = new Set<string>();
   for (const style of styles) {

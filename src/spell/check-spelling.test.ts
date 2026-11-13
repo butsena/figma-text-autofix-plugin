@@ -20,6 +20,9 @@ import {
 } from "./spell-checker";
 import { MAX_SPELL_CARDS_PER_TEXT } from "./spell-card-budget";
 import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
+import { MSG_NE_VERB_SEPARATE } from "../rules/rule-messages";
+import { NE_VERB_SPLIT_RULE_ID } from "./ne-verb-split";
+import { isNbspGlueFix } from "../ui/nbsp-glue-summary";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -269,6 +272,69 @@ describe("checkSpellingFixes", () => {
     expect(fixes.filter((f) => f.ruleId === ORTHOGRAPHY_SPELL_RULE_ID).map((f) => f.before)).not.toContain(
       "смс",
     );
+  });
+
+  it("слитое «не»+глагол — confirm редполитики, не карточка опечатки", () => {
+    const fixes = checkSpellingFixes("Пока неотключите уведомления");
+    const split = fixes.find((f) => f.ruleId === NE_VERB_SPLIT_RULE_ID);
+    expect(split).toMatchObject({
+      before: "неотключите",
+      after: "не отключите",
+      applyPolicy: "confirm",
+      category: "cian_editorial",
+      message: MSG_NE_VERB_SEPARATE,
+    });
+    expect(isNbspGlueFix({ before: split!.before, after: split!.after })).toBe(false);
+    expect(fixes.filter((f) => f.ruleId === ORTHOGRAPHY_SPELL_RULE_ID).map((f) => f.before)).not.toContain(
+      "неотключите",
+    );
+
+    expect(checkSpellingFixes("не отключите уведомления").some((f) => f.ruleId === NE_VERB_SPLIT_RULE_ID)).toBe(
+      false,
+    );
+    for (const word of ["ненавидеть", "нельзя", "неплохо", "невысокий", "неработающий"]) {
+      expect(checkSpellingFixes(word).some((f) => f.ruleId === NE_VERB_SPLIT_RULE_ID)).toBe(false);
+    }
+  });
+
+  it("ne-verb: регистр, «йтесь», ложные существительные и уже занятый диапазон", () => {
+    expect(checkSpellingFixes("НЕОТКЛЮЧИТЕ").find((f) => f.ruleId === NE_VERB_SPLIT_RULE_ID)?.after).toBe(
+      "НЕ ОТКЛЮЧИТЕ",
+    );
+    expect(checkSpellingFixes("небойтесь").find((f) => f.ruleId === NE_VERB_SPLIT_RULE_ID)?.after).toBe(
+      "не бойтесь",
+    );
+    expect(checkSpellingFixes("несмейтесь").find((f) => f.ruleId === NE_VERB_SPLIT_RULE_ID)?.after).toBe(
+      "не смейтесь",
+    );
+
+    for (const word of ["немаршрут", "неканал", "непривет", "несу", "неси"]) {
+      expect(checkSpellingFixes(word).some((f) => f.ruleId === NE_VERB_SPLIT_RULE_ID)).toBe(false);
+    }
+
+    const occupied = checkSpellingFixes("неотключите", [
+      { from: 0, to: 11, before: "неотключите", after: "x", ruleId: "other", category: "typography", message: "x", priority: 1, applyPolicy: "auto" },
+    ]);
+    expect(occupied.some((f) => f.ruleId === NE_VERB_SPLIT_RULE_ID)).toBe(false);
+  });
+
+  it("не предлагает раскладку рядом с @ / :// / www.", () => {
+    expect(
+      checkSpellingFixes("Пишите на user@ghbdtn.com").filter((f) => f.ruleId === "orthography-keyboard-layout"),
+    ).toEqual([]);
+    expect(
+      checkSpellingFixes("Откройте https://ghbdtn.ru").filter((f) => f.ruleId === "orthography-keyboard-layout"),
+    ).toEqual([]);
+    expect(
+      checkSpellingFixes("Зеркало www.ghbdtn.ru").filter((f) => f.ruleId === "orthography-keyboard-layout"),
+    ).toEqual([]);
+  });
+
+  it("«,elbnt» после буквы получает ведущий пробел в подстановке", () => {
+    const fixes = checkSpellingFixes("слово,elbnt дальше");
+    const layout = fixes.find((f) => f.before === ",elbnt");
+    expect(layout?.after).toBe(" будите");
+    expect(layout?.ruleId).toBe("orthography-keyboard-layout");
   });
 
   it("стена мусора не считает suggest на каждое слово", () => {

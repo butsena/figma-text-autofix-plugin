@@ -9,14 +9,18 @@ import {
 } from "./ui-helpers";
 import { formatTechLexiconStatusBodyHtml } from "./ui-lexicon-status";
 import { isNbspGlueFix, renderNbspGlueSummaryHtml } from "./nbsp-glue-summary";
+import { FIX_CARD_PAGE, FIX_ROW_PAGE, takeLayersByFixLimit } from "./list-window";
+import { confirmGroupId, groupFixes } from "./fix-groups";
 import { state } from "./ui-state";
 import { renderChoiceFixRow, renderFixRow } from "./ui-render-fix-row";
 
 function layerSourceText(layer: {
   originalText?: string;
+  sourceText?: string;
   fixes?: Array<{ sourceText?: string }>;
 }): string | undefined {
   if (layer.originalText != null) return layer.originalText;
+  if (layer.sourceText != null) return layer.sourceText;
   return layer.fixes?.find((fix) => fix.sourceText != null)?.sourceText;
 }
 
@@ -27,6 +31,7 @@ function renderLayerBlocksHtml<
     characterCount: number;
     frameName?: string;
     originalText?: string;
+    sourceText?: string;
     fixes?: Array<{ sourceText?: string }>;
   },
 >(layers: T[], renderFixes: (layer: T, cardIdx: number) => string): string {
@@ -66,7 +71,8 @@ function wrapReportInDetails(
   `;
 }
 
-function renderFixLineHtml(f: AutoApplyFixLineDto): string {
+function renderFixLineHtml(f: AutoApplyFixLineDto, layerSource = ""): string {
+  const source = f.sourceText ?? layerSource;
   return renderFixRow(
     {
       ruleId: f.ruleId,
@@ -76,18 +82,20 @@ function renderFixLineHtml(f: AutoApplyFixLineDto): string {
       to: f.to,
       before: f.before,
       after: f.after,
-      sourceText: f.sourceText,
+      sourceText: source,
     },
-    f.sourceText ?? "",
+    source,
   );
 }
 
 function renderLayerFixesHtml(
   fixes: AutoApplyFixLineDto[],
   collapseNbspGlues: boolean,
+  layerSource = "",
 ): string {
+  const line = (fix: AutoApplyFixLineDto) => renderFixLineHtml(fix, layerSource);
   if (!collapseNbspGlues || !fixes.some(isNbspGlueFix)) {
-    return fixes.map(renderFixLineHtml).join("");
+    return fixes.map(line).join("");
   }
 
   const parts: string[] = [];
@@ -95,29 +103,61 @@ function renderLayerFixesHtml(
   for (const fix of fixes) {
     if (isNbspGlueFix(fix)) {
       if (!summaryEmitted) {
-        parts.push(renderNbspGlueSummaryHtml(fixes));
+        parts.push(renderNbspGlueSummaryHtml(fixes, layerSource));
         summaryEmitted = true;
       }
       continue;
     }
-    parts.push(renderFixLineHtml(fix));
+    parts.push(line(fix));
   }
   return parts.join("");
+}
+
+function renderShowMoreButton(which: "report" | "manual"): string {
+  return `<button type="button" class="showMoreBtn" data-show-more="${which}">Показать ещё</button>`;
 }
 
 function renderReportLayersHtml(
   report: NonNullable<typeof state.lastReport>,
   collapseNbspGlues: boolean,
+  limit: number,
+  more: "report" | "manual",
 ): string {
-  return renderLayerBlocksHtml(report.layers, (layer) =>
-    renderLayerFixesHtml(layer.fixes, collapseNbspGlues),
+  const windowed = takeLayersByFixLimit(report.layers, limit);
+  const blocks = renderLayerBlocksHtml(windowed.layers, (layer) =>
+    renderLayerFixesHtml(layer.fixes, collapseNbspGlues, layer.sourceText ?? ""),
   );
+  const button = windowed.shown < windowed.total ? renderShowMoreButton(more) : "";
+  return `${blocks}${button}`;
+}
+
+function renderAutofixProgressHtml(): string {
+  const progress = state.autofixProgress;
+  if (!progress) return "";
+  const label =
+    progress.phase === "spell"
+      ? "Обновляю словарь"
+      : progress.phase === "lexicon"
+        ? "Освежаю редполитику"
+        : `Исправляю тексты — ${progress.applied}`;
+  const ratio = progress.total > 0 ? Math.min(1, progress.applied / progress.total) : 0;
+  const width = progress.total > 0 ? `${Math.round(ratio * 100)}%` : "35%";
+  const counter = progress.total > 0 ? `${progress.applied} / ${progress.total}` : "";
+  return `
+    <div class="resultProgress">
+      <div class="resultProgressLabel">${escapeHtml(label)}</div>
+      <div class="resultProgressTrack" role="progressbar" aria-valuemin="0" aria-valuemax="${progress.total}" aria-valuenow="${progress.applied}">
+        <div class="resultProgressBar${progress.total > 0 ? "" : " resultProgressBarIndeterminate"}" style="width:${width}"></div>
+      </div>
+      ${counter ? `<div class="resultProgressCount">${escapeHtml(counter)}</div>` : ""}
+    </div>
+  `;
 }
 
 export function renderResultHeaderHtml(): string {
-  if (state.spellcheckInProgress) return "";
+  if (state.spellcheckInProgress && state.summary) return "";
   if (!state.summary) {
-    return '<div class="resultWaiting">Шуршу по макету…</div>';
+    return `<div class="resultWaiting">Шуршу по макету…${renderAutofixProgressHtml()}</div>`;
   }
   const appliedAuto = state.lastReport ? state.lastReport.summary.appliedFixCount : 0;
   const appliedManual = state.lastManualReport
@@ -229,7 +269,10 @@ export function renderReportHtml(): string {
     return "";
   }
 
-  return wrapReportInDetails(renderReportLayersHtml(r, true), {
+  const body = state.ui.reportDetailsOpen
+    ? renderReportLayersHtml(r, true, state.reportShown, "report")
+    : "";
+  return wrapReportInDetails(body, {
     title: "Исправлено автоматически",
     detailsClass: "reportDetails",
     open: state.ui.reportDetailsOpen,
@@ -241,40 +284,125 @@ export function renderManualReportHtml(): string {
   const r = state.lastManualReport;
   if (!r?.layers.length) return "";
 
-  return wrapReportInDetails(renderReportLayersHtml(r, false), {
+  const body = state.ui.manualReportDetailsOpen
+    ? renderReportLayersHtml(r, false, state.manualReportShown, "manual")
+    : "";
+  return wrapReportInDetails(body, {
     title: "Вы исправили",
     detailsClass: "manualReportDetails",
     open: state.ui.manualReportDetailsOpen,
   });
 }
 
+type GroupedFixEntry = {
+  ruleId: string;
+  message: string;
+  nodeId: string;
+  nodeName: string;
+  characterCount: number;
+  frameName?: string;
+  originalText?: string;
+  render: () => string;
+};
+
+function renderFixRemainderHtml(shown: number, total: number): string {
+  if (shown >= total || total <= 0) return "";
+  const width = Math.round((shown / total) * 100);
+  return `
+    <div class="fixRemainder">
+      <div class="resultProgressTrack">
+        <div class="resultProgressBar" style="width:${width}%"></div>
+      </div>
+      <div class="resultProgressCount">${shown} / ${total} кейсов</div>
+    </div>
+  `;
+}
+
+function renderGroupedFixesHtml(
+  kind: "confirm" | "choice",
+  entries: GroupedFixEntry[],
+  groupIdOf: (ruleId: string) => string,
+): string {
+  const groups = groupFixes(entries, groupIdOf, () => false);
+  let shown = 0;
+  let total = 0;
+  const rows: string[] = [];
+  const moreButtons: string[] = [];
+  for (const group of groups) {
+    const key = `${kind}:${group.id}`;
+    const limit = state.expandedGroups[key] ?? FIX_CARD_PAGE;
+    const visible = group.entries.slice(0, limit);
+    shown += visible.length;
+    total += group.entries.length;
+    rows.push(
+      visible
+        .map(
+          (entry) => `
+          <div class="reportLayer">
+            ${formatLayerTitleHtml(
+              entry.nodeId,
+              layerDisplayLabel({
+                nodeName: entry.nodeName,
+                text: entry.originalText,
+                frameName: entry.frameName,
+              }),
+              entry.characterCount,
+            )}
+            ${entry.render()}
+          </div>
+        `,
+        )
+        .join(""),
+    );
+    const hidden = group.entries.length - visible.length;
+    if (hidden > 0) {
+      moreButtons.push(
+        `<button type="button" class="showMoreBtn" data-more-group="${escapeHtml(key)}">Показать ещё ${Math.min(FIX_CARD_PAGE, hidden)}</button>`,
+      );
+    }
+  }
+  return renderFixRemainderHtml(shown, total) + rows.join("") + moreButtons.join("");
+}
+
 export function renderConfirmHtml(): string {
   if (state.spellcheckInProgress) return "";
   if (!state.confirmCards.length) return "";
-  const layerBlocks = renderLayerBlocksHtml(state.confirmCards, (layer, cardIdx) =>
-    layer.fixes
-      .map((f, fixIdx) => {
+  const entries: GroupedFixEntry[] = [];
+  if (state.ui.confirmDetailsOpen) {
+    state.confirmCards.forEach((layer, cardIdx) => {
+      layer.fixes.forEach((f, fixIdx) => {
         const ruleId = f.rule?.id ?? "";
-        const category = f.rule?.category ?? "";
         const message = f.rule?.message ?? "";
-        const hint = f.rule?.hint;
-        return renderFixRow(
-          {
-            ruleId,
-            category,
-            message,
-            hint,
-            from: f.from,
-            to: f.to,
-            before: f.before,
-            after: f.after,
-          },
-          layer.originalText,
-          { cardIdx, fixIdx },
-        );
-      })
-      .join(""),
-  );
+        entries.push({
+          ruleId,
+          message,
+          nodeId: layer.nodeId,
+          nodeName: layer.nodeName,
+          characterCount: layer.characterCount,
+          frameName: layer.frameName,
+          originalText: layer.originalText,
+          render: () =>
+            renderFixRow(
+              {
+                ruleId,
+                category: f.rule?.category ?? "",
+                message,
+                hint: f.rule?.hint,
+                from: f.from,
+                to: f.to,
+                before: f.before,
+                after: f.after,
+              },
+              layer.originalText,
+              { cardIdx, fixIdx },
+            ),
+        });
+      });
+    });
+  }
+  const body = state.ui.confirmDetailsOpen
+    ? renderGroupedFixesHtml("confirm", entries, confirmGroupId)
+    : "";
 
   return `
     <div class="confirmBlock">
@@ -282,7 +410,7 @@ export function renderConfirmHtml(): string {
         <summary class="confirmDetailsSummary">
           <span class="confirmDetailsTitle">Обратите внимание</span>
         </summary>
-        <div class="confirmDetailsBody">${layerBlocks}</div>
+        <div class="confirmDetailsBody">${body}</div>
       </details>
     </div>
   `;
@@ -308,11 +436,26 @@ export function renderLeftoverCardsHtml(): string {
 export function renderChoiceHtml(): string {
   if (state.spellcheckInProgress) return "";
   if (!state.choiceCards.length) return "";
-  const layerBlocks = renderLayerBlocksHtml(state.choiceCards, (layer, cardIdx) =>
-    layer.fixes
-      .map((f, fixIdx) => renderChoiceFixRow(f, cardIdx, fixIdx, layer.originalText))
-      .join(""),
-  );
+  const entries: GroupedFixEntry[] = [];
+  if (state.ui.choiceDetailsOpen) {
+    state.choiceCards.forEach((layer, cardIdx) => {
+      layer.fixes.forEach((f, fixIdx) => {
+        entries.push({
+          ruleId: f.rule?.id ?? "",
+          message: f.rule?.message ?? "",
+          nodeId: layer.nodeId,
+          nodeName: layer.nodeName,
+          characterCount: layer.characterCount,
+          frameName: layer.frameName,
+          originalText: layer.originalText,
+          render: () => renderChoiceFixRow(f, cardIdx, fixIdx, layer.originalText),
+        });
+      });
+    });
+  }
+  const body = state.ui.choiceDetailsOpen
+    ? renderGroupedFixesHtml("choice", entries, (ruleId) => ruleId)
+    : "";
 
   return `
     <div class="choiceBlock">
@@ -320,7 +463,7 @@ export function renderChoiceHtml(): string {
         <summary class="choiceDetailsSummary">
           <span class="choiceDetailsTitle">Выберите вариант</span>
         </summary>
-        <div class="choiceDetailsBody">${layerBlocks}</div>
+        <div class="choiceDetailsBody">${body}</div>
       </details>
     </div>
   `;

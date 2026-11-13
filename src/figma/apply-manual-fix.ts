@@ -22,6 +22,7 @@ import {
   setLastAutoApplyReport,
   setLastManualApplyReport,
 } from "./check-result-session";
+import type { TextFix } from "../core/autofix-engine";
 import type { TextFixDto } from "../shared/messages";
 import { textFixDtoToEngineFix } from "../shared/text-fix-mapping";
 import { isOrthographyRuleId } from "../rules/orthography-spell-rules";
@@ -142,7 +143,9 @@ async function applyManualFixOnce(
   // После ручной правки добираем auto. В аналитику уходит только дельта этого добора.
   const beforeAutoReport = getLastAutoApplyReport();
   const followUpStartedAt = Date.now();
-  let { report, finalScan } = await runAutofixAutoPasses(selection, beforeAutoReport);
+  let { report, finalScan } = await runAutofixAutoPasses(selection, beforeAutoReport, {
+    reportProgress: false,
+  });
   let followUpError: unknown = null;
   try {
     // Автоправки сдвигают текст — перезаписать якоря только уже сохранённого решения.
@@ -153,7 +156,7 @@ async function applyManualFixOnce(
       }
     }
 
-    const second = await runAutofixAutoPasses(selection, report);
+    const second = await runAutofixAutoPasses(selection, report, { reportProgress: false });
     report = second.report;
     finalScan = second.finalScan;
   } catch (error) {
@@ -171,7 +174,7 @@ async function applyManualFixOnce(
   if (followUpError) throw followUpError;
 }
 
-/** «Пропустить» орфографию: макет не меняем, считаем показ (макс. 3 запуска). */
+/** «Пропустить» орфографию: макет не меняем, карточку в следующий раз не показываем. */
 export async function skipManualFixAndRefresh(
   nodeId: string,
   fix: TextFixDto,
@@ -194,4 +197,81 @@ export async function skipManualFixAndRefresh(
   trackManualFixFromDto(fix, "skipped");
 
   postCheckResultToUi(figma.currentPage.selection);
+}
+
+function fixWasApplied(applied: TextFix[], fix: TextFixDto): boolean {
+  return applied.some(
+    (item) =>
+      item.ruleId === fix.rule.id &&
+      item.from === fix.from &&
+      item.to === fix.to &&
+      item.before === fix.before,
+  );
+}
+
+/** «Применить все» одного типа: по слою с конца, один добор auto и один отчёт в панель. */
+export async function applyManualFixBatchAndRefresh(
+  items: Array<{ nodeId: string; fix: TextFixDto }>,
+): Promise<void> {
+  if (!items.length) return;
+
+  const byNode = new Map<string, TextFixDto[]>();
+  for (const item of items) {
+    const list = byNode.get(item.nodeId) ?? [];
+    list.push(item.fix);
+    byNode.set(item.nodeId, list);
+  }
+
+  for (const [nodeId, fixes] of byNode) {
+    const node = await figma.getNodeByIdAsync(nodeId);
+    if (!node || node.type !== "TEXT") {
+      trackPluginError("manual_apply", null, { code: "node_missing" });
+      continue;
+    }
+
+    const sourceText = node.characters;
+    let applied: TextFix[] = [];
+    try {
+      applied = await applyTextFixesToTextNode(
+        node,
+        fixes.map(textFixDtoToEngineFix),
+        "manual_apply",
+      );
+    } catch (error) {
+      trackPluginError("manual_apply", error);
+      continue;
+    }
+
+    for (const fix of fixes) {
+      if (!fixWasApplied(applied, fix)) continue;
+      trackManualFixFromDto(fix, "applied");
+      setLastManualApplyReport(
+        mergeAutoApplyReports(
+          getLastManualApplyReport(),
+          buildAutoApplyReportFromConfirmFix(
+            node.id,
+            node.name,
+            fix,
+            sourceText,
+            containingFrameName(node),
+          ),
+        ),
+      );
+    }
+  }
+
+  const selection = figma.currentPage.selection;
+  const beforeAutoReport = getLastAutoApplyReport();
+  const followUpStartedAt = Date.now();
+  const { report, finalScan } = await runAutofixAutoPasses(selection, beforeAutoReport, {
+    reportProgress: false,
+  });
+  setLastAutoApplyReport(report);
+  trackFollowUpAutoFixes(
+    beforeAutoReport,
+    report,
+    finalScan.summary.foundFixes,
+    Date.now() - followUpStartedAt,
+  );
+  postCheckResultToUi(selection);
 }

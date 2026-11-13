@@ -31,6 +31,45 @@
         color: #666;
         padding: 4px 0 12px;
       }
+      .resultProgress {
+        margin-top: 8px;
+      }
+      .resultProgressLabel,
+      .resultProgressCount {
+        font-size: 11px;
+        color: #666;
+        line-height: 1.3;
+      }
+      .resultProgressTrack {
+        height: 6px;
+        margin-top: 4px;
+        background: #ececec;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .resultProgressBar {
+        height: 100%;
+        background: #0b57d0;
+        border-radius: 99px;
+      }
+      .resultProgressBarIndeterminate {
+        animation: resultProgressSlide 1.1s ease-in-out infinite;
+      }
+      @keyframes resultProgressSlide {
+        0% { transform: translateX(-120%); }
+        100% { transform: translateX(320%); }
+      }
+      .resultProgressCount {
+        margin-top: 4px;
+      }
+      .fixRemainder {
+        margin: 2px 0 12px;
+      }
+      button.showMoreBtn {
+        width: fit-content;
+        margin: 0 0 8px;
+        font-weight: 600;
+      }
       .spellcheckStatus {
         display: flex;
         align-items: center;
@@ -507,8 +546,14 @@
       .ws-nbsp {
         color: #c45c00;
       }
+      .ws-nbsp-existing {
+        color: #9aa0a6;
+      }
       .ws-nnbsp {
         color: #9a6b00;
+      }
+      .ws-nnbsp-existing {
+        color: #9aa0a6;
       }
       .ws-tab {
         color: #0b57d0;

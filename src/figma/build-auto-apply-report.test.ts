@@ -60,12 +60,13 @@ describe("build-auto-apply-report", () => {
     ]);
 
     const report = buildAutoApplyReportFromApplied(scan, applied);
+    expect(report.layers[0].sourceText).toBe("квартира и дом");
     expect(report.layers[0].fixes[0]).toMatchObject({
       from: 9,
       to: 10,
-      sourceText: "квартира и дом",
       ruleId: "cian-095-nbsp-и",
     });
+    expect(report.layers[0].fixes[0].sourceText).toBeUndefined();
     expect(report.layers[0].characterCount).toBe(14);
   });
 

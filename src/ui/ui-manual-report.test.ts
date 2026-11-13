@@ -78,11 +78,14 @@ describe("manual vs auto report blocks", () => {
       ],
     };
 
-    const html = renderManualReportHtml();
-    expect(html).toContain('<details class="manualReportDetails">');
-    expect(html).not.toContain('<details class="manualReportDetails" open>');
-    expect(html).toContain("Вы исправили");
-    expect(html).toContain("перд");
+    const closed = renderManualReportHtml();
+    expect(closed).toContain('<details class="manualReportDetails">');
+    expect(closed).not.toContain('<details class="manualReportDetails" open>');
+    expect(closed).toContain("Вы исправили");
+    expect(closed).not.toContain("перд");
+
+    state.ui.manualReportDetailsOpen = true;
+    expect(renderManualReportHtml()).toContain("перд");
   });
 
   it("renderReportHtml не смешивает ручные правки", () => {
@@ -133,6 +136,7 @@ describe("manual vs auto report blocks", () => {
       ],
     };
 
+    state.ui.reportDetailsOpen = true;
     const autoHtml = renderReportHtml();
     expect(autoHtml).toContain("Исправлено автоматически");
     expect(autoHtml).not.toContain("Что исправлено автоматически");
@@ -177,6 +181,7 @@ describe("manual vs auto report blocks", () => {
       ],
     };
 
+    state.ui.reportDetailsOpen = true;
     const html = renderReportHtml();
     expect(html).toContain("Исправлено автоматически");
     expect(html).toContain("Бренд: «ЦИАН» → «Циан»");
@@ -263,6 +268,7 @@ describe("manual vs auto report blocks", () => {
         },
       ],
     };
+    state.ui.reportDetailsOpen = true;
     const html = renderReportHtml();
     expect(html).toContain(MSG_TYPO_EMDASH);
     expect(html).toContain("Типографика: неразрывные пробелы");

@@ -9,7 +9,6 @@ type AutoApplyFixLine = AutoApplyReportDto["layers"][number]["fixes"][number];
 function toAutoApplyFixLineFromEngine(
   nodeId: string,
   fix: TextFix,
-  sourceText: string,
 ): AutoApplyFixLine {
   return {
     fixId: makeFixId(nodeId, fix.ruleId, fix.from, fix.to),
@@ -20,11 +19,10 @@ function toAutoApplyFixLineFromEngine(
     after: fix.after,
     from: fix.from,
     to: fix.to,
-    sourceText,
   };
 }
 
-function toAutoApplyFixLineFromDto(fix: TextFixDto, sourceText: string): AutoApplyFixLine {
+function toAutoApplyFixLineFromDto(fix: TextFixDto): AutoApplyFixLine {
   return {
     fixId: fix.fixId,
     ruleId: fix.rule.id,
@@ -34,7 +32,6 @@ function toAutoApplyFixLineFromDto(fix: TextFixDto, sourceText: string): AutoApp
     after: fix.after,
     from: fix.from,
     to: fix.to,
-    sourceText,
   };
 }
 
@@ -57,7 +54,11 @@ export function mergeAutoApplyReports(
   for (const layer of next.layers) {
     const prev = layerMap.get(layer.nodeId);
     if (prev) {
-      prev.fixes.push(...layer.fixes);
+      const incoming = layer.fixes.map((fix) => {
+        if (fix.sourceText || !layer.sourceText || layer.sourceText === prev.sourceText) return fix;
+        return { ...fix, sourceText: layer.sourceText };
+      });
+      prev.fixes.push(...incoming);
       if (layer.nodeName) prev.nodeName = layer.nodeName;
       if (layer.frameName) prev.frameName = layer.frameName;
       prev.characterCount = layer.characterCount;
@@ -92,7 +93,8 @@ export function buildAutoApplyReportFromApplied(
       nodeName: card?.nodeName ?? "",
       ...(card?.frameName ? { frameName: card.frameName } : {}),
       characterCount: countTextCharacters(applyTextFixes(sourceText, fixes)),
-      fixes: fixes.map((f) => toAutoApplyFixLineFromEngine(nodeId, f, sourceText)),
+      sourceText,
+      fixes: fixes.map((f) => toAutoApplyFixLineFromEngine(nodeId, f)),
     });
   }
 
@@ -132,7 +134,8 @@ export function buildAutoApplyReportFromConfirmFix(
         nodeName,
         ...(frameName ? { frameName } : {}),
         characterCount: countTextCharacters(textAfter),
-        fixes: [toAutoApplyFixLineFromDto(fix, sourceText)],
+        sourceText,
+        fixes: [toAutoApplyFixLineFromDto(fix)],
       },
     ],
   };

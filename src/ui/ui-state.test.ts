@@ -8,6 +8,8 @@ import {
   mapTextNodeCard,
   resetForError,
   state,
+  detailsStateSelector,
+  readDetailsOpen,
   syncAccordionStateFromElement,
 } from "./ui-state";
 
@@ -103,6 +105,25 @@ describe("ui-state", () => {
     expect(state.cards).toEqual([]);
     expect(state.lastReport).toBeNull();
     expect(state.lastManualReport).toBeNull();
+  });
+
+  it("закрытие смотрит флаг секции, даже если DOM уже переключён", () => {
+    state.ui.manualReportDetailsOpen = true;
+    state.ui.reportDetailsOpen = true;
+    const manual = {
+      classList: { contains: (name: string) => name === "manualReportDetails" },
+      open: false,
+    } as unknown as HTMLDetailsElement;
+    const report = {
+      classList: { contains: (name: string) => name === "reportDetails" },
+      open: false,
+    } as unknown as HTMLDetailsElement;
+    expect(readDetailsOpen(manual)).toBe(true);
+    expect(readDetailsOpen(report)).toBe(true);
+    expect(detailsStateSelector(manual)).toBe("details.manualReportDetails");
+    expect(detailsStateSelector(report)).toBe("details.reportDetails");
+    expect(detailsStateSelector({ classList: { contains: () => false } } as unknown as Element)).toBeNull();
+    expect(readDetailsOpen({ classList: { contains: () => false } } as unknown as Element)).toBeNull();
   });
 
   it("syncAccordionStateFromElement обновляет флаги details", () => {

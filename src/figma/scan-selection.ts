@@ -34,6 +34,8 @@ export type ScanSelectionOptions = {
    * Без confirm/choice и без полного partition — заметно быстрее на больших выборках.
    */
   autoApplyOnly?: boolean;
+  /** Повторный проход: только слои, которые изменились в предыдущем. */
+  onlyNodeIds?: ReadonlySet<string>;
 };
 
 function resolveConfirmFixes(node: TextNode, confirm: TextFix[]) {
@@ -69,7 +71,7 @@ function buildCards(
     } else if (policy === "confirm") {
       fixes = resolveConfirmFixes(node, fixes);
     }
-    const card = buildCardForNode(node, fixes, policy === "auto" ? "auto" : "manual");
+    const card = buildCardForNode(node, fixes);
     if (!card) continue;
 
     foundFixes += fixes.length;
@@ -104,19 +106,19 @@ function scanAllPolicies(
     const resolvedChoice = filterUnresolvedChoiceFixes(node, choice);
     const resolvedConfirm = resolveConfirmFixes(node, confirm);
 
-    const autoCard = buildCardForNode(node, auto, "auto");
+    const autoCard = buildCardForNode(node, auto);
     if (autoCard) {
       foundFixes += auto.length;
       cards.push(autoCard);
     }
 
-    const confirmCard = buildCardForNode(node, resolvedConfirm, "manual");
+    const confirmCard = buildCardForNode(node, resolvedConfirm);
     if (confirmCard) {
       confirmFixes += resolvedConfirm.length;
       confirmCards.push(confirmCard);
     }
 
-    const choiceCard = buildCardForNode(node, resolvedChoice, "manual");
+    const choiceCard = buildCardForNode(node, resolvedChoice);
     if (choiceCard) {
       choiceFixes += resolvedChoice.length;
       choiceCards.push(choiceCard);
@@ -175,7 +177,10 @@ function scanSelectedTextNodesImpl(
   const policy = options?.policy ?? "auto";
   const includeSpelling = options?.includeSpelling ?? true;
   const autoApplyOnly = options?.autoApplyOnly ?? false;
-  const textNodes = [...collectTextNodesFromSelection(selection)];
+  const onlyNodeIds = options?.onlyNodeIds;
+  const textNodes = [...collectTextNodesFromSelection(selection)].filter(
+    (node) => !onlyNodeIds || onlyNodeIds.has(node.id),
+  );
   const nodeById = new Map<string, TextNode>();
   for (const node of textNodes) nodeById.set(node.id, node);
 

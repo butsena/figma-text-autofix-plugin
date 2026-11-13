@@ -1,29 +1,39 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  anchorCheckedTextNodes,
   buildCheckResultForUi,
   getLastAutoApplyReport,
   getLastManualApplyReport,
+  resetAnchoredTextNodesForTests,
   setLastAutoApplyReport,
   setLastManualApplyReport,
 } from "./check-result-session";
 
+const scannedSelections = vi.hoisted(() => [] as unknown[]);
+
 vi.mock("./scan-selection", () => ({
-  scanSelectedTextNodes: () => ({
-    result: {
-      summary: { checkedLayers: 0, foundFixes: 0, confirmFixes: 0, choiceFixes: 0 },
-      checkedTextLayers: [],
-      cards: [],
-      confirmCards: [],
-      choiceCards: [],
-    },
-    nodeById: new Map(),
-  }),
+  scanSelectedTextNodes: (selection: unknown) => {
+    scannedSelections.push(selection);
+    const checkedLayers = Array.isArray(selection) ? selection.length : 0;
+    return {
+      result: {
+        summary: { checkedLayers, foundFixes: 0, confirmFixes: 0, choiceFixes: 0 },
+        checkedTextLayers: [],
+        cards: [],
+        confirmCards: [],
+        choiceCards: [],
+      },
+      nodeById: new Map(),
+    };
+  },
 }));
 
 describe("check-result-session", () => {
   beforeEach(() => {
     setLastAutoApplyReport(null);
     setLastManualApplyReport(null);
+    resetAnchoredTextNodesForTests();
+    scannedSelections.length = 0;
   });
 
   it("хранит lastAutoApplyReport", () => {
@@ -76,5 +86,13 @@ describe("check-result-session", () => {
     expect(result.summary.checkedLayers).toBe(0);
     expect(result.lastAutoApplyReport).toBeNull();
     expect(result.lastManualApplyReport).toBeNull();
+  });
+
+  it("пустой selection после «Исправить» не обнуляет уже проверенные слои", () => {
+    const node = { id: "1:2", type: "TEXT", parent: null, removed: false };
+    anchorCheckedTextNodes([node as unknown as SceneNode]);
+    const result = buildCheckResultForUi([]);
+    expect(result.summary.checkedLayers).toBe(1);
+    expect(scannedSelections.at(-1)).toEqual([node]);
   });
 });

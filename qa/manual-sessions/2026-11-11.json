@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "exportedAt": "2026-11-11T14:20:00Z",
+  "canvasPath": "/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx",
+  "unsavedSession": false,
+  "entries": {
+    "13": {
+      "status": "needs_retest",
+      "comment": "Один «Пропустить» на орфографии прячет карточку и в следующем запуске. Тройной повтор выключен. Ручной passed не ставить до проверки в Figma.",
+      "attachments": [],
+      "checkedAt": "2026-11-11T14:20:00Z",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "history": [],
+          "archivedAt": "2026-11-11T14:20:00Z",
+          "retestReason": "Один «Пропустить» на орфографии прячет карточку и в следующем запуске. Тройной повтор выключен. Ручной passed не ставить до проверки в Figma."
+        }
+      ]
+    },
+    "44": {
+      "status": "needs_retest",
+      "comment": "Пропуск точки по-прежнему возвращает карточку после Reload. Упоминание «×3 только у орфографии» заменено на один пропуск орфографии (#13). Ручной passed не ставить до проверки в Figma.",
+      "attachments": [],
+      "checkedAt": "2026-11-11T14:20:00Z",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "history": [],
+          "archivedAt": "2026-11-11T14:20:00Z",
+          "retestReason": "Пропуск точки по-прежнему возвращает карточку после Reload. Упоминание «×3 только у орфографии» заменено на один пропуск орфографии (#13). Ручной passed не ставить до проверки в Figma."
+        }
+      ]
+    }
+  }
+}

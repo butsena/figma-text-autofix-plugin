@@ -31,8 +31,8 @@ vi.mock("./check-result-session", async () => {
 import type { AutoApplyReportDto } from "../shared/messages";
 import { applyTextFixesToTextNode } from "./apply-fixes";
 import { runAutofixAutoPasses } from "./autofix-pipeline";
-import { applyManualFixAndRefresh, resetManualApplyInFlightForTests, skipManualFixAndRefresh } from "./apply-manual-fix";
-import { setLastAutoApplyReport, setLastManualApplyReport } from "./check-result-session";
+import { applyManualFixAndRefresh, applyManualFixBatchAndRefresh, resetManualApplyInFlightForTests, skipManualFixAndRefresh } from "./apply-manual-fix";
+import { postCheckResultToUi, setLastAutoApplyReport, setLastManualApplyReport } from "./check-result-session";
 
 vi.mock("./apply-fixes", () => ({
   applyTextFixesToTextNode: vi.fn(),
@@ -413,6 +413,61 @@ describe("applyManualFixAndRefresh", () => {
       categories: { typography: 1 },
     });
     expect(JSON.stringify(autoCalls)).not.toContain("cian_branding");
+  });
+
+  it("пакет одного типа пишет слои по одному и делает один добор", async () => {
+    const first = fakeTextNode("Все");
+    first.id = "1:1";
+    const second = fakeTextNode("не знает");
+    second.id = "1:2";
+    const nodes = new Map([
+      [first.id, first],
+      [second.id, second],
+    ]);
+    vi.stubGlobal("figma", {
+      getNodeByIdAsync: vi.fn(async (id: string) => nodes.get(id) ?? null),
+      currentPage: { selection: [first, second] },
+    });
+    vi.mocked(postCheckResultToUi).mockClear();
+    vi.mocked(applyTextFixesToTextNode).mockImplementation(async (_node, fixes) => fixes);
+
+    const capital = confirmFix({
+      fixId: "cap",
+      before: "все",
+      after: "Все",
+      rule: {
+        id: "cian-138-sentence-start-capitalize",
+        category: "cian_editorial",
+        message: "Заглавная",
+        applyPolicy: "confirm",
+        priority: 1,
+      },
+    });
+    const other = confirmFix({
+      fixId: "ne",
+      before: "не знает",
+      after: "незнает",
+      to: 8,
+      rule: {
+        id: "orthography-ne-verb-split",
+        category: "orthography",
+        message: "Не с глаголом",
+        applyPolicy: "confirm",
+        priority: 1,
+      },
+    });
+
+    await applyManualFixBatchAndRefresh([
+      { nodeId: first.id, fix: capital },
+      { nodeId: second.id, fix: other },
+    ]);
+
+    expect(applyTextFixesToTextNode).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(applyTextFixesToTextNode).mock.calls[0][1]).toHaveLength(1);
+    expect(vi.mocked(applyTextFixesToTextNode).mock.calls[1][1]).toHaveLength(1);
+    expect(runAutofixAutoPasses).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(runAutofixAutoPasses).mock.calls[0][2]).toEqual({ reportProgress: false });
+    expect(postCheckResultToUi).toHaveBeenCalledTimes(1);
   });
 
   it("повтор того же клика, пока первый ещё идёт, не шлёт вторую auto-дельту", async () => {

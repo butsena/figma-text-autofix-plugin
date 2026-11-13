@@ -1,6 +1,10 @@
 import { trackPluginError, trackSpellcheckRequested } from "../analytics/pipeline-events";
 import { enableSpellcheckForSession } from "../config/spellcheck-preference";
-import { applyManualFixAndRefresh, skipManualFixAndRefresh } from "./apply-manual-fix";
+import {
+  applyManualFixAndRefresh,
+  applyManualFixBatchAndRefresh,
+  skipManualFixAndRefresh,
+} from "./apply-manual-fix";
 import { runAutofixPipeline } from "./autofix-pipeline";
 import { focusLayerById } from "./focus-layer";
 import { clampPluginUiHeight } from "../shared/plugin-ui-layout";
@@ -23,7 +27,9 @@ export async function handleUiMessage(
     await dispatchUiMessage(message, gate);
   } catch (error) {
     // One owner for the entire UI operation, including errors rethrown to main.
-    const stage = message?.type === "ui:applyManualFix" || message?.type === "ui:skipManualFix"
+    const stage = message?.type === "ui:applyManualFix" ||
+      message?.type === "ui:applyFixBatch" ||
+      message?.type === "ui:skipManualFix"
       ? "manual_apply" : message?.type === "ui:ready" || message?.type === "ui:enableSpellcheck"
         ? "open" : "ui";
     trackPluginError(stage, error);
@@ -46,6 +52,10 @@ async function dispatchUiMessage(
     }
     case "ui:applyManualFix": {
       await applyManualFixAndRefresh(message.nodeId, message.fix, message.spellingSource);
+      break;
+    }
+    case "ui:applyFixBatch": {
+      await applyManualFixBatchAndRefresh(message.fixes);
       break;
     }
     case "ui:skipManualFix": {

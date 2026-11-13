@@ -2,7 +2,6 @@ import uiHtml from "./ui/ui.figma.html?raw";
 import { beginAnalyticsSession } from "./analytics/track";
 import { trackPluginError, trackPluginOpen } from "./analytics/pipeline-events";
 import { collectTextNodesFromSelection } from "./figma/collect-text-nodes";
-import { beginPluginRun } from "./figma/choice-resolution";
 import { runAutofixPipeline } from "./figma/autofix-pipeline";
 import { handleUiMessage, type UiMessageGate } from "./figma/handle-ui-message";
 import { postPluginError } from "./figma/plugin-ui-messages";
@@ -12,7 +11,6 @@ import {
 } from "./shared/plugin-ui-layout";
 import { NO_TEXT_IN_SELECTION_NOTICE, type UiToPluginMessage } from "./shared/messages";
 
-beginPluginRun();
 beginAnalyticsSession();
 
 /** Пауза, чтобы красный тост успели прочитать: closePlugin сразу гасит notify. */

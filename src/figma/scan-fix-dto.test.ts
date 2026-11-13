@@ -86,7 +86,6 @@ describe("buildCheckedTextLayers", () => {
         nodeId: "1:2",
         nodeName: "B",
         characterCount: 26,
-        text: longText,
         frameName: "B",
       },
     ]);
@@ -118,28 +117,16 @@ describe("toFixDto", () => {
 describe("buildCardForNode", () => {
   it("null без правок", () => {
     const node = { id: "1", name: "t", characters: "текст" } as unknown as TextNode;
-    expect(buildCardForNode(node, [], "auto")).toBeNull();
+    expect(buildCardForNode(node, [])).toBeNull();
   });
 
-  it("manual оставляет originalText в preview", () => {
+  it("кладёт исходный текст и правки, без копии preview", () => {
     const node = { id: "1", name: "t", characters: "abc" } as unknown as TextNode;
-    const card = buildCardForNode(
-      node,
-      [fix({ from: 0, to: 3, before: "abc", after: "xyz", ruleId: "r" })],
-      "manual",
-    );
+    const card = buildCardForNode(node, [
+      fix({ from: 0, to: 3, before: "abc", after: "xyz", ruleId: "r" }),
+    ]);
     expect(card?.originalText).toBe("abc");
-    expect(card?.previewText).toBe("abc");
+    expect(card?.previewText).toBeUndefined();
     expect(card?.fixes).toHaveLength(1);
-  });
-
-  it("auto применяет правки в preview", () => {
-    const node = { id: "1", name: "t", characters: "abc" } as unknown as TextNode;
-    const card = buildCardForNode(
-      node,
-      [fix({ from: 0, to: 3, before: "abc", after: "xyz", ruleId: "r" })],
-      "auto",
-    );
-    expect(card?.previewText).toBe("xyz");
   });
 });

@@ -4,6 +4,14 @@
   "canvasPath": "/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx",
   "unsavedSession": false,
   "entries": {
+    "37": {
+      "status": "needs_retest",
+      "comment": "Оба отчёта: первый клик сразу открывает, следующий сразу закрывает. «Исправлено автоматически» без паузы. Ручной passed не ставить.",
+      "attachments": [],
+      "checkedAt": "2026-11-13T16:20:00.000Z",
+      "checkedCommit": null,
+      "history": []
+    },
     "51": {
       "status": "needs_retest",
       "comment": "T-151: проверить явный test и настоящий номер после рабочего переноса. Приёмка обычной правки T-144 сохранена в истории; нового ручного passed нет.",
@@ -429,6 +437,48 @@
           "archivedAt": "2026-10-29T08:59:01Z"
         }
       ]
+    },
+    "56": {
+      "status": "needs_retest",
+      "comment": "T-162: кнопка «Проверить орфографию» переехала выше списков. Прежний порядок под «правок нет» больше не ожидается. Ручной passed не ставить.",
+      "attachments": [],
+      "checkedAt": "2026-11-11T14:00:00.000Z",
+      "checkedCommit": null,
+      "history": [
+        {
+          "status": "processed_legacy",
+          "comment": "",
+          "attachments": [],
+          "checkedAt": null,
+          "checkedCommit": null,
+          "archivedAt": "2026-11-11T14:00:00.000Z",
+          "retestReason": "T-162: кнопка орфографии выше списков"
+        }
+      ]
+    },
+    "62": {
+      "status": "needs_retest",
+      "comment": "До орфографии «Освежаю редполитику». Во время орфографии «Обновляю словарь». Ручной passed не ставить.",
+      "attachments": [],
+      "checkedAt": "2026-11-13T16:15:00.000Z",
+      "checkedCommit": null,
+      "history": []
+    },
+    "63": {
+      "status": "needs_retest",
+      "comment": "T-162: закрытый автоотчёт без строк, кнопка орфографии выше списков. Ручной passed не ставить.",
+      "attachments": [],
+      "checkedAt": "2026-11-11T14:00:00.000Z",
+      "checkedCommit": null,
+      "history": []
+    },
+    "64": {
+      "status": "needs_retest",
+      "comment": "Полоска «X / Y кейсов» сверху. «Показать ещё» открывает 10. У choice полоска с 11-й карточки одного типа. Ручной passed не ставить.",
+      "attachments": [],
+      "checkedAt": "2026-11-13T15:40:00.000Z",
+      "checkedCommit": null,
+      "history": []
     },
     "61": {
       "status": "not_run",
