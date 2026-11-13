@@ -93,6 +93,22 @@ function contextChunkHtml(chunk: { text: string; truncated: boolean }, edge: "le
   return edge === "left" ? mark + body : body + mark;
 }
 
+type WordWindow = {
+  left: { text: string; truncated: boolean };
+  right: { text: string; truncated: boolean };
+  mid: string;
+};
+
+/** Слова слева/справа от якоря правки и сам фрагмент [from, to). */
+function wordWindowAround(sourceText: string, from: number, to: number): WordWindow {
+  const anchor = anchorBounds(sourceText, from, to);
+  return {
+    left: takeWordsBefore(sourceText, anchor.start, CONTEXT_WORD_LIMIT),
+    right: takeWordsAfter(sourceText, anchor.end, CONTEXT_WORD_LIMIT),
+    mid: sourceText.slice(from, Math.max(to, from)),
+  };
+}
+
 /** 3–5 слов вокруг правки. Короткий слой целиком, без «…». */
 export function applyOutsideContext(
   diffHtml: string,
@@ -100,9 +116,7 @@ export function applyOutsideContext(
   from: number,
   to: number,
 ): string {
-  const anchor = anchorBounds(sourceText, from, to);
-  const left = takeWordsBefore(sourceText, anchor.start, CONTEXT_WORD_LIMIT);
-  const right = takeWordsAfter(sourceText, anchor.end, CONTEXT_WORD_LIMIT);
+  const { left, right } = wordWindowAround(sourceText, from, to);
   const leftHtml = contextChunkHtml(left, "left");
   const rightHtml = contextChunkHtml(right, "right");
   if (!leftHtml && !rightHtml) return diffHtml;
@@ -121,10 +135,7 @@ export function applyOutsideContext(
 
 /** Choice / орфография: текущее слово жирным, вокруг окно, без стрелки. */
 export function formatAnchorContextHtml(sourceText: string, from: number, to: number): string {
-  const anchor = anchorBounds(sourceText, from, to);
-  const left = takeWordsBefore(sourceText, anchor.start, CONTEXT_WORD_LIMIT);
-  const right = takeWordsAfter(sourceText, anchor.end, CONTEXT_WORD_LIMIT);
-  const mid = sourceText.slice(from, Math.max(to, from));
+  const { left, right, mid } = wordWindowAround(sourceText, from, to);
   return (
     contextChunkHtml(left, "left") +
     "<b>" +

@@ -41,6 +41,7 @@ import {
   spellDictionaryCacheSkipsNetwork,
 } from "../spell/spell-dictionary-cache";
 import { ORTHOGRAPHY_SPELL_RULE_ID } from "../rules/orthography-spell-rules";
+import { applySkipToResolutions, shouldSuppressChoiceFix } from "../figma/choice-resolution";
 import { buildAnalyticsEnvelope } from "../analytics/schema";
 
 describe("QA #60 / T-144: безопасные исходы", () => {
@@ -192,6 +193,24 @@ describe("manual QA checklist verify", () => {
     expect(applyAllRules(text, allRules())).toMatch(/^1\. показываем[\s\S]*\n2\. пав/);
   });
 
+  it("#13 один пропуск орфографии прячет карточку в следующем запуске", () => {
+    const text = "Кватира в центре";
+    const from = text.indexOf("Кватира");
+    const fix = {
+      ruleId: ORTHOGRAPHY_SPELL_RULE_ID,
+      from,
+      to: from + "Кватира".length,
+      before: "Кватира",
+    };
+    const skipped = applySkipToResolutions(text, fix, []);
+    expect(skipped[0]).toMatchObject({ skipCount: 1, chosen: "Кватира", beforeAtResolve: "Кватира" });
+    expect(shouldSuppressChoiceFix(text, fix, skipped)).toBe(true);
+    expect(applySkipToResolutions(text, fix, skipped)[0]?.skipCount).toBe(1);
+
+    const legacy = { ...skipped[0]!, chosen: "", skipCount: 2 };
+    expect(shouldSuppressChoiceFix(text, fix, [legacy])).toBe(true);
+  });
+
   it("#7–10 spelling / layout", () => {
     expect(checkSpellingFixes("Кватира в центре").some((f) => f.before === "Кватира")).toBe(true);
     expect(checkSpellingFixes("Наберите ghbdtn в чат").some((f) => f.after === "привет")).toBe(true);
@@ -259,11 +278,54 @@ describe("manual QA checklist verify", () => {
         },
       ],
     };
+    state.ui.reportDetailsOpen = true;
     const html = renderReportHtml();
     expect(html).toContain("Типографика: неразрывные пробелы");
     expect(html).toContain("1 склейка в этом слое");
+    expect(html).toContain('class="ws-mark ws-nbsp"');
+    expect(html).not.toContain("ws-nbsp-existing");
     expect(html).toContain("Бренд: «ЦИАН» → «Циан»");
     expect(html).not.toContain("Типографика: неразрывный пробел после служебного слова");
+    state.lastReport = null;
+    state.summary = null;
+  });
+
+  it("#65 саммари: старые NBSP серые, новая склейка оранжевая", () => {
+    const glue = "\u00a0";
+    const sourceText = `За${glue}полгода и дом`;
+    const spaceAfterI = sourceText.indexOf("и ") + 1;
+    state.spellcheckInProgress = false;
+    state.summary = { checkedLayers: 1, foundFixes: 1, confirmFixes: 0, choiceFixes: 0 };
+    state.lastManualReport = null;
+    state.lastReport = {
+      summary: { checkedLayers: 1, appliedFixCount: 1, changedLayerCount: 1 },
+      layers: [
+        {
+          nodeId: "1:1",
+          nodeName: "Для Антона",
+          characterCount: sourceText.length,
+          sourceText,
+          fixes: [
+            {
+              fixId: "n1",
+              ruleId: "cian-095-nbsp-и",
+              category: "typography",
+              message: "Типографика: неразрывный пробел после служебного слова",
+              before: " ",
+              after: glue,
+              from: spaceAfterI,
+              to: spaceAfterI + 1,
+              sourceText,
+            },
+          ],
+        },
+      ],
+    };
+    state.ui.reportDetailsOpen = true;
+    const html = renderReportHtml();
+    expect(html).toContain("1 склейка в этом слое");
+    expect((html.match(/class="ws-mark ws-nbsp"/g) ?? []).length).toBe(1);
+    expect((html.match(/ws-nbsp-existing/g) ?? []).length).toBe(1);
     state.lastReport = null;
     state.summary = null;
   });
@@ -438,8 +500,11 @@ describe("manual QA checklist verify", () => {
     );
     const confirmCall = renderSrc.indexOf("${renderConfirmHtml()}");
     const choiceCall = renderSrc.indexOf("${renderChoiceHtml()}");
+    const spellCall = renderSrc.indexOf("${renderSpellcheckActionHtml()}");
     expect(confirmCall).toBeGreaterThan(-1);
     expect(choiceCall).toBeGreaterThan(-1);
+    expect(spellCall).toBeGreaterThan(-1);
+    expect(spellCall).toBeLessThan(confirmCall);
     expect(confirmCall).toBeLessThan(choiceCall);
     state.confirmCards = [];
     state.choiceCards = [];
@@ -792,7 +857,7 @@ describe("manual QA checklist verify", () => {
     expect(fixes.some((f) => f.applyPolicy === "auto")).toBe(true);
   });
 
-  it("#56 кнопка орфографии после отчёта: дефолт есть, после вкл пропадает", () => {
+  it("#56 кнопка орфографии над списками: дефолт есть, после вкл пропадает", () => {
     state.spellcheckInProgress = false;
     state.spellcheckEnabled = false;
     state.summary = { checkedLayers: 1, foundFixes: 0, confirmFixes: 0, choiceFixes: 0 };
@@ -832,5 +897,108 @@ describe("manual QA checklist verify", () => {
     state.spellcheckEnabled = false;
     state.confirmCards = [];
     state.lastReport = null;
+  });
+
+  it("#62–64 прогресс под фразой, закрытый отчёт без строк, confirm по типу", () => {
+    state.spellcheckInProgress = false;
+    state.summary = null;
+    state.autofixProgress = { phase: "apply", applied: 3, total: 10 };
+    const header = renderResultHeaderHtml();
+    expect(header.indexOf("Шуршу по макету…")).toBeLessThan(header.indexOf("Исправляю тексты — 3"));
+    expect(header).toContain("3 / 10");
+
+    state.summary = { checkedLayers: 1, foundFixes: 1, confirmFixes: 2, choiceFixes: 0 };
+    state.autofixProgress = null;
+    state.ui.reportDetailsOpen = false;
+    state.lastManualReport = null;
+    state.lastReport = {
+      summary: { checkedLayers: 1, appliedFixCount: 1, changedLayerCount: 1 },
+      layers: [
+        {
+          nodeId: "1:1",
+          nodeName: "Слой",
+          characterCount: 4,
+          sourceText: "ЦИАН",
+          fixes: [
+            {
+              fixId: "a1",
+              ruleId: "cian-brand",
+              category: "brand",
+              message: "Циан",
+              before: "ЦИАН",
+              after: "Циан",
+              from: 0,
+              to: 4,
+            },
+          ],
+        },
+      ],
+    };
+    const closed = renderReportHtml();
+    expect(closed).toContain("Исправлено автоматически");
+    expect(closed).not.toContain('class="reportFix"');
+
+    state.ui.confirmDetailsOpen = true;
+    state.expandedGroups = {};
+    state.confirmCards = [
+      {
+        nodeId: "1:2",
+        nodeName: "А",
+        originalText: "дом",
+        characterCount: 3,
+        fixes: [
+          {
+            fixId: "c1",
+            from: 0,
+            to: 3,
+            before: "дом",
+            after: "Дом",
+            rule: {
+              id: "cian-138-sentence-start-capitalize",
+              category: "cian_editorial",
+              message: "Заглавная",
+              priority: 1,
+              applyPolicy: "confirm",
+            },
+          },
+        ],
+      },
+      {
+        nodeId: "1:3",
+        nodeName: "Б",
+        originalText: "еще",
+        characterCount: 4,
+        fixes: [
+          {
+            fixId: "c2",
+            from: 0,
+            to: 4,
+            before: "еще",
+            after: "ещё",
+            rule: {
+              id: "cian-yo-homograph-esche",
+              category: "yo_spelling",
+              message: "еще или ещё",
+              priority: 1,
+              applyPolicy: "confirm",
+            },
+          },
+        ],
+      },
+    ];
+    const confirm = renderConfirmHtml();
+    expect(confirm).toContain("Обратите внимание");
+    expect(confirm).toContain('class="confirmFix"');
+    expect(confirm).toContain('data-node-id="1:2"');
+    expect(confirm).toContain('data-confirm-apply="0:0"');
+    expect(confirm).toContain('data-confirm-apply="1:0"');
+    expect(confirm).not.toContain("Применить все");
+    expect(confirm).not.toContain("Разобрать");
+
+    state.summary = null;
+    state.autofixProgress = null;
+    state.lastReport = null;
+    state.confirmCards = [];
+    state.expandedGroups = {};
   });
 });

@@ -3,6 +3,7 @@ import { getAutofixRules } from "../rules/autofix-rules";
 import { MSG_TYPO_EMDASH, MSG_TYPO_NBSP_SUMMARY } from "../rules/rule-messages";
 import { autoFixesFor } from "../test/helpers";
 import {
+  applyReportedFixesWithNewGlueIndexes,
   countNbspGlues,
   formatNbspSentenceHtml,
   isNbspGlueFix,
@@ -36,6 +37,26 @@ describe("formatNbspSentenceHtml", () => {
     expect(html).toContain("□");
     expect(html).not.toContain("ws-sp");
   });
+
+  it("новые и старые NBSP разными классами", () => {
+    const text = `За${nbsp}полгода и${nbsp}дом`;
+    const secondNbsp = text.lastIndexOf(nbsp);
+    const html = formatNbspSentenceHtml(text, new Set([secondNbsp]));
+    expect((html.match(/ws-nbsp-existing/g) ?? []).length).toBe(1);
+    expect((html.match(/class="ws-mark ws-nbsp"/g) ?? []).length).toBe(1);
+  });
+});
+
+describe("applyReportedFixesWithNewGlueIndexes", () => {
+  it("отмечает только glue-позиции после нескольких правок", () => {
+    const source = "ЦИАН и дом";
+    const { text, newGlueIndexes } = applyReportedFixesWithNewGlueIndexes(source, [
+      { from: 0, to: 4, before: "ЦИАН", after: "Циан", sourceText: source },
+      { from: 6, to: 7, before: " ", after: nbsp, sourceText: source },
+    ]);
+    expect(text).toBe(`Циан и${nbsp}дом`);
+    expect([...newGlueIndexes]).toEqual([6]);
+  });
 });
 
 describe("renderNbspGlueSummaryHtml", () => {
@@ -60,6 +81,7 @@ describe("renderNbspGlueSummaryHtml", () => {
     expect(html).toContain("1 склейка в этом слое");
     expect(html).toContain("Циан и");
     expect(html).toContain("ws-nbsp");
+    expect(html).not.toContain("ws-nbsp-existing");
     expect(html).not.toContain("ЦИАН");
   });
 
@@ -82,8 +104,35 @@ describe("renderNbspGlueSummaryHtml", () => {
     expect(html).toContain("3 склейки в этом слое");
     expect(html).toContain("Циан и");
     expect(html).toContain("квартира");
-    expect((html.match(/ws-nbsp/g) ?? []).length).toBe(3);
+    expect((html.match(/ws-nbsp"/g) ?? []).length).toBe(3);
+    expect(html).not.toContain("ws-nbsp-existing");
     expect(html).not.toContain("ЦИАН");
+  });
+
+  it("старые NBSP серые, новая склейка оранжевая (кейс Антона)", () => {
+    const sourceText =
+      `За${nbsp}полгода после запуска нового стиля не${nbsp}только вернули, но${nbsp}и${nbsp}превысили ожидаемые показатели атрибуции коммуникаций Циана и отдельных бренд-кодов!`;
+    expect([...sourceText].length).toBe(146);
+    expect([...sourceText].filter((c) => c === nbsp).length).toBe(4);
+
+    const fixes = autoFixesFor(sourceText, allRules());
+    expect(countNbspGlues(fixes)).toBe(1);
+
+    const html = renderNbspGlueSummaryHtml(
+      fixes.map((f) => ({
+        from: f.from,
+        to: f.to,
+        before: f.before,
+        after: f.after,
+        sourceText,
+      })),
+      sourceText,
+    );
+    expect(html).toContain("1 склейка в этом слое");
+    expect((html.match(/ws-nbsp"/g) ?? []).length).toBe(1);
+    expect((html.match(/ws-nbsp-existing/g) ?? []).length).toBe(4);
+    expect(html).toContain("новая склейка");
+    expect(html).toContain("уже был в слое");
   });
 
   it("склоняет «склейки» и «склеек»", () => {

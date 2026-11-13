@@ -194,4 +194,20 @@ describe("scanSelectedTextNodes", () => {
     expect(result.confirmCards).toEqual([]);
     expect(result.choiceCards).toEqual([]);
   });
+
+  it("onlyNodeIds проверяет только слои прошлого прохода", async () => {
+    const first = textNode("1:1", "первый");
+    const second = textNode("1:2", "второй");
+    collectMock.mockReturnValue([first, second]);
+    checkTextMock.mockReturnValue([]);
+
+    const { scanSelectedTextNodes } = await import("./scan-selection");
+    const { result } = scanSelectedTextNodes([first, second], {
+      onlyNodeIds: new Set(["1:2"]),
+    });
+
+    expect(result.summary.checkedLayers).toBe(1);
+    expect(result.checkedTextLayers.map((layer) => layer.nodeId)).toEqual(["1:2"]);
+    expect(checkTextMock).toHaveBeenCalledTimes(1);
+  });
 });

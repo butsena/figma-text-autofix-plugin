@@ -25,6 +25,14 @@ describe("yo-curated-store", () => {
     expect(getYoCorrection("еще")).toBe("ещё");
   });
 
+  it("getYoCorrection сохраняет регистр и не трогает уже «ё»", () => {
+    resetYoCuratedToBundled();
+    expect(getYoCorrection("Еще")).toBe("Ещё");
+    expect(getYoCorrection("ЕЩЕ")).toBe("ЕЩЁ");
+    expect(getYoCorrection("ещё")).toBeNull();
+    expect(getYoCorrection("неттакогослова")).toBeNull();
+  });
+
   it("применяет remote-список", () => {
     expect(applyYoCuratedFromRaw("самолёт\n")).toBe(true);
     expect(getYoCuratedLoadStats().fromRemote).toBe(true);

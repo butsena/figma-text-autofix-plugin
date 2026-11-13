@@ -62,7 +62,7 @@ export function layerDisplayLabel(input: {
   frameName?: string;
 }): string {
   const frame = input.frameName?.trim() || input.nodeName.trim() || "Без имени";
-  if (input.text == null) return input.nodeName.trim() || frame;
+  if (input.text == null) return frame;
   return layerRowLabel(input.text, frame);
 }
 

@@ -29,33 +29,79 @@ import {
   extractCyrillicWordTokens,
   rangesOverlap,
   shouldSkipSpellToken,
+  type CyrillicWordToken,
 } from "./tokenize-cyrillic-words";
+import { buildNeVerbFixes } from "./ne-verb-split";
 import { takeSpellCardSlot } from "./spell-card-budget";
 import { getSpellWhitelistWords } from "./spell-word-list-store";
 
-const whitelistLower = (): Set<string> => {
+type Range = { from: number; to: number };
+
+function whitelistLower(): Set<string> {
   return new Set(getSpellWhitelistWords().map((w) => w.toLowerCase()));
-};
+}
 
 function isWhitelisted(word: string, whitelist: Set<string>): boolean {
   return whitelist.has(word.toLowerCase());
 }
 
-function overlapsExistingFix(from: number, to: number, fixes: readonly TextFix[]): boolean {
+function overlapsExistingFix(from: number, to: number, fixes: readonly Range[]): boolean {
   return fixes.some((fix) => rangesOverlap(from, to, fix.from, fix.to));
 }
 
+function knownChecker(spell: SpellChecker): (word: string) => boolean {
+  return (word) => isKnownWord(spell, word);
+}
+
+function layoutConfirmFix(from: number, to: number, before: string, after: string): TextFix {
+  return {
+    from,
+    to,
+    before,
+    after,
+    ruleId: ORTHOGRAPHY_LAYOUT_RULE_ID,
+    category: "orthography",
+    message: orthographyLayoutMessage(before),
+    priority: ORTHOGRAPHY_LAYOUT_PRIORITY,
+    applyPolicy: "confirm",
+  };
+}
+
+function spellConfirmFix(from: number, to: number, before: string, after: string): TextFix {
+  return {
+    from,
+    to,
+    before,
+    after,
+    ruleId: ORTHOGRAPHY_SPELL_RULE_ID,
+    category: "orthography",
+    message: orthographySpellMessage(before),
+    priority: ORTHOGRAPHY_SPELL_PRIORITY,
+    applyPolicy: "confirm",
+  };
+}
+
 /** Латиница токена уже целиком внутри другой правки — вторую карточку не дублируем. */
-function latinCharsCoveredByFixes(from: number, word: string, fixes: readonly TextFix[]): boolean {
+function latinCharsCoveredByFixes(from: number, word: string, fixes: readonly Range[]): boolean {
   let sawLatin = false;
   for (let i = 0; i < word.length; i++) {
-    if (!/[A-Za-z]/.test(word[i])) continue;
+    if (!/[A-Za-z]/.test(word[i]!)) continue;
     sawLatin = true;
     const pos = from + i;
     const covered = fixes.some((fix) => pos >= fix.from && pos < fix.to);
     if (!covered) return false;
   }
   return sawLatin;
+}
+
+function shouldSkipLayoutToken(
+  text: string,
+  from: number,
+  to: number,
+  word: string,
+  whitelist: Set<string>,
+): boolean {
+  return isWhitelisted(word, whitelist) || isLikelyUrlOrEmailContext(text, from, to);
 }
 
 function checkMixedScriptFixes(
@@ -67,12 +113,11 @@ function checkMixedScriptFixes(
   if (!textHasCyrillic(text)) return [];
 
   const fixes: TextFix[] = [];
-  const known = (w: string) => isKnownWord(spell, w);
+  const known = knownChecker(spell);
 
   for (const token of extractMixedScriptTokens(text)) {
     const { word, from, to } = token;
-    if (isWhitelisted(word, whitelist)) continue;
-    if (isLikelyUrlOrEmailContext(text, from, to)) continue;
+    if (shouldSkipLayoutToken(text, from, to, word, whitelist)) continue;
     // Choice на кириллической основе («пишете» внутри «yпишете») не закрывает латинскую букву.
     if (latinCharsCoveredByFixes(from, word, existingFixes)) continue;
     if (latinCharsCoveredByFixes(from, word, fixes)) continue;
@@ -83,17 +128,8 @@ function checkMixedScriptFixes(
     // «лctt» и «kjjклk’;kg» — мусор, готовой замены нет.
     if (!knownSuggestion && word.replace(/[^A-Za-z]/g, "").length < 2) continue;
 
-    fixes.push({
-      from,
-      to,
-      before: word,
-      after: knownSuggestion ? casingForSuggestion(text, from, knownSuggestion) : word,
-      ruleId: ORTHOGRAPHY_LAYOUT_RULE_ID,
-      category: "orthography",
-      message: orthographyLayoutMessage(word),
-      priority: ORTHOGRAPHY_LAYOUT_PRIORITY,
-      applyPolicy: "confirm",
-    });
+    const after = knownSuggestion ? casingForSuggestion(text, from, knownSuggestion) : word;
+    fixes.push(layoutConfirmFix(from, to, word, after));
   }
 
   return fixes;
@@ -107,18 +143,18 @@ function checkLatinLayoutFixes(
 ): TextFix[] {
   const fixes: TextFix[] = [];
   const mixedSpans = extractMixedScriptTokens(text);
+  const known = knownChecker(spell);
 
   for (const token of extractLatinLayoutTokens(text)) {
     const { word, from, to } = token;
     if (shouldSkipLatinLayoutToken(word)) continue;
-    if (isWhitelisted(word, whitelist)) continue;
-    if (isLikelyUrlOrEmailContext(text, from, to)) continue;
+    if (shouldSkipLayoutToken(text, from, to, word, whitelist)) continue;
     if (mixedSpans.some((span) => rangesOverlap(from, to, span.from, span.to))) continue;
     if (overlapsExistingFix(from, to, existingFixes) || overlapsExistingFix(from, to, fixes)) continue;
 
-    const suggestedRu = suggestRuFromLatinLayout(word, (w) => isKnownWord(spell, w));
+    const suggestedRu = suggestRuFromLatinLayout(word, known);
     if (!suggestedRu) continue;
-    const knownRu = isKnownWord(spell, suggestedRu);
+    const knownRu = known(suggestedRu);
 
     const cased = knownRu
       ? casingForSuggestion(text, from, suggestedRu)
@@ -127,20 +163,33 @@ function checkLatinLayoutFixes(
     const gluedToLetter = /^[^A-Za-z]/.test(word) && /[A-Za-zА-Яа-яЁё]/.test(prev);
     const after = gluedToLetter && !/^\s/.test(cased) ? ` ${cased}` : cased;
 
-    fixes.push({
-      from,
-      to,
-      before: word,
-      after,
-      ruleId: ORTHOGRAPHY_LAYOUT_RULE_ID,
-      category: "orthography",
-      message: orthographyLayoutMessage(word),
-      priority: ORTHOGRAPHY_LAYOUT_PRIORITY,
-      applyPolicy: "confirm",
-    });
+    fixes.push(layoutConfirmFix(from, to, word, after));
   }
 
   return fixes;
+}
+
+function collectUnknownCyrillicTokens(
+  text: string,
+  spell: SpellChecker,
+  whitelist: Set<string>,
+  occupied: readonly Range[],
+  mixedSpans: readonly Range[],
+): CyrillicWordToken[] {
+  const unknown: CyrillicWordToken[] = [];
+  const overlapsMixedSpan = (from: number, to: number) =>
+    mixedSpans.some((span) => rangesOverlap(from, to, span.from, span.to));
+
+  for (const token of extractCyrillicWordTokens(text)) {
+    const { word, from, to } = token;
+    if (shouldSkipSpellToken(word)) continue;
+    if (isWhitelisted(word, whitelist)) continue;
+    if (overlapsExistingFix(from, to, occupied)) continue;
+    if (overlapsMixedSpan(from, to)) continue;
+    if (isKnownWord(spell, word)) continue;
+    unknown.push(token);
+  }
+  return unknown;
 }
 
 /** Проверка орфографии Hunspell; возвращает confirm-правки без пересечения с уже найденными. */
@@ -151,28 +200,21 @@ export function checkSpellingFixes(text: string, existingFixes: readonly TextFix
   if (!spell) return [];
 
   const whitelist = whitelistLower();
-  const fixes: TextFix[] = [];
+  const known = knownChecker(spell);
 
   // Смешанные слова (yпишете) раскладка чинит целиком — считаем их первыми,
   // чтобы орфография не ругалась на кириллические обрывки вокруг латинской буквы.
   const mixedFixes = checkMixedScriptFixes(text, spell, whitelist, existingFixes);
-  const spellExisting = [...existingFixes, ...mixedFixes];
+  // «неотключите» → confirm «не отключите» до обычной орфографии, иначе уйдёт в поле ввода.
+  const neVerbFixes = buildNeVerbFixes(text, known, {
+    skipWord: (word) => isWhitelisted(word, whitelist),
+    occupied: [...existingFixes, ...mixedFixes],
+  });
+  const spellExisting = [...existingFixes, ...mixedFixes, ...neVerbFixes];
   const mixedSpans = extractMixedScriptTokens(text);
-  const overlapsMixedSpan = (from: number, to: number) =>
-    mixedSpans.some((span) => rangesOverlap(from, to, span.from, span.to));
 
-  // Проход 1: только «знает / не знает». suggest — ниже, для уникальных форм и с лимитом карточек.
-  const unknown: { word: string; from: number; to: number }[] = [];
-  for (const token of extractCyrillicWordTokens(text)) {
-    const { word, from, to } = token;
-    if (shouldSkipSpellToken(word)) continue;
-    if (isWhitelisted(word, whitelist)) continue;
-    if (overlapsExistingFix(from, to, spellExisting)) continue;
-    if (overlapsMixedSpan(from, to)) continue;
-    if (isKnownWord(spell, word)) continue;
-    unknown.push(token);
-  }
-
+  const unknown = collectUnknownCyrillicTokens(text, spell, whitelist, spellExisting, mixedSpans);
+  const fixes: TextFix[] = [];
   let emitted = 0;
   for (const token of unknown) {
     if (!takeSpellCardSlot(emitted)) break;
@@ -180,23 +222,12 @@ export function checkSpellingFixes(text: string, existingFixes: readonly TextFix
     const { word, from, to } = token;
     const suggestion = suggestCorrection(spell, word);
     const after = suggestion ? capitalizeLike(word, suggestion) : word;
-
-    fixes.push({
-      from,
-      to,
-      before: word,
-      after,
-      ruleId: ORTHOGRAPHY_SPELL_RULE_ID,
-      category: "orthography",
-      message: orthographySpellMessage(word),
-      priority: ORTHOGRAPHY_SPELL_PRIORITY,
-      applyPolicy: "confirm",
-    });
+    fixes.push(spellConfirmFix(from, to, word, after));
   }
 
   const latinFixes = checkLatinLayoutFixes(text, spell, whitelist, [
     ...spellExisting,
     ...fixes,
   ]);
-  return [...fixes, ...mixedFixes, ...latinFixes];
+  return [...fixes, ...mixedFixes, ...latinFixes, ...neVerbFixes];
 }

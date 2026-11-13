@@ -3,11 +3,13 @@ import { initUiEvents } from "./ui-events";
 import { sendToPlugin } from "./ui-plugin-bridge";
 import { render, renderPluginError } from "./ui-render";
 import {
+  applyAutofixProgress,
   applyCheckResult,
   applyLexiconConfig,
   applySpellcheckPreference,
   applySpellcheckStatus,
   resetForError,
+  state,
 } from "./ui-state";
 
 export function handlePluginMessage(event: MessageEvent): void {
@@ -31,6 +33,13 @@ export function handlePluginMessage(event: MessageEvent): void {
 
   if (msg.type === "plugin:spellcheckStatus") {
     applySpellcheckStatus(Boolean(msg.active));
+    render();
+    return;
+  }
+
+  if (msg.type === "plugin:autofixProgress") {
+    if (state.summary) return;
+    applyAutofixProgress(msg.progress);
     render();
     return;
   }

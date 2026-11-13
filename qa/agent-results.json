@@ -111,11 +111,11 @@
     },
     {
       "scenarioId": "13",
-      "agentStatus": "ok-code",
-      "agentNote": "spec S09b: MAX_SPELL_SKIP_COUNT=3 только orthography-*; confirm-точка и choice без вечного skip",
+      "agentStatus": "ok",
+      "agentNote": "Один skip orthography-* пишет chosen=слово и skipCount=1; следующий запуск карточку не показывает. Старый skipCount 1–2 с пустым chosen тоже скрыт. Confirm вне орфографии skipCount не пишет.",
       "checkedAt": null,
       "commit": null,
-      "method": "code-review",
+      "method": "engine-test",
       "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
     },
     {
@@ -309,12 +309,12 @@
     },
     {
       "scenarioId": "35",
-      "agentStatus": "ok",
-      "agentNote": "Авто-отчёт: space→nbsp в одно саммари на слой; бренд/тире/ё отдельными строками; счётчик шапки не режем",
-      "checkedAt": null,
+      "agentStatus": "needs_retest",
+      "agentNote": "T-166: новые склейки — оранжевый □, уже бывшие NBSP — серый □. Meta по-прежнему = число новых glue. На чистом исходнике #35 все □ оранжевые.",
+      "checkedAt": "2026-11-12",
       "commit": null,
       "method": "engine-test",
-      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+      "environmentNote": "vitest nbsp-glue-summary. Ручной passed не ставить — нужна повторная проверка в Figma."
     },
     {
       "scenarioId": "36",
@@ -327,9 +327,9 @@
     },
     {
       "scenarioId": "37",
-      "agentStatus": "ok",
-      "agentNote": "manualReportDetailsOpen по умолчанию false: «Вы исправили» свёрнут, пока не кликнуть заголовок",
-      "checkedAt": null,
+      "agentStatus": "fixed",
+      "agentNote": "Заголовок меняет флаг секции и тот же details. Повторный toggle браузера больше не записывает open обратно в состояние.",
+      "checkedAt": "2026-11-13",
       "commit": null,
       "method": "engine-test",
       "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
@@ -363,12 +363,12 @@
     },
     {
       "scenarioId": "41",
-      "agentStatus": "ok",
-      "agentNote": "ne-1: confirm «неотключите» → «не отключите», не auto; причастия и словарные «ненавидеть» / «нельзя» / «неплохо» / «невысокий» не режем; □ после «не» доклеивает старый cian-095, в саммари неразрывных пробелов сама вставка пробела не попадает",
+      "agentStatus": "fixed",
+      "agentNote": "ne-1 refactor: helpers + «йтесь»; engine/unit cover casing, participles, false nouns, skip/occupied, multi-hit, Hunspell integration. Manual Figma #41 → needs_retest (def+1: небойтесь/НЕОТКЛЮЧИТЕ).",
       "checkedAt": null,
       "commit": null,
       "method": "engine-test",
-      "environmentNote": "Migrated from canvas ITEMS agentStatus/agentNote (13.10.2026). Not a live Figma run unless noted."
+      "environmentNote": "Refactored 2026-11-11; not a live Figma run."
     },
     {
       "scenarioId": "42",
@@ -391,7 +391,7 @@
     {
       "scenarioId": "44",
       "agentStatus": "ok-code",
-      "agentNote": "spec-3: 139a confirm без input; орфография = spellInput; skip неорфографии не пишет skipCount; 139 terminal period — auto",
+      "agentNote": "spec-3: 139a confirm без input; орфография = spellInput; skip неорфографии не пишет skipCount и после Reload карточка точки снова есть; 139 terminal period — auto",
       "checkedAt": null,
       "commit": null,
       "method": "code-review",
@@ -499,11 +499,11 @@
     {
       "scenarioId": "56",
       "agentStatus": "fixed",
-      "agentNote": "«В выделенных слоях правок нет» скрывается, если есть confirm, choice, leftover или «Вы исправили». Кнопка орфографии по-прежнему после отчёта, не в шапке.",
-      "checkedAt": "2026-10-22",
+      "agentNote": "T-162: кнопка «Проверить орфографию» над списками, не в шапке. «Правок нет» по-прежнему скрывается, если есть confirm, choice, leftover или «Вы исправили».",
+      "checkedAt": "2026-11-11",
       "commit": null,
-      "method": "code-review",
-      "environmentNote": "Session-only spellcheck; no persistence across plugin opens."
+      "method": "engine-test",
+      "environmentNote": "vitest ui-render и manual-qa #56. Ручной passed не ставить: порядок кнопки изменился."
     },
     {
       "scenarioId": "57",
@@ -549,6 +549,42 @@
       "method": "engine-test",
       "environmentNote": "Готовые QA/release-файлы выполнены с перехватом fetch. По разрешению Антона рабочие приёмник/отчёт обновлены; 13 служебных test POST дали 8 строк, все исключены из рабочих показателей.",
       "agentNote": "T-151: version 6/T-151-1, события 435–442, source/режимы/replay и все 41 разложения проверены. Старые A:G и рабочие итоги сохранены; неизвестная история отделена. Ручного Figma-прогона пока нет, #61 not_run."
+    },
+    {
+      "scenarioId": "62",
+      "agentStatus": "fixed",
+      "agentNote": "До орфографии под «Шуршу по макету…» подпись «Освежаю редполитику». Пока качается словарь орфографии — «Обновляю словарь».",
+      "checkedAt": "2026-11-13",
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "vitest ui-speedup и autofix-pipeline. Не ручная приёмка."
+    },
+    {
+      "scenarioId": "63",
+      "agentStatus": "fixed",
+      "agentNote": "T-162: закрытый автоотчёт без строк правок; кнопка орфографии выше confirm. Длинный текст проверенного слоя в сообщение не копируется.",
+      "checkedAt": "2026-11-11",
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "vitest ui-manual-report, scan-fix-dto, ui-render. Не ручная приёмка."
+    },
+    {
+      "scenarioId": "64",
+      "agentStatus": "fixed",
+      "agentNote": "Полоска сверху секции подписана «показано / всего кейсов». «Показать ещё» открывает 10 карточек этого типа. У choice полоска есть, когда одного типа больше 10.",
+      "checkedAt": "2026-11-13",
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "vitest ui-speedup и check-result-session. Высоту окна в Figma не мерил. Не ручная приёмка."
+    },
+    {
+      "scenarioId": "65",
+      "agentStatus": "fixed",
+      "agentNote": "T-166: при 4 уже NBSP + 1 новой склейке meta «1 склейка», 1× ws-nbsp и 4× ws-nbsp-existing. Analytics/единица счёта не менялись.",
+      "checkedAt": "2026-11-12",
+      "commit": null,
+      "method": "engine-test",
+      "environmentNote": "vitest nbsp-glue-summary (кейс Антона). Не ручная приёмка."
     }
   ]
 }

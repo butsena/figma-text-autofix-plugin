@@ -12,7 +12,6 @@ vi.mock("./figma/apply-manual-fix", () => ({
   skipManualFixAndRefresh: vi.fn(),
 }));
 vi.mock("./figma/focus-layer", () => ({ focusLayerById: vi.fn() }));
-vi.mock("./figma/choice-resolution", () => ({ beginPluginRun: vi.fn() }));
 vi.mock("./analytics/track", () => ({
   beginAnalyticsSession: vi.fn(() => "sess_test12345678"),
 }));

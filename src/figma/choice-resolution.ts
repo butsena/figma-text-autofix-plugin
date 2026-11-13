@@ -3,8 +3,6 @@ export type {
   ChoiceResolution,
 } from "./choice-resolution-core";
 
-export { beginPluginRun, MAX_SPELL_SKIP_COUNT } from "./choice-skip-session";
-
 export {
   buildChoiceAnchors,
   createChoiceResolution,
@@ -85,7 +83,7 @@ export function recordChoiceResolutionOnNode(
   writeChoiceResolutions(node, upsertChoiceResolution(active, resolution));
 }
 
-/** «Пропустить» орфографию: +1 запуск; после MAX_SPELL_SKIP_COUNT больше не показывать. */
+/** «Пропустить» орфографию: записать слово как принятое и больше не показывать. */
 export function recordSpellSkipOnNode(node: TextNode, fix: ChoiceFixPosition): void {
   const text = node.characters;
   const active = pruneStaleResolutions(text, readChoiceResolutions(node));

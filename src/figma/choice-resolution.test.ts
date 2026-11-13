@@ -1,10 +1,8 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   applySkipToResolutions,
-  beginPluginRun,
   createChoiceResolution,
   findResolutionPositions,
-  MAX_SPELL_SKIP_COUNT,
   pruneStaleResolutions,
   readChoiceResolutionsFromPluginData,
   shouldSuppressChoiceFix,
@@ -200,13 +198,10 @@ describe("spell skip resolution", () => {
     before: "Кватира",
   };
 
-  beforeEach(() => {
-    beginPluginRun(); // новая «сессия» плагина
-  });
-
-  it("после skip в том же запуске скрывает, повторный клик не плюсует", () => {
-    let resolutions = applySkipToResolutions(text, fix, []);
+  it("один skip прячет карточку и в этом запуске, и в следующем", () => {
+    const resolutions = applySkipToResolutions(text, fix, []);
     expect(resolutions[0]?.skipCount).toBe(1);
+    expect(resolutions[0]?.chosen).toBe("Кватира");
     expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(true);
 
     const same = applySkipToResolutions(text, fix, resolutions);
@@ -214,30 +209,13 @@ describe("spell skip resolution", () => {
     expect(shouldSuppressChoiceFix(text, fix, same)).toBe(true);
   });
 
-  it("в следующем запуске снова показывает при skipCount < MAX", () => {
-    let resolutions = applySkipToResolutions(text, fix, []);
-    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(true);
+  it("старый незавершённый счётчик тоже больше не показывает", () => {
+    const legacy = createChoiceResolution(text, SPELL_RULE_ID, from, to, "Кватира", "", 1);
+    expect(shouldSuppressChoiceFix(text, fix, [legacy])).toBe(true);
 
-    beginPluginRun(); // закрыли и открыли плагин заново
-    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(false);
-
-    resolutions = applySkipToResolutions(text, fix, resolutions);
-    expect(resolutions[0]?.skipCount).toBe(2);
-    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(true);
-  });
-
-  it(`после ${MAX_SPELL_SKIP_COUNT} запусков с skip больше не показывает`, () => {
-    let resolutions: ReturnType<typeof applySkipToResolutions> = [];
-    for (let i = 0; i < MAX_SPELL_SKIP_COUNT; i++) {
-      if (i > 0) beginPluginRun();
-      resolutions = applySkipToResolutions(text, fix, resolutions);
-    }
-    expect(resolutions[0]?.skipCount).toBe(MAX_SPELL_SKIP_COUNT);
-    expect(resolutions[0]?.chosen).toBe("Кватира");
-    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(true);
-
-    beginPluginRun();
-    expect(shouldSuppressChoiceFix(text, fix, resolutions)).toBe(true);
+    const same = applySkipToResolutions(text, fix, [legacy]);
+    expect(same[0]?.skipCount).toBe(1);
+    expect(same[0]?.chosen).toBe("");
   });
 
   it("после исправления не показывает повторно", () => {

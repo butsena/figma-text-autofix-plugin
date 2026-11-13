@@ -7,7 +7,14 @@ import type { CheckResultDto } from "../shared/messages";
 import { orderFixesForApply } from "../shared/fix-sort";
 import { textFixDtoToEngineFix } from "../shared/text-fix-mapping";
 import { isCaseOnlyChange } from "./apply-fixes-helpers";
-import { applyCharStyleAt, captureRangeStyles, restoreRangeStyles } from "./text-style-snapshot";
+import {
+  applyCharStyleAt,
+  captureRangeStyles,
+  captureUniformRangeStyle,
+  caseStylesAreUniform,
+  restoreRangeStyles,
+  type CharTextStyle,
+} from "./text-style-snapshot";
 
 /** true — фрагмент уже не тот, правку писать нельзя. */
 function fragmentIsStale(textNode: TextNode, fix: TextFix): boolean {
@@ -27,12 +34,20 @@ async function loadFontName(font: FontName): Promise<void> {
   await figma.loadFontAsync(font);
 }
 
-async function loadFontsForTextNode(textNode: TextNode): Promise<void> {
+async function loadFontsForTextNode(textNode: TextNode): Promise<Set<string>> {
+  const failed = new Set<string>();
   const len = textNode.characters.length;
   if (len === 0) {
     const font = textNode.fontName;
-    if (font !== figma.mixed) await loadFontName(font);
-    return;
+    if (font !== figma.mixed) {
+      try {
+        await loadFontName(font);
+      } catch (error) {
+        failed.add(`${font.family}__${font.style}`);
+        console.warn("[text-autofix] font load failed", font, error);
+      }
+    }
+    return failed;
   }
 
   const fontNames = textNode.getRangeAllFontNames(0, len);
@@ -45,9 +60,11 @@ async function loadFontsForTextNode(textNode: TextNode): Promise<void> {
     try {
       await loadFontName(fontName);
     } catch (error) {
+      failed.add(key);
       console.warn("[text-autofix] font load failed", fontName, error);
     }
   }
+  return failed;
 }
 
 class FontRangeFailure extends AnalyticsFailure {
@@ -97,11 +114,22 @@ export async function applyTextFixesToTextNode(
 ): Promise<TextFix[]> {
   if (fixes.length === 0) return [];
 
+  let failedOnNode: Set<string>;
   try {
-    await loadFontsForTextNode(textNode);
+    failedOnNode = await loadFontsForTextNode(textNode);
   } catch (error) {
     throw annotateFailure(error, stage, "font_load_failed");
   }
+
+  const nodeLength = textNode.characters.length;
+  const nodeUniform = nodeLength > 0 ? captureUniformRangeStyle(textNode, 0, nodeLength) : null;
+
+  const stylesForFix = (from: number, to: number): CharTextStyle[] => {
+    if (nodeUniform) return [nodeUniform];
+    const rangeUniform = captureUniformRangeStyle(textNode, from, to);
+    if (rangeUniform) return [rangeUniform];
+    return captureRangeStyles(textNode, from, to);
+  };
 
   const applied: TextFix[] = [];
   // Only repeated failures of the same font within this layer operation are coalesced.
@@ -110,11 +138,15 @@ export async function applyTextFixesToTextNode(
     try {
       if (fragmentIsStale(textNode, fix)) continue;
 
-      await loadFontsForRange(textNode, fix.from, fix.to, stage);
+      // Шрифты слоя уже загружены. Повторный getRangeAllFontNames нужен только там,
+      // где какой-то шрифт не загрузился: тогда пропускаем правку этого диапазона.
+      if (failedOnNode.size > 0) {
+        await loadFontsForRange(textNode, fix.from, fix.to, stage);
+      }
       // Пока грузился шрифт, параллельный клик мог уже записать тот же фрагмент.
       if (fragmentIsStale(textNode, fix)) continue;
 
-      const capturedStyles = captureRangeStyles(textNode, fix.from, fix.to);
+      const capturedStyles = stylesForFix(fix.from, fix.to);
       const caseOnly = isCaseOnlyChange(fix.before, fix.after);
 
       textNode.deleteCharacters(fix.from, fix.to);
@@ -122,7 +154,7 @@ export async function applyTextFixesToTextNode(
         textNode.insertCharacters(fix.from, fix.after);
         if (capturedStyles.length > 0) {
           try {
-            if (caseOnly) {
+            if (caseOnly && !caseStylesAreUniform(capturedStyles)) {
               for (let i = 0; i < fix.after.length; i++) {
                 const style = capturedStyles[Math.min(i, capturedStyles.length - 1)];
                 await applyCharStyleAt(textNode, fix.from + i, style);
@@ -154,6 +186,7 @@ export async function applyFixesFromScan(
   result: CheckResultDto,
   nodeById: Map<string, TextNode>,
   failedFontsByNode: Map<string, Set<string>> = new Map(),
+  onLayerApplied?: (appliedInBatch: number) => void,
 ): Promise<ApplyFixesBatchResult> {
   const fixByNodeId = new Map<string, TextFix[]>();
 
@@ -189,6 +222,7 @@ export async function applyFixesFromScan(
       trackPluginError("auto_apply", error, { code: "apply_failed" });
       console.warn("[text-autofix] failed to apply fixes to layer", nodeId, error);
     }
+    onLayerApplied?.(appliedFixesCount);
   }
 
   return { appliedCount: appliedFixesCount, appliedByNode };

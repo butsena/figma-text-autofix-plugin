@@ -35,7 +35,8 @@ export type TextNodeCardDto = {
   nodeId: string;
   nodeName: string;
   originalText: string;
-  previewText: string;
+  /** Раньше дублировал текст после автоправок. В панель не отправляется: экран его не показывает. */
+  previewText?: string;
   /** Длина текста слоя на момент сканирования. */
   characterCount: number;
   /** Ближайший фрейм (или компонент), в котором лежит текст. */
@@ -64,8 +65,11 @@ export type AutoApplyFixLineDto = {
   after: string;
   from: number;
   to: number;
-  /** Текст слоя на момент обнаружения правки (для контекста в UI). */
-  sourceText: string;
+  /**
+   * Текст слоя на момент этой правки, если он отличается от sourceText слоя.
+   * Одинаковый текст лежит один раз на слое, не на каждой строке.
+   */
+  sourceText?: string;
 };
 
 export type AutoApplyLayerReportDto = {
@@ -75,6 +79,8 @@ export type AutoApplyLayerReportDto = {
   characterCount: number;
   /** Ближайший фрейм (или компонент), в котором лежит текст. */
   frameName?: string;
+  /** Текст слоя для диффа строк, у которых нет своего sourceText. */
+  sourceText?: string;
   fixes: AutoApplyFixLineDto[];
 };
 
@@ -126,6 +132,15 @@ export type LexiconLoadStatusDto = {
   spellExtraUniqueCount?: number;
 };
 
+export type AutofixProgressPhase = "lexicon" | "spell" | "apply";
+
+/** Прогресс автоприменения. total = уже записано + найдено в текущем проходе. */
+export type AutofixProgressDto = {
+  phase: AutofixProgressPhase;
+  applied: number;
+  total: number;
+};
+
 export type UiToPluginMessage =
   | { type: "ui:ready" }
   | { type: "ui:focusLayer"; nodeId: string }
@@ -143,6 +158,10 @@ export type UiToPluginMessage =
       fix: TextFixDto;
     }
   | {
+      type: "ui:applyFixBatch";
+      fixes: Array<{ nodeId: string; fix: TextFixDto }>;
+    }
+  | {
       type: "ui:resize";
       width: number;
       height: number;
@@ -158,5 +177,6 @@ export type PluginToUiMessage =
       /** Пользовательский преф орфографии (для toggle). */
       spellcheckEnabled?: boolean;
     }
-  | { type: "plugin:spellcheckStatus"; active: boolean };
+  | { type: "plugin:spellcheckStatus"; active: boolean }
+  | { type: "plugin:autofixProgress"; progress: AutofixProgressDto };
 

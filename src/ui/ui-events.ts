@@ -8,18 +8,32 @@ import {
   skipSpellFix,
   syncSpellApplyButton,
 } from "./ui-event-actions";
+import { FIX_CARD_PAGE, FIX_ROW_PAGE } from "./list-window";
 import { sendToPlugin } from "./ui-plugin-bridge";
-import { schedulePluginResize } from "./ui-resize";
-import { render } from "./ui-render";
+import { render, rerenderAccordion } from "./ui-render";
 import {
   applySpellcheckPreference,
+  readDetailsOpen,
   state,
-  syncAccordionStateFromElement,
 } from "./ui-state";
 
-function handleAppClick(event: Event): void {
+function eventElement(event: Event): Element | null {
   const target = event.target;
-  if (!(target instanceof HTMLElement)) return;
+  if (target instanceof Element) return target;
+  if (target instanceof Node) return target.parentElement;
+  return null;
+}
+
+/** Пока возвращаем `open` к нашему флагу, вложенный toggle не должен крутиться снова. */
+let enforcingDetailsOpen = false;
+
+function handleAppClick(event: Event): void {
+  const target = eventElement(event);
+  if (!target) return;
+
+  if (target.closest("[data-more-group], [data-show-more], [data-confirm-apply], [data-confirm-skip], [data-spell-apply], [data-spell-skip], [data-choice-pick], [data-choice-confirm]")) {
+    event.preventDefault();
+  }
 
   const spellApply = target.closest("[data-spell-apply]");
   if (spellApply instanceof HTMLButtonElement) {
@@ -37,6 +51,27 @@ function handleAppClick(event: Event): void {
     const parts = parseKey(spellSkip.getAttribute("data-spell-skip"), 2);
     if (!parts) return;
     skipSpellFix(parts[0], parts[1]);
+    return;
+  }
+
+  const moreGroup = target.closest("[data-more-group]");
+  if (moreGroup instanceof HTMLElement) {
+    event.stopPropagation();
+    const key = moreGroup.getAttribute("data-more-group");
+    if (key) {
+      state.expandedGroups[key] = (state.expandedGroups[key] ?? FIX_CARD_PAGE) + FIX_CARD_PAGE;
+      render();
+    }
+    return;
+  }
+
+  const showMore = target.closest("[data-show-more]");
+  if (showMore instanceof HTMLElement) {
+    event.stopPropagation();
+    const which = showMore.getAttribute("data-show-more");
+    if (which === "report") state.reportShown += FIX_ROW_PAGE;
+    else if (which === "manual") state.manualReportShown += FIX_ROW_PAGE;
+    render();
     return;
   }
 
@@ -116,16 +151,42 @@ function handleAppInput(event: Event): void {
   syncSpellApplyButton(parts[0], parts[1]);
 }
 
+function enforceDetailsOpen(details: HTMLDetailsElement, open: boolean): void {
+  if (!details.isConnected || details.open === open || enforcingDetailsOpen) return;
+  enforcingDetailsOpen = true;
+  details.open = open;
+  enforcingDetailsOpen = false;
+}
+
+function handleSummaryClick(event: Event): void {
+  const target = eventElement(event);
+  const summary = target?.closest("summary");
+  const details = summary?.parentElement;
+  if (!summary || !(details instanceof HTMLDetailsElement)) return;
+  const current = readDetailsOpen(details);
+  if (current == null) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const next = !current;
+  rerenderAccordion(details, next);
+  // Дефолт клика срабатывает после слушателя и снова ставит open.
+  queueMicrotask(() => enforceDetailsOpen(details, next));
+  setTimeout(() => enforceDetailsOpen(details, next), 0);
+}
+
 function handleAppToggle(event: Event): void {
+  if (enforcingDetailsOpen) return;
   const target = event.target;
   if (!(target instanceof HTMLDetailsElement)) return;
-  syncAccordionStateFromElement(target);
-  schedulePluginResize();
+  const intended = readDetailsOpen(target);
+  if (intended == null) return;
+  enforceDetailsOpen(target, intended);
 }
 
 export function initUiEvents(): void {
   const app = document.getElementById("app");
   if (!app) return;
+  app.addEventListener("click", handleSummaryClick, true);
   app.addEventListener("click", handleAppClick);
   app.addEventListener("input", handleAppInput);
   app.addEventListener("toggle", handleAppToggle, true);

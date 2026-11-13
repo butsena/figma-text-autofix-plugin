@@ -1,18 +1,12 @@
 import { rangesOverlap } from "../shared/ranges-overlap";
-import {
-  MAX_SPELL_SKIP_COUNT,
-  markSpellSkippedThisSession,
-  wasSpellSkippedThisSession,
-} from "./choice-skip-session";
-
-export { MAX_SPELL_SKIP_COUNT };
 
 /** Запись о подтверждённом choice/орфо-правке на текстовом слое. */
 export type ChoiceResolution = {
   ruleId: string;
   /**
    * Подтверждённая форма / исправление.
-   * Пустая строка — пока только счётчик skip (орфография, skipCount < MAX).
+   * Для пропуска орфографии — само слово («принято как есть»).
+   * Пустая строка остаётся только в старых записях незавершённого счётчика.
    */
   chosen: string;
   beforeAtResolve: string;
@@ -22,7 +16,7 @@ export type ChoiceResolution = {
   anchorAfter: string;
   /** Длина слова (to − from) на момент подтверждения. */
   wordLength: number;
-  /** Сколько запусков плагина подряд пользователь нажал «Пропустить» (орфография). */
+  /** Орфографию пропустили: 1 и старые 1–3 одинаково скрывают карточку навсегда. */
   skipCount?: number;
   /**
    * @deprecated Раньше сравнивали с in-memory run id (ломалось: каждый запуск снова id=1).
@@ -283,7 +277,7 @@ function resolutionOverlapsFix(
   );
 }
 
-/** Не показывать choice/орфо, если пользователь уже подтвердил или 3 запуска подряд пропустил. */
+/** Не показывать choice/орфо, если форму уже подтвердили или орфографию хотя бы раз пропустили. */
 export function shouldSuppressChoiceFix(
   text: string,
   fix: ChoiceFixPosition,
@@ -301,19 +295,15 @@ export function shouldSuppressChoiceFix(
     );
     if (!overlaps.length) continue;
 
-    if ((resolution.skipCount ?? 0) >= MAX_SPELL_SKIP_COUNT) return true;
+    // Один «Пропустить» прячет карточку и в этом запуске, и в следующих.
+    // Старые записи со счётчиком 1–2 тоже больше не всплывают.
+    if ((resolution.skipCount ?? 0) > 0) return true;
 
     // Подтверждённая форма / исправление на месте — не спрашиваем снова.
     if (resolution.chosen && currentWord === resolution.chosen) return true;
 
     // Слово изменили вручную относительно подтверждённого — снова спрашиваем.
     if (resolution.chosen && currentWord !== resolution.chosen) return false;
-
-    // Skip в этом открытии плагина: скрыть до закрытия.
-    // После переоткрытия Set пустой — снова показываем, пока skipCount < MAX.
-    if (!resolution.chosen && (resolution.skipCount ?? 0) > 0) {
-      return wasSpellSkippedThisSession(resolution.ruleId, resolution.beforeAtResolve);
-    }
 
     return false;
   }
@@ -322,46 +312,35 @@ export function shouldSuppressChoiceFix(
 }
 
 /**
- * «Пропустить» орфографию: +1 к счётчику запусков; на MAX — скрыть навсегда.
- * Повторный skip в том же открытии плагина не увеличивает счётчик.
+ * «Пропустить» орфографию: сразу принять слово как есть.
+ * Повторный клик по той же карточке счётчик не увеличивает.
  */
 export function applySkipToResolutions(
   text: string,
   fix: ChoiceFixPosition,
   resolutions: ChoiceResolution[],
 ): ChoiceResolution[] {
-  // Уже пропустили в этом открытии — не считаем повторный клик.
-  if (wasSpellSkippedThisSession(fix.ruleId, fix.before)) {
-    return resolutions;
-  }
-
   const matchingIdx = resolutions.findIndex((r) => {
     if (r.ruleId !== fix.ruleId) return false;
     if (!resolutionOverlapsFix(text, fix, r)) return false;
-    // Активный skip или «принято как есть» для того же before.
+    if ((r.skipCount ?? 0) > 0) return true;
     if (!r.chosen) return true;
-    if ((r.skipCount ?? 0) >= MAX_SPELL_SKIP_COUNT && r.beforeAtResolve === fix.before) {
-      return true;
-    }
-    return false;
+    return r.beforeAtResolve === fix.before;
   });
 
-  const matching = matchingIdx >= 0 ? resolutions[matchingIdx] : undefined;
-  const nextSkips = (matching?.skipCount ?? 0) + 1;
-  const accepted = nextSkips >= MAX_SPELL_SKIP_COUNT;
+  if (matchingIdx >= 0 && (resolutions[matchingIdx]?.skipCount ?? 0) > 0) {
+    return resolutions;
+  }
+
   const next = createChoiceResolution(
     text,
     fix.ruleId,
     fix.from,
     fix.to,
     fix.before,
-    accepted ? fix.before : "",
-    nextSkips,
+    fix.before,
+    1,
   );
-
-  if (!accepted) {
-    markSpellSkippedThisSession(fix.ruleId, fix.before);
-  }
 
   if (matchingIdx >= 0) {
     const copy = resolutions.slice();

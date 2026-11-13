@@ -1,9 +1,11 @@
 import type {
   AutoApplyReportDto,
+  AutofixProgressDto,
   CheckedTextLayerDto,
   LexiconLoadStatusDto,
   TextNodeCardDto,
 } from "../shared/messages";
+import { FIX_ROW_PAGE } from "./list-window";
 
 export type UiAccordionState = {
   confirmDetailsOpen: boolean;
@@ -32,6 +34,13 @@ export type UiState = {
   spellcheckInProgress: boolean;
   /** Пользовательский преф орфографии (toggle в шапке). */
   spellcheckEnabled: boolean;
+  /** Полоска под «Шуршу по макету...», пока результат ещё не пришёл. */
+  autofixProgress: AutofixProgressDto | null;
+  /** Сколько строк автоотчёта и «Вы исправили» уже показано. */
+  reportShown: number;
+  manualReportShown: number;
+  /** Ключ «confirm:id» / «choice:id» → сколько карточек этого типа уже показано. Нет ключа — первые 10. */
+  expandedGroups: Record<string, number>;
   ui: UiAccordionState;
   /** Выбранный вариант choice-правки: ключ «cardIdx:fixIdx» → индекс опции. */
   choiceSelection: Record<string, number>;
@@ -48,6 +57,10 @@ export const state: UiState = {
   lexiconLoad: null,
   spellcheckInProgress: false,
   spellcheckEnabled: false,
+  autofixProgress: null,
+  reportShown: FIX_ROW_PAGE,
+  manualReportShown: FIX_ROW_PAGE,
+  expandedGroups: {},
   ui: {
     confirmDetailsOpen: true,
     choiceDetailsOpen: true,
@@ -83,6 +96,14 @@ export function resetForError(): void {
   state.lastManualReport = null;
   state.cards = [];
   state.spellcheckInProgress = false;
+  state.autofixProgress = null;
+  state.expandedGroups = {};
+  state.reportShown = FIX_ROW_PAGE;
+  state.manualReportShown = FIX_ROW_PAGE;
+}
+
+export function applyAutofixProgress(progress: AutofixProgressDto): void {
+  state.autofixProgress = progress;
 }
 
 export function applySpellcheckStatus(active: boolean): void {
@@ -99,6 +120,10 @@ export function applyCheckResult(result: {
   choiceCards: TextNodeCardDto[];
 }): void {
   state.choiceSelection = {};
+  state.autofixProgress = null;
+  state.expandedGroups = {};
+  state.reportShown = FIX_ROW_PAGE;
+  state.manualReportShown = FIX_ROW_PAGE;
   state.summary = result.summary;
   state.checkedTextLayers = result.checkedTextLayers || [];
   state.lastReport = result.lastAutoApplyReport;
@@ -136,17 +161,39 @@ export function captureUiAccordionState(): void {
 }
 
 export function syncAccordionStateFromElement(el: Element): void {
-  if (el.classList.contains("confirmDetails")) {
-    state.ui.confirmDetailsOpen = (el as HTMLDetailsElement).open;
-  } else if (el.classList.contains("choiceDetails")) {
-    state.ui.choiceDetailsOpen = (el as HTMLDetailsElement).open;
-  } else if (el.classList.contains("reportDetails")) {
-    state.ui.reportDetailsOpen = (el as HTMLDetailsElement).open;
-  } else if (el.classList.contains("manualReportDetails")) {
-    state.ui.manualReportDetailsOpen = (el as HTMLDetailsElement).open;
-  } else if (el.classList.contains("textLayersDetails")) {
-    state.ui.textLayersDetailsOpen = (el as HTMLDetailsElement).open;
-  } else if (el.classList.contains("techDetails")) {
-    state.ui.techDetailsOpen = (el as HTMLDetailsElement).open;
-  }
+  if (typeof HTMLDetailsElement !== "undefined" && !(el instanceof HTMLDetailsElement)) return;
+  setDetailsOpen(el, "open" in el && Boolean((el as HTMLDetailsElement).open));
+}
+
+/** Заголовки секций, которые сами решают, открыты они или нет. */
+export function setDetailsOpen(el: Element, open: boolean): boolean {
+  if (el.classList.contains("confirmDetails")) state.ui.confirmDetailsOpen = open;
+  else if (el.classList.contains("choiceDetails")) state.ui.choiceDetailsOpen = open;
+  else if (el.classList.contains("manualReportDetails")) state.ui.manualReportDetailsOpen = open;
+  else if (el.classList.contains("reportDetails")) state.ui.reportDetailsOpen = open;
+  else if (el.classList.contains("textLayersDetails")) state.ui.textLayersDetailsOpen = open;
+  else if (el.classList.contains("techDetails")) state.ui.techDetailsOpen = open;
+  else return false;
+  return true;
+}
+
+/** Состояние секции в модели, не свойство DOM: браузер к клику уже мог его переключить. */
+export function readDetailsOpen(el: Element): boolean | null {
+  if (el.classList.contains("confirmDetails")) return state.ui.confirmDetailsOpen;
+  if (el.classList.contains("choiceDetails")) return state.ui.choiceDetailsOpen;
+  if (el.classList.contains("manualReportDetails")) return state.ui.manualReportDetailsOpen;
+  if (el.classList.contains("reportDetails")) return state.ui.reportDetailsOpen;
+  if (el.classList.contains("textLayersDetails")) return state.ui.textLayersDetailsOpen;
+  if (el.classList.contains("techDetails")) return state.ui.techDetailsOpen;
+  return null;
+}
+
+export function detailsStateSelector(el: Element): string | null {
+  if (el.classList.contains("confirmDetails")) return "details.confirmDetails";
+  if (el.classList.contains("choiceDetails")) return "details.choiceDetails";
+  if (el.classList.contains("manualReportDetails")) return "details.manualReportDetails";
+  if (el.classList.contains("reportDetails")) return "details.reportDetails";
+  if (el.classList.contains("textLayersDetails")) return "details.textLayersDetails";
+  if (el.classList.contains("techDetails")) return "details.techDetails";
+  return null;
 }
