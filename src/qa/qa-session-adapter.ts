@@ -1,4 +1,4 @@
-/** Standalone source embedded into the Canvas by qa:sync-canvas. No runtime imports. */
+/** Archive session format (former QA canvas). No runtime imports into the plugin bundle. */
 export type QaManualStatus =
   | "passed"
   | "failed"
@@ -122,7 +122,7 @@ export function migrateLegacyQaEntries(
   return next;
 }
 
-/** Called only by an explicit status action in the Canvas. */
+/** Archive helper: explicit status change with history snapshot. */
 export function setQaManualStatus(
   previous: QaManualEntry | undefined,
   status: QaManualStatus,

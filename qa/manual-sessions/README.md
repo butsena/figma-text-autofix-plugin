@@ -1,7 +1,7 @@
-# Manual QA sessions
+# Manual QA sessions (archive)
 
-Export from the Cursor QA canvas (**Export session**), then save as `YYYY-MM-DD.json` here.
+Исторические экспорты из снятого Cursor QA canvas (`manual-qa-checklist`).
 
-Until a file is saved, canvas export carries `unsavedSession: true`.
+С 18.11.2026 новые сессии сюда не пишем: QA по задачам — в Google Таблице (A-007).
 
-Do not treat `processed_legacy` as Passed.
+`processed_legacy` не считать Passed.

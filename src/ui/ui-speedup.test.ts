@@ -46,25 +46,29 @@ describe("ускорение панели", () => {
     state.ui.choiceDetailsOpen = true;
   });
 
-  it("полоска стоит под «Шуршу по макету…» и исчезает с результатом", () => {
+  it("у каждой фазы одна строка статуса, с результатом она исчезает", () => {
     state.autofixProgress = { phase: "lexicon", applied: 0, total: 0 };
     const lexicon = renderResultHeaderHtml();
-    expect(lexicon).toContain("Шуршу по макету…");
-    expect(lexicon.indexOf("Шуршу по макету…")).toBeLessThan(lexicon.indexOf("Освежаю редполитику"));
-    expect(lexicon).not.toContain("Обновляю словарь");
+    expect(lexicon).toContain("Шуршу по макету — освежаю редполитику...");
+    expect(lexicon).not.toContain("Шуршу по макету…");
+    expect(lexicon).not.toContain("обновляю словарь");
 
     state.autofixProgress = { phase: "spell", applied: 0, total: 0 };
-    expect(renderResultHeaderHtml()).toContain("Обновляю словарь");
+    const spell = renderResultHeaderHtml();
+    expect(spell).toContain("Шуршу по макету — обновляю словарь...");
+    expect(spell).not.toContain("освежаю редполитику");
 
     state.autofixProgress = { phase: "apply", applied: 2, total: 5 };
     const apply = renderResultHeaderHtml();
-    expect(apply).toContain("Исправляю тексты — 2");
+    expect(apply).toContain("Шуршу по макету — исправляю тексты — 2");
     expect(apply).toContain("2 / 5");
+    expect(apply).not.toContain("освежаю редполитику");
+    expect(apply).not.toContain("обновляю словарь");
 
     state.summary = { checkedLayers: 1, foundFixes: 0, confirmFixes: 0, choiceFixes: 0 };
     state.autofixProgress = null;
     const done = renderResultHeaderHtml();
-    expect(done).not.toContain("Шуршу по макету…");
+    expect(done).not.toContain("Шуршу по макету");
     expect(done).not.toContain("resultProgress");
   });
 
