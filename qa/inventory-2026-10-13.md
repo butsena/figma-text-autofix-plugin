@@ -2,7 +2,7 @@
 
 ## Source
 
-- Canvas (definitions): `/Users/a.butsenko/.cursor/projects/Users-a-butsenko-Desktop-figma-text-autofix-plugin/canvases/manual-qa-checklist.canvas.tsx`
+- Canvas (definitions): снял 18.11.2026; был `manual-qa-checklist.canvas.tsx`
 - Extracted to: `qa/scenarios.json`, `qa/agent-results.json`
 - Tool: `node scripts/qa-extract-canvas-items.mjs`
 
@@ -32,12 +32,11 @@ Known YAML→tracker map: `qa/legacy-id-map.json` (from Sheets A-007 description
 
 ## Portable canvas shell
 
-- Repo copy: `qa/canvas/manual-qa-checklist.canvas.tsx` (Export/Import session, «В бэклог» → Sheets A-007).
-- Live IDE path is mirrored by `npm run qa:sync-canvas`.
+- Repo/live QA canvas removed 18.11.2026 (`qa/canvas/README.md`).
 - Scenario `#55` covers the session round-trip; linked to `T-046` / legacy `pipeline-qa`.
 
 ## Preservation
 
 - Original live canvas file is **not deleted**.
-- Canvas ITEMS regenerate from `qa/scenarios.json` via `npm run qa:sync-canvas`.
+- `qa/scenarios.json` is archive-only; do not sync to a canvas.
 - No `useCanvasState` keys were cleared.

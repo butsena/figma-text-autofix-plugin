@@ -34,7 +34,7 @@ export type UiState = {
   spellcheckInProgress: boolean;
   /** Пользовательский преф орфографии (toggle в шапке). */
   spellcheckEnabled: boolean;
-  /** Полоска под «Шуршу по макету...», пока результат ещё не пришёл. */
+  /** Одна строка статуса и полоска, пока результат ещё не пришёл. */
   autofixProgress: AutofixProgressDto | null;
   /** Сколько строк автоотчёта и «Вы исправили» уже показано. */
   reportShown: number;

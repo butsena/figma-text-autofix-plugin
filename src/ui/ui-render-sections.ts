@@ -136,10 +136,10 @@ function renderAutofixProgressHtml(): string {
   if (!progress) return "";
   const label =
     progress.phase === "spell"
-      ? "Обновляю словарь"
+      ? "Шуршу по макету — обновляю словарь..."
       : progress.phase === "lexicon"
-        ? "Освежаю редполитику"
-        : `Исправляю тексты — ${progress.applied}`;
+        ? "Шуршу по макету — освежаю редполитику..."
+        : `Шуршу по макету — исправляю тексты — ${progress.applied}`;
   const ratio = progress.total > 0 ? Math.min(1, progress.applied / progress.total) : 0;
   const width = progress.total > 0 ? `${Math.round(ratio * 100)}%` : "35%";
   const counter = progress.total > 0 ? `${progress.applied} / ${progress.total}` : "";
@@ -157,7 +157,8 @@ function renderAutofixProgressHtml(): string {
 export function renderResultHeaderHtml(): string {
   if (state.spellcheckInProgress && state.summary) return "";
   if (!state.summary) {
-    return `<div class="resultWaiting">Шуршу по макету…${renderAutofixProgressHtml()}</div>`;
+    const progress = renderAutofixProgressHtml();
+    return `<div class="resultWaiting">${progress || "Шуршу по макету…"}</div>`;
   }
   const appliedAuto = state.lastReport ? state.lastReport.summary.appliedFixCount : 0;
   const appliedManual = state.lastManualReport

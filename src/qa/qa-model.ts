@@ -31,6 +31,8 @@ export type QaAgentResult = {
 export type QaScenariosFile = {
   schemaVersion: 1;
   updatedAt: string;
+  /** Set when the QA canvas was retired; file is archive-only. */
+  archivedAt?: string;
   sourceCanvas?: string;
   scenarios: QaScenario[];
 };

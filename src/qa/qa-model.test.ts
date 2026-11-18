@@ -22,10 +22,11 @@ describe("qa portable model (T-046)", () => {
     readFileSync(resolve(ROOT, "qa/legacy-id-map.json"), "utf8"),
   ) as { map: Record<string, string | string[]> };
 
-  it("keeps stable unique id/n from migration", () => {
-    expect(scenariosFile.scenarios.length).toBe(61);
+  it("keeps stable unique id/n in the archived checklist", () => {
+    expect(scenariosFile.archivedAt).toBe("2026-11-18");
+    expect(scenariosFile.scenarios.length).toBe(65);
     assertStableIdsUnique(scenariosFile.scenarios);
-    expect(nextScenarioNumber(scenariosFile.scenarios)).toBe(62);
+    expect(nextScenarioNumber(scenariosFile.scenarios)).toBe(66);
     expect(scenariosFile.scenarios.find((s) => s.id === "61")?.taskIds).toEqual(["T-151"]);
     expect(scenariosFile.scenarios.find((s) => s.id === "59")?.taskIds).toEqual(["T-140", "T-144"]);
     expect(scenariosFile.scenarios.find((s) => s.id === "60")?.taskIds).toEqual(["T-144"]);

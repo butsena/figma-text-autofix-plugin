@@ -11,8 +11,6 @@
     "build:release": "node scripts/build-analytics.mjs release",
     "test": "npm run build:yo-curated && vitest run",
     "test:watch": "npm run build:yo-curated && vitest",
-    "qa:extract-canvas": "node scripts/qa-extract-canvas-items.mjs",
-    "qa:sync-canvas": "node scripts/qa-sync-canvas.mjs",
     "build:qa": "node scripts/build-analytics.mjs qa",
     "check:release": "node scripts/check-analytics-release.mjs"
   },

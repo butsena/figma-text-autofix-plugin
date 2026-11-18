@@ -904,7 +904,8 @@ describe("manual QA checklist verify", () => {
     state.summary = null;
     state.autofixProgress = { phase: "apply", applied: 3, total: 10 };
     const header = renderResultHeaderHtml();
-    expect(header.indexOf("Шуршу по макету…")).toBeLessThan(header.indexOf("Исправляю тексты — 3"));
+    expect(header).toContain("Шуршу по макету — исправляю тексты — 3");
+    expect(header).not.toContain("Шуршу по макету…");
     expect(header).toContain("3 / 10");
 
     state.summary = { checkedLayers: 1, foundFixes: 1, confirmFixes: 2, choiceFixes: 0 };
